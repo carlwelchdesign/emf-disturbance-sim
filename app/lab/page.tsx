@@ -6,9 +6,15 @@ import { SourceMarker } from './components/Canvas3D/SourceMarker';
 import { MeasurementPoint as MeasurementPointMarker } from './components/Canvas3D/MeasurementPoint';
 import { EnvironmentBoundary } from './components/Canvas3D/EnvironmentBoundary';
 import { FieldVisualization } from './components/Canvas3D/FieldVisualization';
+import { DroneMarker } from './components/Canvas3D/DroneMarker';
+import { FlightPath } from './components/Canvas3D/FlightPath';
+import { ContestZoneMarker } from './components/Canvas3D/ContestZoneMarker';
 import { ControlPanel } from './components/ControlPanel/ControlPanel';
 import { AccuracyDisclaimer } from './components/Analysis/AccuracyDisclaimer';
 import { FieldStrengthOverlay } from './components/Analysis/FieldStrengthOverlay';
+import { ThreatMetricsPanel } from './components/Analysis/ThreatMetricsPanel';
+import { EmitterInteractionsPanel } from './components/Analysis/EmitterInteractionsPanel';
+import { FieldSamplesChart } from './components/Analysis/FieldSamplesChart';
 import { FPSCounter } from './components/shared/FPSCounter';
 import { PerformanceWarning } from './components/shared/PerformanceWarning';
 import { WebGLErrorBoundary } from './components/shared/WebGLErrorBoundary';
@@ -26,6 +32,7 @@ export default function LabPage() {
   const settings = useLabStore((state) => state.settings);
   const camera = useLabStore((state) => state.camera);
   const measurements = useLabStore((state) => state.measurements);
+  const drones = useLabStore((state) => state.drones);
   const activeSources = useMemo(() => sources.filter((source) => source.active), [sources]);
 
   useFPSMonitor();
@@ -68,6 +75,18 @@ export default function LabPage() {
               lod={settings.lod}
               colorScheme={settings.colorScheme}
             />
+
+            {/* Contested zone indicators */}
+            <ContestZoneMarker />
+
+            {/* Drone flight paths */}
+            {settings.showFlightPaths &&
+              drones.map((drone) => <FlightPath key={`path-${drone.id}`} drone={drone} />)}
+
+            {/* Drone animated objects */}
+            {drones.map((drone) => (
+              <DroneMarker key={drone.id} drone={drone} />
+            ))}
           </Canvas3D>
         </WebGLErrorBoundary>
 
@@ -102,6 +121,11 @@ export default function LabPage() {
         <AccuracyDisclaimer />
         <FieldStrengthOverlay measurement={measurements[measurements.length - 1]} />
         <FPSCounter />
+
+        {/* Faction / drone analysis panels */}
+        {settings.showThreatMetrics && <ThreatMetricsPanel />}
+        {settings.showEmitterInteractions && <EmitterInteractionsPanel />}
+        {settings.showFieldChart && <FieldSamplesChart />}
       </Box>
 
       {/* Control Panel */}

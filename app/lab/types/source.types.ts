@@ -1,5 +1,8 @@
 import { Vector3D } from './common.types';
 
+/** Which side of the scenario this source belongs to */
+export type SourceFaction = 'friendly' | 'hostile' | 'neutral';
+
 /**
  * RF/EMF Source with configurable parameters
  * Represents a radio frequency or electromagnetic field source (antenna, device)
@@ -46,6 +49,9 @@ export interface RFSource {
   
   /** Device type hint for UI (e.g., "Wi-Fi Router", "Cell Tower", "Bluetooth") */
   deviceType?: string;
+
+  /** Scenario faction — determines particle color and threat analysis grouping */
+  faction?: SourceFaction;
 }
 
 /** Parameters for creating a new source (id generated automatically) */
@@ -65,6 +71,7 @@ export const DEFAULT_RF_SOURCE: Omit<RFSource, 'id'> = {
   antennaType: 'omnidirectional',
   gain: 1.0,
   active: true,
+  faction: 'friendly',
 };
 
 /** Validation limits for source parameters */

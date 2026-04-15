@@ -3,6 +3,7 @@ import { Vector3D } from '../../types/common.types';
 import { DEFAULT_ENVIRONMENT, Environment } from '../../types/environment.types';
 import { CreateSourceParams, DEFAULT_RF_SOURCE, RFSource } from '../../types/source.types';
 import { DEFAULT_VISUALIZATION, VisualizationSettings } from '../../types/visualization.types';
+import { CreateDroneParams } from '../../types/drone.types';
 import { getSourceColor } from '../../lib/visualization-helpers';
 
 export type ScenarioPresetId =
@@ -13,7 +14,9 @@ export type ScenarioPresetId =
   | 'noisy-electronics'
   | 'atmospheric-scatter'
   | 'medium-transition'
-  | 'polarization-showcase';
+  | 'polarization-showcase'
+  | 'ew-drone-patrol'
+  | 'engineering-multiband';
 
 export interface ScenarioSourceTemplate extends Partial<CreateSourceParams> {
   label: string;
@@ -28,6 +31,8 @@ export interface ScenarioPreset {
   environment?: Partial<Environment>;
   settings?: Partial<VisualizationSettings>;
   camera?: Partial<CameraState>;
+  /** Optional drones to spawn when this preset is loaded */
+  drones?: CreateDroneParams[];
 }
 
 function source(label: string, position: Vector3D, overrides: Partial<CreateSourceParams> = {}): ScenarioSourceTemplate {
@@ -165,6 +170,103 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       lod: 'high',
       colorScheme: 'rainbow',
     },
+  },
+  {
+    id: 'ew-drone-patrol',
+    name: 'EW — Drone Patrol vs Jammer',
+    description:
+      'A friendly drone circles a hostile ground jammer. Watch signal degradation as the drone enters the disruption zone.',
+    sources: [
+      source('Ground Jammer', { x: 0, y: 0.5, z: 0 }, { power: 5, frequency: 5.8e9, bandwidthHz: 200e6, faction: 'hostile' }),
+      source('Drone Comms Link', { x: 4, y: 1.5, z: 0 }, { power: 0.1, frequency: 2.4e9, bandwidthHz: 80e6, faction: 'friendly' }),
+    ],
+    settings: {
+      animateFields: true,
+      animationSpeed: 1.0,
+      showGrid: true,
+      lod: 'high',
+      colorScheme: 'thermal',
+      showThreatMetrics: true,
+      showEmitterInteractions: true,
+      showFieldChart: true,
+      showFlightPaths: true,
+    },
+    camera: {
+      position: { x: 0, y: 10, z: 8 },
+      target: { x: 0, y: 0, z: 0 },
+      up: { x: 0, y: 1, z: 0 },
+      fov: 65,
+      zoom: 1,
+      near: 0.1,
+      far: 1000,
+    },
+    drones: [
+      {
+        label: 'Recon Drone',
+        faction: 'friendly',
+        speed: 0.35,
+        disruptionThreshold: 0.8,
+        waypoints: [
+          { position: { x: 4, y: 1.5, z: 0 } },
+          { position: { x: 2.83, y: 1.5, z: 2.83 } },
+          { position: { x: 0, y: 1.5, z: 4 } },
+          { position: { x: -2.83, y: 1.5, z: 2.83 } },
+          { position: { x: -4, y: 1.5, z: 0 } },
+          { position: { x: -2.83, y: 1.5, z: -2.83 } },
+          { position: { x: 0, y: 1.5, z: -4 } },
+          { position: { x: 2.83, y: 1.5, z: -2.83 } },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'engineering-multiband',
+    name: 'Engineering — Multi-Band RF Environment',
+    description:
+      'A drone sweeps through a cluttered spectrum: a friendly Wi-Fi AP competes with LTE and Bluetooth interference sources.',
+    sources: [
+      source('Wi-Fi AP', { x: -4, y: 1.5, z: 0 }, { power: 0.1, frequency: 5.0e9, bandwidthHz: 80e6, faction: 'friendly' }),
+      source('LTE Interference', { x: 3, y: 1.5, z: 0 }, { power: 1.5, frequency: 1.8e9, bandwidthHz: 20e6, faction: 'hostile' }),
+      source('BT Noise', { x: 0, y: 1.5, z: 3 }, { power: 0.02, frequency: 2.4e9, bandwidthHz: 1e6, faction: 'hostile' }),
+    ],
+    settings: {
+      animateFields: true,
+      animationSpeed: 1.0,
+      showGrid: true,
+      lod: 'high',
+      colorScheme: 'rainbow',
+      showThreatMetrics: true,
+      showEmitterInteractions: true,
+      showFieldChart: true,
+      showFlightPaths: true,
+    },
+    camera: {
+      position: { x: 0, y: 6, z: 10 },
+      target: { x: 0, y: 1, z: 0 },
+      up: { x: 0, y: 1, z: 0 },
+      fov: 70,
+      zoom: 1,
+      near: 0.1,
+      far: 1000,
+    },
+    drones: [
+      {
+        label: 'Survey Drone',
+        faction: 'friendly',
+        speed: 0.28,
+        disruptionThreshold: 0.6,
+        waypoints: [
+          { position: { x: -5, y: 1.5, z: 0 } },
+          { position: { x: -2.5, y: 1.5, z: 0 } },
+          { position: { x: 0, y: 1.5, z: 0 } },
+          { position: { x: 2.5, y: 1.5, z: 0 } },
+          { position: { x: 5, y: 1.5, z: 0 } },
+          { position: { x: 2.5, y: 1.5, z: 0 } },
+          { position: { x: 0, y: 1.5, z: 0 } },
+          { position: { x: -2.5, y: 1.5, z: 0 } },
+        ],
+      },
+    ],
   },
 ];
 

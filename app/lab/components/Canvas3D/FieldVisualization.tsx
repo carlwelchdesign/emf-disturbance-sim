@@ -49,6 +49,18 @@ type CloudLayerConfig = {
   tintMix: number;
 };
 
+/** Faction-based base tint colours: friendly = cyan-blue, hostile = red-orange, neutral = auto */
+const FACTION_COLORS = {
+  friendly: '#00AAFF',
+  hostile: '#FF3320',
+  neutral: null, // falls through to getSourceColor
+} as const;
+
+function getFactionTint(source: RFSource, index: number): string {
+  const factionColor = FACTION_COLORS[source.faction ?? 'neutral'];
+  return factionColor ?? (source.color ?? getSourceColor(index));
+}
+
 const TAU = Math.PI * 2;
 const X_AXIS = new THREE.Vector3(1, 0, 0);
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
@@ -105,7 +117,11 @@ function EmitterCloud({
   const { calculateFieldAtPoint } = useFieldCalculator();
   const { animateFields, animationSpeed, fieldLineDensity, solverProfile } = useLabStore((state) => state.settings);
 
-  const sourceTint = useMemo(() => new THREE.Color(source.color ?? getSourceColor(sourceIndex)), [source.color, sourceIndex]);
+  const sourceTint = useMemo(
+    () => new THREE.Color(getFactionTint(source, sourceIndex)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [source.faction, source.color, sourceIndex]
+  );
   const scratch = useMemo(
     () => ({
       flow: new THREE.Vector3(),

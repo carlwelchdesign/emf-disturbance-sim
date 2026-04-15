@@ -47,6 +47,29 @@ export interface FieldGrid {
 }
 
 /**
+ * Aggregated field strength broken down by source faction at a single point.
+ * Used by ThreatMetricsPanel and drone status calculation.
+ */
+export interface FactionMetrics {
+  /** Net E-field from friendly sources (V/m) */
+  eFieldFriendly: number;
+  /** Net E-field from hostile sources (V/m) */
+  eFieldHostile: number;
+  /** Superposed E-field from all sources (V/m) */
+  eFieldNet: number;
+  /** 0–1 ratio of hostile dominance: eHostile / (eFriendly + eHostile) */
+  threatDominance: number;
+  /** Field magnitude cancelled by destructive interference (V/m) */
+  destructiveStrength: number;
+  /** Additional field magnitude from constructive interference (V/m) */
+  constructiveStrength: number;
+  /** Normalised overlap score between friendly and hostile fields */
+  interactionScore: number;
+  /** Spatial gradient magnitude |∇E| at this point (V/m²) — computed only when requested */
+  gradient: number;
+}
+
+/**
  * Represents identified regions of constructive or destructive interference
  */
 export interface InterferencePattern {

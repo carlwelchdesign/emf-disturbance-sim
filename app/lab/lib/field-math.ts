@@ -4,6 +4,8 @@
 
 import { dot, normalize } from './math-utils';
 import { Vector3D } from '../types/common.types';
+import { FactionMetrics } from '../types/field.types';
+import { RFSource } from '../types/source.types';
 
 // Physical constants
 export const SPEED_OF_LIGHT = 299792458; // m/s
@@ -159,4 +161,76 @@ export function fieldStrengthToPowerDensity(fieldStrength: number): number {
  */
 export function powerDensityToFieldStrength(powerDensity: number): number {
   return Math.sqrt(2 * VACUUM_IMPEDANCE * powerDensity);
+}
+
+/**
+ * Compute faction-separated field metrics at a single point in space.
+ *
+ * Calls the provided `calculateField` function up to three times (friendly, hostile, net).
+ * Pass `computeGradient: true` only when displaying the ThreatMetricsPanel — it adds
+ * six extra calls and should not run inside the 60 fps animation loop.
+ *
+ * @param point - World-space position to evaluate
+ * @param sources - All RF sources in the scene
+ * @param time - Current animation time (same value passed to the simulation engine)
+ * @param calculateField - Delegate that wraps the simulation engine's calculateFieldAtPoint
+ * @param computeGradient - Whether to approximate |∇E| via central differences (default false)
+ */
+export function computeFactionMetrics(
+  point: Vector3D,
+  sources: RFSource[],
+  time: number,
+  calculateField: (p: Vector3D, s: RFSource[], t: number) => { strength: number },
+  computeGradient = false
+): FactionMetrics {
+  const activeSources = sources.filter((s) => s.active);
+  const friendlySources = activeSources.filter((s) => (s.faction ?? 'friendly') !== 'hostile');
+  const hostileSources = activeSources.filter((s) => s.faction === 'hostile');
+
+  const eF = friendlySources.length > 0
+    ? Math.abs(calculateField(point, friendlySources, time).strength)
+    : 0;
+  const eH = hostileSources.length > 0
+    ? Math.abs(calculateField(point, hostileSources, time).strength)
+    : 0;
+  const eN = activeSources.length > 0
+    ? Math.abs(calculateField(point, activeSources, time).strength)
+    : 0;
+
+  const total = eF + eH;
+  const threatDominance = total > 1e-9 ? eH / total : 0;
+
+  const maxSingle = Math.max(eF, eH);
+  const constructiveStrength = Math.max(0, eN - maxSingle);
+  const destructiveStrength = Math.max(0, maxSingle - eN);
+  const interactionScore = calculateFieldOverlapScore(eF, eH);
+
+  let gradient = 0;
+  if (computeGradient && activeSources.length > 0) {
+    const DELTA = 0.1;
+    const gx =
+      (Math.abs(calculateField({ x: point.x + DELTA, y: point.y, z: point.z }, activeSources, time).strength) -
+       Math.abs(calculateField({ x: point.x - DELTA, y: point.y, z: point.z }, activeSources, time).strength)) /
+      (2 * DELTA);
+    const gy =
+      (Math.abs(calculateField({ x: point.x, y: point.y + DELTA, z: point.z }, activeSources, time).strength) -
+       Math.abs(calculateField({ x: point.x, y: point.y - DELTA, z: point.z }, activeSources, time).strength)) /
+      (2 * DELTA);
+    const gz =
+      (Math.abs(calculateField({ x: point.x, y: point.y, z: point.z + DELTA }, activeSources, time).strength) -
+       Math.abs(calculateField({ x: point.x, y: point.y, z: point.z - DELTA }, activeSources, time).strength)) /
+      (2 * DELTA);
+    gradient = Math.sqrt(gx * gx + gy * gy + gz * gz);
+  }
+
+  return {
+    eFieldFriendly: eF,
+    eFieldHostile: eH,
+    eFieldNet: eN,
+    threatDominance,
+    destructiveStrength,
+    constructiveStrength,
+    interactionScore,
+    gradient,
+  };
 }

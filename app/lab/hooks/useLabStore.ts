@@ -8,6 +8,7 @@ import { DEFAULT_CAMERA } from '../types/camera.types';
 import { DEFAULT_VISUALIZATION } from '../types/visualization.types';
 import { DEFAULT_ENVIRONMENT } from '../types/environment.types';
 import { MeasurementPoint } from '../types/measurement.types';
+import { DroneState, CreateDroneParams } from '../types/drone.types';
 import { LabStoreState } from '../types/store.types';
 import { sanitizeSource } from '../lib/validation';
 import { createSourceIdGenerator } from '../lib/source-helpers';
@@ -44,6 +45,8 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     averageFPS: 60,
     isLowPerformance: false,
   },
+  drones: [],
+  activeFactionMetrics: null,
 
   // === Source Actions ===
   addSource: (params = {}) => {
@@ -126,6 +129,8 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
       activeScenarioPresetId: null,
       scenarioIsDirty: false,
       measurements: [],
+      drones: [],
+      activeFactionMetrics: null,
     });
   },
 
@@ -139,6 +144,21 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     measurementIdCounter = 1;
 
     const sources = buildScenarioSources(preset, () => sourceIdGenerator.nextId());
+    const drones = preset.drones
+      ? preset.drones.map((params: CreateDroneParams, i: number) => {
+          const id = `drone-preset-${i}`;
+          const initialPosition = params.waypoints[0]?.position ?? { x: 0, y: 1, z: 0 };
+          return {
+            id,
+            ...params,
+            currentSegment: 0,
+            segmentProgress: 0,
+            position: { ...initialPosition },
+            status: 'nominal' as const,
+            fieldAtDrone: null,
+          };
+        })
+      : [];
 
     set((state) => ({
       sources,
@@ -155,6 +175,8 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
         solverProfile: state.settings.solverProfile,
       },
       measurements: [],
+      drones,
+      activeFactionMetrics: null,
     }));
   },
 
@@ -263,6 +285,38 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
           averageFPS: avgFPS,
           isLowPerformance,
         },
+      };
+    });
+  },
+
+  // === Drone Actions ===
+  addDrone: (params: CreateDroneParams) => {
+    const id = `drone-${Date.now()}`;
+    const initialPosition = params.waypoints[0]?.position ?? { x: 0, y: 1, z: 0 };
+    const newDrone: DroneState = {
+      id,
+      ...params,
+      currentSegment: 0,
+      segmentProgress: 0,
+      position: { ...initialPosition },
+      status: 'nominal',
+      fieldAtDrone: null,
+    };
+    set((state) => ({ drones: [...state.drones, newDrone] }));
+    return id;
+  },
+
+  removeDrone: (id) => {
+    set((state) => ({ drones: state.drones.filter((d) => d.id !== id) }));
+  },
+
+  updateDroneState: (id, update) => {
+    set((state) => {
+      const drones = state.drones.map((d) => (d.id === id ? { ...d, ...update } : d));
+      const primary = drones.find((d) => d.faction === 'friendly') ?? drones[0];
+      return {
+        drones,
+        activeFactionMetrics: primary?.fieldAtDrone ?? state.activeFactionMetrics,
       };
     });
   },

@@ -1,8 +1,8 @@
 'use client';
 
-import { Box, Typography, TextField, Button as MuiButton, Tooltip } from '@mui/material';
+import { Box, Typography, TextField, Button as MuiButton, Tooltip, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { Slider } from '../shared/Slider';
-import { RFSource } from '../../types/source.types';
+import { RFSource, SourceFaction } from '../../types/source.types';
 import { useLabStore } from '../../hooks/useLabStore';
 import { FrequencyPresets } from './FrequencyPresets';
 import { estimateSourceFieldStrength } from '../../lib/source-helpers';
@@ -49,6 +49,31 @@ export function SourceControls({ source }: SourceControlsProps) {
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
+            Faction
+          </Typography>
+          <ToggleButtonGroup
+            value={source.faction ?? 'friendly'}
+            exclusive
+            size="small"
+            onChange={(_e, val: SourceFaction | null) => {
+              if (val !== null) applyUpdate({ faction: val });
+            }}
+            fullWidth
+          >
+            <ToggleButton value="friendly" sx={{ color: '#00AAFF', '&.Mui-selected': { color: '#00AAFF', bgcolor: 'rgba(0,170,255,0.15)' } }}>
+              Friendly
+            </ToggleButton>
+            <ToggleButton value="neutral" sx={{ '&.Mui-selected': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
+              Neutral
+            </ToggleButton>
+            <ToggleButton value="hostile" sx={{ color: '#FF3320', '&.Mui-selected': { color: '#FF3320', bgcolor: 'rgba(255,51,32,0.15)' } }}>
+              Hostile
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+
         <FrequencyPresets
           value={source.frequency}
           onChange={(frequencyHz) => applyUpdate({ frequency: frequencyHz })}

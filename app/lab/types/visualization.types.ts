@@ -31,6 +31,18 @@ export interface VisualizationSettings {
 
   /** Global UI theme mode */
   themeMode: ThemeMode;
+
+  /** Show the live threat metrics overlay (E-field by faction, threat dominance) */
+  showThreatMetrics: boolean;
+
+  /** Show the emitter interaction panel (coupling, resonance, conflict score) */
+  showEmitterInteractions: boolean;
+
+  /** Show the E-field samples chart along the X axis */
+  showFieldChart: boolean;
+
+  /** Show drone patrol flight paths in the 3D view */
+  showFlightPaths: boolean;
 }
 
 /** Color scheme options for field visualization */
@@ -57,6 +69,10 @@ export const DEFAULT_VISUALIZATION: VisualizationSettings = {
   lod: 'high',
   solverProfile: 'balanced',
   themeMode: 'dark',
+  showThreatMetrics: true,
+  showEmitterInteractions: true,
+  showFieldChart: true,
+  showFlightPaths: true,
 };
 
 /** LOD configurations for different performance levels */

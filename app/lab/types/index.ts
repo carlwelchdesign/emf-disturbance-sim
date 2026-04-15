@@ -5,9 +5,13 @@
 // Common types
 export type { Vector3D, BoundingBox } from './common.types';
 
+// Drone types
+export type { DroneState, DroneStatus, Waypoint, CreateDroneParams } from './drone.types';
+
 // Source types
 export type {
   RFSource,
+  SourceFaction,
   CreateSourceParams,
   UpdateSourceParams,
 } from './source.types';
@@ -22,6 +26,7 @@ export {
 export type {
   FieldPoint,
   FieldGrid,
+  FactionMetrics,
   InterferencePattern,
 } from './field.types';
 
