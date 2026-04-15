@@ -45,6 +45,7 @@ const X_AXIS = new THREE.Vector3(1, 0, 0);
 const Y_AXIS = new THREE.Vector3(0, 1, 0);
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
 const VISUAL_TIME_SCALE = 1e-9;
+const DEFAULT_BANDWIDTH_HZ = 80e6;
 
 const LAYERS: CloudLayerConfig[] = [
   { id: 'core', size: 0.09, baseOpacity: 0.28, countScale: 0.9, radiusScale: 0.55, blur: 0.08, compression: 0.2, tintMix: 0.82 },
@@ -99,12 +100,15 @@ function EmitterCloud({
 
   const bands = useMemo(() => {
     const lodFactor = lod === 'high' ? 1 : lod === 'medium' ? 0.78 : 0.58;
+    const bandwidthHz = source.bandwidthHz ?? DEFAULT_BANDWIDTH_HZ;
+    const bandwidthFactor = 1 + Math.min(2.2, Math.log10(Math.max(bandwidthHz, 1e6) / 1e6 + 1) * 0.45);
+
     return LAYERS.map((layer, layerIndex) => {
       const count = Math.max(
         28,
-        Math.min(96, Math.round(fieldLineDensity * lodFactor * layer.countScale * 1.3))
+        Math.min(120, Math.round(fieldLineDensity * lodFactor * layer.countScale * 1.3 * bandwidthFactor))
       );
-      const baseRadius = 0.42 + Math.min(1.0, Math.abs(source.power) * 1.2);
+      const baseRadius = 0.42 + Math.min(1.0, Math.abs(source.power) * 1.2) + bandwidthFactor * 0.08;
       const particles: CloudParticle[] = [];
 
       for (let i = 0; i < count; i++) {
@@ -126,8 +130,8 @@ function EmitterCloud({
           radial: emissionRadius,
           phaseSeed: t * TAU + sourceIndex * 0.55 + layerIndex * 0.35,
           layer: layer.id,
-          drift: ((i % 2 === 0 ? 1 : -1) * (0.08 + layerIndex * 0.03)),
-          spin: 0.4 + (i % 7) * 0.045 + layerIndex * 0.06,
+          drift: ((i % 2 === 0 ? 1 : -1) * (0.08 + layerIndex * 0.03)) * bandwidthFactor,
+          spin: (0.4 + (i % 7) * 0.045 + layerIndex * 0.06) * (0.9 + bandwidthFactor * 0.08),
           compression: 1 - layer.compression,
         });
       }
@@ -138,7 +142,7 @@ function EmitterCloud({
         geometry: createLayerGeometry(count),
       };
     });
-  }, [fieldLineDensity, lod, source.frequency, source.id, source.power, source.position.x, source.position.y, source.position.z, sourceIndex]);
+  }, [fieldLineDensity, lod, source.bandwidthHz, source.power, source.position.x, source.position.y, source.position.z, sourceIndex]);
 
   useEffect(() => {
     return () => {
@@ -198,11 +202,13 @@ function EmitterCloud({
 
         const phasePulse = Math.sin((field.phase ?? 0) + particle.phaseSeed * 0.75);
         const frequencyPulse = Math.sin((source.frequency * time * 0.25) + particle.phaseSeed);
-        const waveEnvelope = 0.38 + 0.24 * phasePulse + 0.18 * frequencyPulse + normalized * 0.12;
+        const bandwidthHz = source.bandwidthHz ?? DEFAULT_BANDWIDTH_HZ;
+        const bandwidthFactor = 1 + Math.min(2.2, Math.log10(Math.max(bandwidthHz, 1e6) / 1e6 + 1) * 0.45);
+        const waveEnvelope = 0.38 + 0.24 * phasePulse + 0.18 * frequencyPulse + normalized * 0.12 + bandwidthFactor * 0.06;
 
-        const interferenceCompression = 1 - normalized * layer.compression;
-        const densityPulse = 0.02 + normalized * layer.blur;
-        const swirlFlow = (0.16 + normalized * 0.54 + Math.abs(phasePulse) * 0.12) * delta;
+        const interferenceCompression = 1 - normalized * layer.compression * (0.9 + bandwidthFactor * 0.12);
+        const densityPulse = 0.02 + normalized * layer.blur + bandwidthFactor * 0.01;
+        const swirlFlow = (0.16 + normalized * 0.54 + Math.abs(phasePulse) * 0.12) * delta * (0.92 + bandwidthFactor * 0.06);
         const jitter = new THREE.Vector3(
           Math.sin(time * 0.95 + particle.phaseSeed),
           Math.cos(time * 0.8 + particle.phaseSeed * 0.9),
@@ -222,7 +228,7 @@ function EmitterCloud({
         particle.tangent.lerp(swirlAxis.clone(), 0.1 + Math.abs(phasePulse) * 0.05).normalize();
 
         const radius = particle.radial + waveEnvelope * (0.04 + normalized * 0.09);
-        const cloudSpread = 0.18 + normalized * 0.3;
+        const cloudSpread = 0.18 + normalized * 0.3 + bandwidthFactor * 0.05;
         const target = new THREE.Vector3(
           source.position.x + particle.direction.x * radius * interferenceCompression + particle.tangent.x * swirlFlow + jitter.x * cloudSpread,
           source.position.y + particle.direction.y * radius * interferenceCompression + particle.tangent.y * swirlFlow + jitter.y * cloudSpread,
@@ -248,7 +254,7 @@ function EmitterCloud({
         )
           .add(eField.clone().multiplyScalar(0.006 + normalized * 0.004))
           .add(bField.clone().multiplyScalar(0.008 + normalized * 0.004))
-          .add(radial.clone().multiplyScalar(0.02 + normalized * 0.02))
+          .add(radial.clone().multiplyScalar((0.02 + normalized * 0.02) * (0.9 + bandwidthFactor * 0.08)))
           .add(swirlAxis.clone().multiplyScalar(0.02 + Math.abs(phasePulse) * 0.02));
         particle.position.add(fieldBias);
 

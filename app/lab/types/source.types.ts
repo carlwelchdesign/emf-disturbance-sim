@@ -13,6 +13,9 @@ export interface RFSource {
   
   /** RF frequency in Hz (e.g., 2.4e9 for 2.4 GHz Wi-Fi) */
   frequency: number;
+
+  /** Spectral bandwidth in Hz (broadens the emitter's effective frequency footprint) */
+  bandwidthHz?: number;
   
   /** Transmit power in watts or dBm */
   power: number;
@@ -55,6 +58,7 @@ export type UpdateSourceParams = Partial<Omit<RFSource, 'id'>>;
 export const DEFAULT_RF_SOURCE: Omit<RFSource, 'id'> = {
   position: { x: 0, y: 1.5, z: 0 }, // 1.5m height (typical device height)
   frequency: 2.4e9, // 2.4 GHz (Wi-Fi)
+  bandwidthHz: 80e6, // 80 MHz spectral width
   power: 0.1,       // 100 mW
   powerUnit: 'watts',
   phase: 0,
@@ -66,6 +70,7 @@ export const DEFAULT_RF_SOURCE: Omit<RFSource, 'id'> = {
 /** Validation limits for source parameters */
 export const SOURCE_LIMITS = {
   frequency: { min: 1e6, max: 100e9 }, // 1 MHz to 100 GHz
+  bandwidthHz: { min: 1e6, max: 5e9 },  // 1 MHz to 5 GHz
   power: {
     watts: { min: 0.001, max: 100 },   // 1 mW to 100 W
     dBm: { min: -30, max: 50 },        // -30 dBm to 50 dBm

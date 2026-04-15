@@ -59,8 +59,8 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     name: 'Metal Barrier Reflection',
     description: 'Conceptual reflective scenario with a strong return wave and source symmetry.',
     sources: [
-      source('Emitter A', { x: -3, y: 1.5, z: 0 }, { power: 0.15 }),
-      source('Reflection Cue', { x: 3, y: 1.5, z: 0 }, { power: 0.08, phase: Math.PI }),
+      source('Emitter A', { x: -3, y: 1.5, z: 0 }, { power: 0.15, bandwidthHz: 120e6 }),
+      source('Reflection Cue', { x: 3, y: 1.5, z: 0 }, { power: 0.08, phase: Math.PI, bandwidthHz: 90e6 }),
     ],
     settings: {
       animateFields: true,
@@ -73,7 +73,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     id: 'dense-wall-attenuation',
     name: 'Dense Wall Attenuation',
     description: 'A higher-loss region concept where the visible field softens across the scene.',
-    sources: [source('Emitter A', { x: -2.5, y: 1.5, z: 0 }, { power: 0.12 })],
+    sources: [source('Emitter A', { x: -2.5, y: 1.5, z: 0 }, { power: 0.12, bandwidthHz: 180e6 })],
     settings: {
       animateFields: true,
       animationSpeed: 0.85,
@@ -88,7 +88,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     description: 'Two emitters with phase offset to emphasize constructive and destructive overlap.',
     sources: [
       source('Emitter A', { x: -2.2, y: 1.5, z: 0 }, { power: 0.12, phase: 0 }),
-      source('Emitter B', { x: 2.2, y: 1.5, z: 0 }, { power: 0.12, phase: Math.PI }),
+      source('Emitter B', { x: 2.2, y: 1.5, z: 0 }, { power: 0.12, phase: Math.PI, bandwidthHz: 60e6 }),
     ],
     settings: {
       animateFields: true,
@@ -102,8 +102,9 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     name: 'Noisy Electronics Environment',
     description: 'A cluttered, slightly unstable scene with small phase and amplitude variation.',
     sources: [
-      source('Emitter A', { x: 0, y: 1.5, z: 0 }, { power: 0.1 }),
-      source('Noise Source', { x: 1.5, y: 1.2, z: -1.5 }, { power: 0.04, phase: Math.PI / 3 }),
+      source('Emitter A', { x: 0, y: 1.5, z: 0 }, { power: 0.1, bandwidthHz: 160e6 }),
+      source('Noise Source', { x: 1.5, y: 1.2, z: -1.5 }, { power: 0.04, phase: Math.PI / 3, bandwidthHz: 220e6 }),
+      source('Jitter Node', { x: -1.6, y: 1.3, z: 1.4 }, { power: 0.03, phase: Math.PI / 2, bandwidthHz: 260e6 }),
     ],
     settings: {
       animateFields: true,
@@ -118,9 +119,10 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     name: 'Atmospheric Scatter',
     description: 'Multiple low-power sources create a diffuse, slightly scattered reading.',
     sources: [
-      source('Emitter A', { x: -3, y: 1.5, z: -1.5 }, { power: 0.08 }),
-      source('Scatter B', { x: 2.2, y: 1.4, z: 1.2 }, { power: 0.05, phase: 0.7 }),
-      source('Scatter C', { x: 1, y: 1.8, z: -2.2 }, { power: 0.04, phase: 1.4 }),
+      source('Emitter A', { x: -3, y: 1.5, z: -1.5 }, { power: 0.08, bandwidthHz: 140e6 }),
+      source('Scatter B', { x: 2.2, y: 1.4, z: 1.2 }, { power: 0.05, phase: 0.7, bandwidthHz: 180e6 }),
+      source('Scatter C', { x: 1, y: 1.8, z: -2.2 }, { power: 0.04, phase: 1.4, bandwidthHz: 220e6 }),
+      source('Scatter D', { x: -0.8, y: 1.6, z: 2.1 }, { power: 0.035, phase: 2.2, bandwidthHz: 260e6 }),
     ],
     settings: {
       animateFields: true,
@@ -134,8 +136,9 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     name: 'Medium Transition',
     description: 'A simplified medium-change cue that shifts apparent propagation spacing.',
     sources: [
-      source('Emitter A', { x: -2.5, y: 1.5, z: 0 }, { power: 0.1 }),
-      source('Transition Cue', { x: 2.5, y: 1.5, z: 0 }, { power: 0.08, phase: 0.5 }),
+      source('Emitter A', { x: -2.5, y: 1.5, z: 0 }, { power: 0.1, bandwidthHz: 100e6 }),
+      source('Transition Cue', { x: 2.5, y: 1.5, z: 0 }, { power: 0.08, phase: 0.5, bandwidthHz: 140e6 }),
+      source('Transition Echo', { x: 0, y: 1.5, z: 2 }, { power: 0.04, phase: 1.2, bandwidthHz: 180e6 }),
     ],
     settings: {
       animateFields: true,
@@ -149,8 +152,11 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     name: 'Polarization Showcase',
     description: 'A comparison-oriented setup for visualizing polarization concepts in a disturbed scene.',
     sources: [
-      source('Linear Cue', { x: -2.2, y: 1.5, z: 0 }, { power: 0.1 }),
-      source('Orthogonal Cue', { x: 2.2, y: 1.5, z: 0 }, { power: 0.1, phase: Math.PI / 2 }),
+      source('Linear Cue', { x: -2.2, y: 1.5, z: 0 }, { power: 0.1, bandwidthHz: 70e6 }),
+      source('Orthogonal Cue', { x: 2.2, y: 1.5, z: 0 }, { power: 0.1, phase: Math.PI / 2, bandwidthHz: 70e6 }),
+      source('Cross Cue', { x: 0, y: 1.5, z: 2 }, { power: 0.08, phase: Math.PI / 4, bandwidthHz: 120e6 }),
+      source('Diagonal Cue', { x: 0, y: 1.5, z: -2 }, { power: 0.08, phase: (3 * Math.PI) / 4, bandwidthHz: 120e6 }),
+      source('Reference Cue', { x: 0, y: 2.3, z: 0 }, { power: 0.06, phase: Math.PI / 6, bandwidthHz: 160e6 }),
     ],
     settings: {
       animateFields: true,

@@ -1,4 +1,5 @@
 import {
+  sanitizeBandwidth,
   sanitizeFrequency,
   sanitizePower,
   sanitizePhase,
@@ -11,6 +12,11 @@ describe('validation', () => {
   it('clamps frequency to configured range', () => {
     expect(sanitizeFrequency(1)).toBeGreaterThanOrEqual(1e6);
     expect(sanitizeFrequency(1e12)).toBeLessThanOrEqual(100e9);
+  });
+
+  it('clamps bandwidth to configured range', () => {
+    expect(sanitizeBandwidth(1)).toBeGreaterThanOrEqual(1e6);
+    expect(sanitizeBandwidth(1e12)).toBeLessThanOrEqual(5e9);
   });
 
   it('clamps power based on unit', () => {
@@ -33,9 +39,11 @@ describe('validation', () => {
     const sanitized = sanitizeSource({
       label: '<script>alert(1)</script>Router',
       deviceType: '<b>Wi-Fi</b>',
+      bandwidthHz: 250e6,
     });
 
     expect(sanitized.label).toBe('alert(1)Router');
     expect(sanitized.deviceType).toBe('Wi-Fi');
+    expect(sanitized.bandwidthHz).toBe(250e6);
   });
 });

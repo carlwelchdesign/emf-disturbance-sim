@@ -19,6 +19,20 @@ export function validateFrequency(frequency: number): number {
 }
 
 /**
+ * Validate and clamp bandwidth to acceptable range.
+ */
+export function validateBandwidth(bandwidthHz: number): number {
+  if (!isFinite(bandwidthHz)) {
+    throw new Error('Bandwidth must be a finite number');
+  }
+
+  return Math.max(
+    SOURCE_LIMITS.bandwidthHz.min,
+    Math.min(SOURCE_LIMITS.bandwidthHz.max, bandwidthHz)
+  );
+}
+
+/**
  * Sanitize a frequency value for safe storage.
  * @param frequency - Raw frequency in Hz.
  * @returns Clamped frequency in Hz.
@@ -47,6 +61,15 @@ export function validatePower(power: number, unit: 'watts' | 'dBm'): number {
  */
 export function sanitizePower(power: number, unit: 'watts' | 'dBm'): number {
   return validatePower(power, unit);
+}
+
+/**
+ * Sanitize a bandwidth value for safe storage.
+ * @param bandwidthHz - Raw bandwidth in Hz.
+ * @returns Clamped bandwidth in Hz.
+ */
+export function sanitizeBandwidth(bandwidthHz: number): number {
+  return validateBandwidth(bandwidthHz);
 }
 
 /**
@@ -86,6 +109,10 @@ export function validatePosition(position: { x: number; y: number; z: number }):
 export function validateSource(source: Partial<RFSource>): void {
   if (source.frequency !== undefined) {
     validateFrequency(source.frequency);
+  }
+
+  if (source.bandwidthHz !== undefined) {
+    validateBandwidth(source.bandwidthHz);
   }
   
   if (source.power !== undefined && source.powerUnit) {
@@ -127,6 +154,10 @@ export function sanitizeSource(source: Partial<RFSource>): Partial<RFSource> {
 
   if (sanitized.frequency !== undefined) {
     sanitized.frequency = sanitizeFrequency(sanitized.frequency);
+  }
+
+  if (sanitized.bandwidthHz !== undefined) {
+    sanitized.bandwidthHz = sanitizeBandwidth(sanitized.bandwidthHz);
   }
 
   if (sanitized.power !== undefined && sanitized.powerUnit) {

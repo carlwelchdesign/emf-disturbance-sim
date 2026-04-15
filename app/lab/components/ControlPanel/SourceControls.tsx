@@ -27,6 +27,7 @@ export function SourceControls({ source }: SourceControlsProps) {
   }
 
   const frequencyGHz = source.frequency / 1e9;
+  const bandwidthMHz = (source.bandwidthHz ?? 80e6) / 1e6;
   const powerMW = source.power * 1000;
   const phaseDeg = (source.phase * 180) / Math.PI;
   const fieldStrength = formatFieldStrength(estimateSourceFieldStrength(source));
@@ -70,6 +71,37 @@ export function SourceControls({ source }: SourceControlsProps) {
                   { value: 2.4, label: '2.4' },
                   { value: 5, label: '5' },
                   { value: 28, label: '28' },
+                ]}
+              />
+            </Box>
+          </Tooltip>
+        </Box>
+
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+            <Typography variant="body2" color="text.secondary">
+              Bandwidth: {bandwidthMHz.toFixed(0)} MHz
+            </Typography>
+            <Typography variant="caption" color="primary.main">
+              Wider bands influence more nearby frequencies
+            </Typography>
+          </Box>
+          <Tooltip title="Broaden the emitter's spectral footprint so the cloud reads as a wider frequency band." describeChild>
+            <Box component="span" sx={{ display: 'block' }}>
+              <Slider
+                value={bandwidthMHz}
+                onChange={(value) => {
+                  const bandwidth = Array.isArray(value) ? value[0] : value;
+                  applyUpdate({ bandwidthHz: bandwidth * 1e6 });
+                }}
+                min={1}
+                max={5000}
+                step={1}
+                aria-label="Bandwidth"
+                marks={[
+                  { value: 10, label: '10' },
+                  { value: 100, label: '100' },
+                  { value: 1000, label: '1000' },
                 ]}
               />
             </Box>

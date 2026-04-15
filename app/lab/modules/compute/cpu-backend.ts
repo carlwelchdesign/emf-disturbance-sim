@@ -12,6 +12,10 @@ import {
 } from '../../lib/field-math';
 import { createOmnidirectionalPattern } from '../source/antenna-patterns';
 
+const DEFAULT_BANDWIDTH_HZ = 80e6;
+const MIN_BANDWIDTH_HZ = 1e6;
+const SPECTRAL_SAMPLES = 5;
+
 /**
  * CPU-based field calculator using simplified inverse-distance model
  * V1 implementation: omnidirectional sources, superposition principle
@@ -81,12 +85,11 @@ export class CPUBackend implements IComputeBackend {
         ? dbmToWatts(source.power)
         : source.power;
 
+      const bandwidthHz = source.bandwidthHz ?? DEFAULT_BANDWIDTH_HZ;
       const nearFieldRadius = calculateNearFieldRadius(source.frequency);
       const amplitude = calculateFreeSpaceFieldStrength(powerWatts, gain, r, nearFieldRadius);
-
-      const waveNumber = calculateWaveNumber(source.frequency);
-      const angularFrequency = 2 * Math.PI * source.frequency;
-      const phaseContribution = angularFrequency * time - waveNumber * r + source.phase;
+      const spectralSpreadHz = Math.max(bandwidthHz, MIN_BANDWIDTH_HZ);
+      const spectralSigmaHz = Math.max(spectralSpreadHz / 2.355, MIN_BANDWIDTH_HZ);
 
       const reference = orientation ?? (Math.abs(propagation.y) < 0.85 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 });
       let eBasis = normalize(cross(cross(propagation, reference), propagation));
@@ -101,12 +104,39 @@ export class CPUBackend implements IComputeBackend {
       const nearFieldDamping = 1 / (1 + Math.pow(nearFieldRadius / Math.max(r, 0.05), 2) * 0.25);
       const dampedAmplitude = amplitude * nearFieldDamping;
 
-      const instantaneousE = add(
-        scale(eBasis, dampedAmplitude * Math.cos(phaseContribution)),
-        scale(orthogonalBasis, dampedAmplitude * 0.35 * Math.sin(phaseContribution))
-      );
-      const instantaneousB = scale(cross(propagation, instantaneousE), 1 / 376.73);
+      let sampledE: Vector3D = { x: 0, y: 0, z: 0 };
+      let sampledB: Vector3D = { x: 0, y: 0, z: 0 };
+      let sampledWeight = 0;
+
+      for (let sampleIndex = 0; sampleIndex < SPECTRAL_SAMPLES; sampleIndex++) {
+        const sampleT = sampleIndex / (SPECTRAL_SAMPLES - 1);
+        const offsetNormalized = sampleT * 2 - 1;
+        const offsetHz = offsetNormalized * spectralSpreadHz * 0.5;
+        const sampleFrequency = Math.max(source.frequency + offsetHz, MIN_BANDWIDTH_HZ);
+        const sampleWeight = Math.exp(-0.5 * Math.pow(offsetHz / spectralSigmaHz, 2));
+        const waveNumber = calculateWaveNumber(sampleFrequency);
+        const angularFrequency = 2 * Math.PI * sampleFrequency;
+        const phaseContribution = angularFrequency * time - waveNumber * r + source.phase;
+        const spectralAmplitude = dampedAmplitude * sampleWeight;
+
+        const sampleE = add(
+          scale(eBasis, spectralAmplitude * Math.cos(phaseContribution)),
+          scale(orthogonalBasis, spectralAmplitude * 0.35 * Math.sin(phaseContribution))
+        );
+        const sampleB = scale(cross(propagation, sampleE), 1 / 376.73);
+
+        sampledE = add(sampledE, sampleE);
+        sampledB = add(sampledB, sampleB);
+        sampledWeight += sampleWeight;
+      }
+
+      const spectralNormalization = sampledWeight > 0 ? 1 / sampledWeight : 1;
+      const instantaneousE = scale(sampledE, spectralNormalization);
+      const instantaneousB = scale(sampledB, spectralNormalization);
       const sourcePoynting = cross(instantaneousE, instantaneousB);
+      const angularFrequency = 2 * Math.PI * source.frequency;
+      const waveNumber = calculateWaveNumber(source.frequency);
+      const phaseContribution = angularFrequency * time - waveNumber * r + source.phase;
 
       eReal = add(eReal, instantaneousE);
       eImag = add(eImag, scale(eBasis, dampedAmplitude * Math.sin(phaseContribution)));

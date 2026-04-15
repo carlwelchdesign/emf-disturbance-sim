@@ -17,11 +17,12 @@ describe('SourceControls', () => {
 
   it('renders parameter controls for a selected source', () => {
     render(
-      <SourceControls
+        <SourceControls
         source={{
           id: 'source-1',
           position: { x: 1, y: 2, z: 3 },
           frequency: 2.4e9,
+          bandwidthHz: 80e6,
           power: 0.1,
           powerUnit: 'watts',
           phase: 0,
@@ -35,6 +36,7 @@ describe('SourceControls', () => {
 
     expect(screen.getByText('Test Source')).toBeInTheDocument();
     expect(screen.getByLabelText('X')).toBeInTheDocument();
+    expect(screen.getByLabelText('Bandwidth')).toBeInTheDocument();
     expect(screen.getByText('Remove Source')).toBeInTheDocument();
   });
 
