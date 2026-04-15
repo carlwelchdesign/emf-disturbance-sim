@@ -3,6 +3,7 @@ import { CameraState } from './camera.types';
 import { VisualizationSettings, LODLevel } from './visualization.types';
 import { Environment } from './environment.types';
 import { MeasurementPoint, CreateMeasurementParams } from './measurement.types';
+import { ScenarioPresetId } from '../modules/scenario/presets';
 
 export interface PerformanceMetrics {
   currentFPS: number;
@@ -13,6 +14,8 @@ export interface PerformanceMetrics {
 export interface LabStoreState {
   sources: RFSource[];
   selectedSourceId: string | null;
+  activeScenarioPresetId: ScenarioPresetId | null;
+  scenarioIsDirty: boolean;
   camera: CameraState;
   settings: VisualizationSettings;
   environment: Environment;
@@ -24,6 +27,7 @@ export interface LabStoreState {
   selectSource: (id: string | null) => void;
   toggleSourceActive: (id: string) => void;
   clearAllSources: () => void;
+  applyScenarioPreset: (presetId: ScenarioPresetId) => void;
   updateCamera: (params: Partial<CameraState>) => void;
   resetCamera: () => void;
   updateSettings: (params: Partial<VisualizationSettings>) => void;

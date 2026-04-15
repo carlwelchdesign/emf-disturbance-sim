@@ -33,6 +33,9 @@ export function FieldStrengthOverlay({ measurement }: FieldStrengthOverlayProps)
         <Typography variant="caption" color="text.secondary">
           Region: {measurement.region}
         </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Divergence/curl cues are conceptual overlays, not a full field solver.
+        </Typography>
       </Stack>
     </Paper>
   );

@@ -47,6 +47,9 @@ export class SimulationEngine implements ISimulationEngine {
       min: bounds.min,
       max: bounds.max,
       size,
+      width: sizeX,
+      height: sizeY,
+      depth: sizeZ,
     };
 
     return this.backend.calculateFieldGrid(

@@ -10,6 +10,9 @@ export function EnvironmentBoundary() {
   if (!showGrid && !showBoundary) return null;
 
   const size = bounds.size;
+  const width = bounds.width ?? size;
+  const height = bounds.height ?? size;
+  const depth = bounds.depth ?? size;
   const center = [
     (bounds.min.x + bounds.max.x) / 2,
     (bounds.min.y + bounds.max.y) / 2,
@@ -18,10 +21,10 @@ export function EnvironmentBoundary() {
 
   return (
     <group>
-      {showGrid && <gridHelper args={[size, 20, '#334155', '#1e293b']} />}
+      {showGrid && <gridHelper args={[Math.max(width, depth), 20, '#334155', '#1e293b']} />}
       {showBoundary && (
         <mesh position={center}>
-          <boxGeometry args={[size, size, size]} />
+          <boxGeometry args={[width, height, depth]} />
           <meshBasicMaterial color="#64748b" wireframe transparent opacity={0.25} />
         </mesh>
       )}

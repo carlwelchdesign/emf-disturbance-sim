@@ -12,6 +12,7 @@ import { LabStoreState } from '../types/store.types';
 import { sanitizeSource } from '../lib/validation';
 import { createSourceIdGenerator } from '../lib/source-helpers';
 import { getSourceColor } from '../lib/visualization-helpers';
+import { buildScenarioSources, getScenarioPreset } from '../modules/scenario/presets';
 
 const sourceIdGenerator = createSourceIdGenerator('source');
 let measurementIdCounter = 1;
@@ -31,6 +32,8 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     },
   ],
   selectedSourceId: 'default-source',
+  activeScenarioPresetId: null,
+  scenarioIsDirty: false,
   camera: DEFAULT_CAMERA,
   settings: DEFAULT_VISUALIZATION,
   environment: DEFAULT_ENVIRONMENT,
@@ -77,6 +80,7 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     set((state) => ({
       sources: [...state.sources, sanitizedSource],
       selectedSourceId: id,
+      scenarioIsDirty: true,
     }));
 
     return id;
@@ -86,6 +90,7 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     set((state) => ({
       sources: state.sources.filter((s) => s.id !== id),
       selectedSourceId: state.selectedSourceId === id ? null : state.selectedSourceId,
+      scenarioIsDirty: true,
     }));
   },
 
@@ -94,6 +99,7 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
       sources: state.sources.map((source) =>
         source.id === id ? { ...source, ...sanitizeSource({ ...source, ...params }) } : source
       ),
+      scenarioIsDirty: true,
     }));
   },
 
@@ -106,38 +112,74 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
       sources: state.sources.map((source) =>
         source.id === id ? { ...source, active: !source.active } : source
       ),
+      scenarioIsDirty: true,
     }));
   },
 
   clearAllSources: () => {
     sourceIdGenerator.reset();
+    measurementIdCounter = 1;
     set({
       sources: [],
       selectedSourceId: null,
+      activeScenarioPresetId: null,
+      scenarioIsDirty: false,
+      measurements: [],
     });
+  },
+
+  applyScenarioPreset: (presetId) => {
+    const preset = getScenarioPreset(presetId);
+    if (!preset) {
+      return;
+    }
+
+    sourceIdGenerator.reset();
+    measurementIdCounter = 1;
+
+    const sources = buildScenarioSources(preset, () => sourceIdGenerator.nextId());
+
+    set((state) => ({
+      sources,
+      selectedSourceId: sources[0]?.id ?? null,
+      activeScenarioPresetId: preset.id,
+      scenarioIsDirty: false,
+      camera: { ...DEFAULT_CAMERA, ...(preset.camera ?? {}) },
+      environment: { ...DEFAULT_ENVIRONMENT, ...(preset.environment ?? {}) },
+      settings: {
+        ...DEFAULT_VISUALIZATION,
+        ...preset.settings,
+        themeMode: state.settings.themeMode,
+        showFPS: state.settings.showFPS,
+      },
+      measurements: [],
+    }));
   },
 
   // === Camera Actions ===
   updateCamera: (params) => {
     set((state) => ({
       camera: { ...state.camera, ...params },
+      scenarioIsDirty: true,
     }));
   },
 
   resetCamera: () => {
-    set({ camera: DEFAULT_CAMERA });
+    set({ camera: DEFAULT_CAMERA, scenarioIsDirty: true });
   },
 
   // === Settings Actions ===
   updateSettings: (params) => {
     set((state) => ({
       settings: { ...state.settings, ...params },
+      scenarioIsDirty: true,
     }));
   },
 
   setLOD: (lod) => {
     set((state) => ({
       settings: { ...state.settings, lod },
+      scenarioIsDirty: true,
     }));
   },
 
@@ -145,11 +187,18 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   updateEnvironment: (params) => {
     set((state) => ({
       environment: { ...state.environment, ...params },
+      scenarioIsDirty: true,
     }));
   },
 
   // === Measurement Actions ===
   addMeasurement: (params) => {
+    const { measurements } = get();
+    if (measurements.length >= 5) {
+      console.warn('Measurement point limit reached for V1');
+      return '';
+    }
+
     const id = `measurement-${measurementIdCounter++}`;
     const newMeasurement: MeasurementPoint = {
       id,
@@ -159,6 +208,7 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
 
     set((state) => ({
       measurements: [...state.measurements, newMeasurement],
+      scenarioIsDirty: true,
     }));
 
     return id;
@@ -167,12 +217,16 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   removeMeasurement: (id) => {
     set((state) => ({
       measurements: state.measurements.filter((m) => m.id !== id),
+      scenarioIsDirty: true,
     }));
   },
 
   clearMeasurements: () => {
     measurementIdCounter = 1;
-    set({ measurements: [] });
+    set({
+      measurements: [],
+      scenarioIsDirty: true,
+    });
   },
 
   // === Performance Actions ===

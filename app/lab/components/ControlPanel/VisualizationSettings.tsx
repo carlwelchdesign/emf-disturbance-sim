@@ -13,7 +13,8 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useLabStore } from '../../hooks/useLabStore';
-import { ColorScheme } from '../../types/visualization.types';
+import { ColorScheme, VISUALIZATION_LIMITS } from '../../types/visualization.types';
+import { Slider } from '../shared/Slider';
 
 export function VisualizationSettings() {
   const colorScheme = useLabStore((state) => state.settings.colorScheme);
@@ -81,9 +82,36 @@ export function VisualizationSettings() {
             />
           </Box>
         </Tooltip>
-        <Typography variant="caption" color="text.secondary">
-          Animation speed: {animationSpeed.toFixed(1)}x
-        </Typography>
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+            <Typography variant="body2" color="text.secondary">
+              Animation speed
+            </Typography>
+            <Typography variant="caption" color="primary.main">
+              {animationSpeed.toFixed(1)}x
+            </Typography>
+          </Box>
+          <Tooltip title="Adjust how quickly the particle field animates without changing the source frequency." describeChild>
+            <Box component="span" sx={{ display: 'block' }}>
+              <Slider
+                aria-label="Animation speed"
+                value={animationSpeed}
+                min={VISUALIZATION_LIMITS.animationSpeed.min}
+                max={VISUALIZATION_LIMITS.animationSpeed.max}
+                step={0.1}
+                marks={[
+                  { value: 0.5, label: '0.5x' },
+                  { value: 1.0, label: '1.0x' },
+                  { value: 2.0, label: '2.0x' },
+                ]}
+                onChange={(value) => {
+                  const speed = Array.isArray(value) ? value[0] : value;
+                  updateSettings({ animationSpeed: speed });
+                }}
+              />
+            </Box>
+          </Tooltip>
+        </Box>
       </Stack>
     </Box>
   );

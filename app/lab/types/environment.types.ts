@@ -34,9 +34,12 @@ export interface MaterialProperties {
 /** Default environment settings */
 export const DEFAULT_ENVIRONMENT: Environment = {
   bounds: {
-    min: { x: -10, y: -10, z: -10 },
-    max: { x: 10, y: 10, z: 10 },
-    size: 20, // 20m × 20m × 20m cube
+    min: { x: -10, y: -4, z: -10 },
+    max: { x: 10, y: 4, z: 10 },
+    size: 20, // Legacy max dimension fallback
+    width: 20,
+    height: 8,
+    depth: 20,
   },
   showBoundary: true,
 };

@@ -1,14 +1,13 @@
 'use client';
 
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { useFieldCalculator } from '../../hooks/useFieldCalculator';
 import { useLabStore } from '../../hooks/useLabStore';
-import { frequencyToDisplayColor } from '../../lib/visualization-helpers';
+import { fieldStrengthToColor, getSourceColor } from '../../lib/visualization-helpers';
 import { RFSource } from '../../types/source.types';
 import { ColorScheme, LODLevel } from '../../types/visualization.types';
-
-const TAU = Math.PI * 2;
 
 export interface FieldVisualizationProps {
   sources: RFSource[];
@@ -16,38 +15,18 @@ export interface FieldVisualizationProps {
   colorScheme: ColorScheme;
 }
 
-type ParticleConfig = {
-  id: string;
-  kind: 'packet' | 'scatter';
-  direction: 1 | -1;
-  travelSpan: number;
+type FlowParticle = {
+  position: THREE.Vector3;
+  seed: number;
   speed: number;
-  size: number;
-  haloSize: number;
-  opacityBase: number;
-  phaseOffset: number;
-  lateralPhase: number;
-  lateralAmplitude: number;
-  crossAmplitude: number;
-  wobble: number;
-  orbitRadius: number;
-  orbitSpeed: number;
-  forwardBias: number;
-  color: string;
+  phase: number;
 };
 
-type WavefrontConfig = {
-  id: string;
-  speed: number;
-  baseRadius: number;
-  expansion: number;
-  opacityBase: number;
-  phaseOffset: number;
-  color: string;
-};
+const TAU = Math.PI * 2;
 
 /**
- * Particle-and-wavefront renderer for the EMF lab.
+ * Equation-driven particle flow visualization.
+ * Tiny particles are advected by the solved E×B flow and heat-mapped by local field intensity.
  */
 export function FieldVisualization({ sources, lod, colorScheme }: FieldVisualizationProps) {
   const activeSources = sources.filter((source) => source.active);
@@ -58,350 +37,166 @@ export function FieldVisualization({ sources, lod, colorScheme }: FieldVisualiza
 
   return (
     <>
-      {activeSources.map((source) => (
-        <SourceField key={source.id} source={source} lod={lod} colorScheme={colorScheme} />
+      {activeSources.map((source, index) => (
+        <SourceFlowField
+          key={source.id}
+          source={source}
+          allSources={activeSources}
+          lod={lod}
+          colorScheme={colorScheme}
+          sourceIndex={index}
+        />
       ))}
     </>
   );
 }
 
-function SourceField({
+function SourceFlowField({
   source,
+  allSources,
   lod,
   colorScheme,
+  sourceIndex,
 }: {
   source: RFSource;
+  allSources: RFSource[];
   lod: LODLevel;
   colorScheme: ColorScheme;
+  sourceIndex: number;
 }) {
-  const particleRefs = useRef<Array<THREE.Group | null>>([]);
-  const coreRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const haloRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const wavefrontRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const coreRef = useRef<THREE.Mesh | null>(null);
-
+  const { calculateFieldAtPoint } = useFieldCalculator();
   const { animateFields, animationSpeed, fieldLineDensity } = useLabStore((state) => state.settings);
 
-  const displayColor = useMemo(() => {
-    if (source.color) {
-      return source.color;
-    }
-
-    if (colorScheme === 'monochrome') {
-      return '#cbd5e1';
-    }
-
-    return frequencyToDisplayColor(source.frequency);
-  }, [colorScheme, source.color, source.frequency]);
-
-  const intensityFactor = useMemo(() => {
-    const frequencyFactor = Math.min(
-      Math.max(Math.log10(source.frequency / 1e6) / Math.log10(100e9 / 1e6), 0),
-      1
-    );
-    const powerFactor =
-      source.powerUnit === 'dBm'
-        ? Math.min(Math.max((source.power + 30) / 80, 0), 1)
-        : Math.min(Math.max(Math.log10(Math.max(source.power, 0.001) * 1000) / 3, 0), 1);
-
-    return {
-      frequencyFactor,
-      powerFactor,
-      combined: Math.min(1, 0.45 + frequencyFactor * 0.25 + powerFactor * 0.45),
-    };
-  }, [source.frequency, source.power, source.powerUnit]);
-
-  const motion = useMemo(() => {
+  const particles = useMemo(() => {
     const lodFactor = lod === 'high' ? 1 : lod === 'medium' ? 0.76 : 0.56;
-    const packetCount = Math.max(
-      16,
-      Math.min(
-        36,
-        Math.round(
-          fieldLineDensity *
-            lodFactor *
-            (0.26 + intensityFactor.powerFactor * 0.48 + intensityFactor.frequencyFactor * 0.2)
-        )
-      )
-    );
-    const scatterCount = Math.max(8, Math.min(18, Math.round(packetCount * 0.4)));
-    const wavefrontCount = Math.max(2, Math.min(4, Math.round(2 + intensityFactor.powerFactor * 2)));
-    const baseRadius = 0.16 + intensityFactor.powerFactor * 0.1;
+    const count = Math.max(56, Math.min(180, Math.round(fieldLineDensity * lodFactor * 1.9)));
+    const seedRadius = 0.25 + Math.min(0.85, Math.abs(source.power) * 1.1);
+    const sourcePhase = source.phase + sourceIndex * 0.73;
+    const sourceStride = 0.36 + (sourceIndex % 4) * 0.08;
+    const state: FlowParticle[] = [];
 
-    const particles: ParticleConfig[] = [
-      ...Array.from({ length: packetCount }, (_, index) => {
-        const direction: 1 | -1 = index % 2 === 0 ? 1 : -1;
-        const lane = index / Math.max(packetCount - 1, 1);
-        const lateralPhase = lane * TAU * 1.4 + source.phase;
-        const travelSpan = 3.8 + intensityFactor.frequencyFactor * 2.4 + intensityFactor.powerFactor * 3.4;
-        const speed =
-          0.65 + intensityFactor.frequencyFactor * 1.1 + intensityFactor.powerFactor * 0.75 + (index % 4) * 0.08;
-        const size = 0.085 + intensityFactor.powerFactor * 0.06 + (index % 4) * 0.01;
-        const haloSize = size * 2.4;
-        const opacityBase = 0.48 + intensityFactor.powerFactor * 0.22;
-        const wobble = 1.1 + intensityFactor.frequencyFactor * 2.2;
-        const lateralAmplitude = 0.12 + intensityFactor.powerFactor * 0.24;
-        const crossAmplitude = lateralAmplitude * 0.84;
+    for (let i = 0; i < count; i++) {
+      const t = i / count;
+      const theta = t * TAU * (4.2 + (sourceIndex % 3) * 0.45) + sourcePhase;
+      const radial = seedRadius + (i % 11) * 0.05 + sourceStride * 0.1;
+      const axial = (t - 0.5) * 3.2;
+      state.push({
+        position: new THREE.Vector3(
+          source.position.x + axial,
+          source.position.y + Math.cos(theta) * radial,
+          source.position.z + Math.sin(theta) * radial
+        ),
+        seed: theta + sourceIndex * 0.33,
+        speed: 0.42 + (i % 9) * 0.04 + Math.min(0.5, source.frequency / 40e9) + sourceStride * 0.1,
+        phase: t * TAU,
+      });
+    }
 
-        return {
-          id: `${source.id}-packet-${index}`,
-          kind: 'packet' as const,
-          direction,
-          travelSpan,
-          speed,
-          size,
-          haloSize,
-          opacityBase,
-          phaseOffset: source.phase + lane * TAU,
-          lateralPhase,
-          lateralAmplitude,
-          crossAmplitude,
-          wobble,
-          orbitRadius: 0,
-          orbitSpeed: 0,
-          forwardBias: 0.42 + lane * 0.44,
-          color: displayColor,
-        };
-      }),
-      ...Array.from({ length: scatterCount }, (_, index) => {
-        const lane = index / Math.max(scatterCount - 1, 1);
-        const direction: 1 | -1 = index % 2 === 0 ? 1 : -1;
-        const orbitRadius = 0.28 + lane * 0.65 + intensityFactor.powerFactor * 0.1;
-        const orbitSpeed = 0.7 + intensityFactor.frequencyFactor * 1.15 + lane * 0.35;
-        const size = 0.05 + lane * 0.025;
-        const haloSize = size * 2.8;
-        const lateralPhase = lane * TAU * 2.2 + source.phase * 1.6;
+    return state;
+  }, [fieldLineDensity, lod, source.frequency, source.id, source.power, source.position.x, source.position.y, source.position.z, sourceIndex]);
 
-        return {
-          id: `${source.id}-scatter-${index}`,
-          kind: 'scatter' as const,
-          direction,
-          travelSpan: 1.6 + intensityFactor.powerFactor * 0.45,
-          speed: 0.55 + lane * 0.25,
-          size,
-          haloSize,
-          opacityBase: 0.24 + intensityFactor.powerFactor * 0.12,
-          phaseOffset: source.phase + lane * TAU * 0.75,
-          lateralPhase,
-          lateralAmplitude: 0.24 + intensityFactor.powerFactor * 0.06,
-          crossAmplitude: 0.2 + intensityFactor.frequencyFactor * 0.08,
-          wobble: 1.6 + intensityFactor.frequencyFactor * 1.4,
-          orbitRadius,
-          orbitSpeed,
-          forwardBias: 0.06 + lane * 0.12,
-          color: displayColor,
-        };
-      }),
-    ];
+  const sourceColor = useMemo(() => {
+    return new THREE.Color(source.color ?? getSourceColor(sourceIndex));
+  }, [source.color, sourceIndex]);
 
-    const wavefronts: WavefrontConfig[] = Array.from({ length: wavefrontCount }, (_, index) => ({
-      id: `${source.id}-wavefront-${index}`,
-      speed: 0.35 + intensityFactor.frequencyFactor * 0.55 + intensityFactor.powerFactor * 0.35 + index * 0.03,
-      baseRadius: baseRadius + index * 0.12,
-      expansion: 0.9 + intensityFactor.frequencyFactor * 0.85 + intensityFactor.powerFactor * 1.25,
-      opacityBase: 0.15 + intensityFactor.powerFactor * 0.12,
-      phaseOffset: source.phase + index * (TAU / Math.max(wavefrontCount, 1)),
-      color: displayColor,
-    }));
+  const geometry = useMemo(() => {
+    const positions = new Float32Array(particles.length * 3);
+    const colors = new Float32Array(particles.length * 3);
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    return geom;
+  }, [particles.length]);
 
-    return { particles, wavefronts };
-  }, [displayColor, fieldLineDensity, intensityFactor.frequencyFactor, intensityFactor.powerFactor, lod, source.id, source.phase]);
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
+
+  const maxStrength = useMemo(() => {
+    const wattEquivalent = allSources.reduce((sum, item) => {
+      const watts = item.powerUnit === 'dBm' ? Math.pow(10, item.power / 10) / 1000 : item.power;
+      return sum + Math.sqrt(Math.max(watts, 0.0001));
+    }, 0);
+
+    return Math.max(0.2, wattEquivalent * 1.5);
+  }, [allSources]);
 
   useFrame(({ clock }) => {
-    const t = animateFields ? clock.getElapsedTime() * animationSpeed : 0;
+    const time = animateFields ? clock.getElapsedTime() * animationSpeed : 0;
+    const delta = Math.min(0.032, clock.getDelta());
+    const positionAttr = geometry.getAttribute('position') as THREE.BufferAttribute;
+    const colorAttr = geometry.getAttribute('color') as THREE.BufferAttribute;
+    const positions = positionAttr.array as Float32Array;
+    const colors = colorAttr.array as Float32Array;
 
-    if (coreRef.current) {
-      coreRef.current.scale.setScalar(1 + intensityFactor.combined * 0.22 + Math.sin(t * 2.5 + source.phase) * 0.05);
-      const coreMaterial = coreRef.current.material as THREE.MeshStandardMaterial;
-      coreMaterial.emissiveIntensity =
-        0.6 + intensityFactor.combined * 0.8 + Math.max(0, Math.sin(t * 3 + source.phase)) * 0.2;
+    for (let i = 0; i < particles.length; i++) {
+      const particle = particles[i];
+      const field = calculateFieldAtPoint(particle.position, allSources, time);
+      const e = field.eField ?? { x: 0, y: 0, z: 0 };
+      const b = field.bField ?? { x: 0, y: 0, z: 0 };
+      const poynting = field.poynting ?? new THREE.Vector3(e.x, e.y, e.z);
+
+      const flow = new THREE.Vector3(poynting.x, poynting.y, poynting.z);
+      if (flow.lengthSq() === 0) {
+        flow.set(-(particle.position.x - source.position.x), particle.position.y - source.position.y, particle.position.z - source.position.z);
+      }
+
+      flow.normalize();
+      const eVector = new THREE.Vector3(e.x, e.y, e.z);
+      const bVector = new THREE.Vector3(b.x, b.y, b.z);
+      const curl = new THREE.Vector3().crossVectors(eVector, bVector).normalize();
+      const advection = flow.multiplyScalar((0.35 + particle.speed) * delta);
+      const twist = curl.multiplyScalar(0.12 * delta);
+      const oscillation = new THREE.Vector3(
+        Math.sin(time * 1.1 + particle.seed),
+        Math.cos(time * 0.9 + particle.phase),
+        Math.sin(time * 0.7 + particle.phase * 0.5)
+      ).multiplyScalar(0.02 + Math.min(0.08, Math.abs(field.strength) / (maxStrength * 8)));
+
+      particle.position.add(advection).add(twist).add(oscillation);
+      particle.phase += delta * (0.8 + particle.speed);
+
+      const radialDistance = particle.position.distanceTo(source.position);
+      if (radialDistance > 4.5 || Math.abs(particle.position.x - source.position.x) > 4.8) {
+        const reseedAngle = (i / particles.length) * TAU * 2 + sourceIndex * 0.7;
+        const reseedRadius = 0.35 + (i % 8) * 0.08;
+        particle.position.set(
+          source.position.x + (Math.random() - 0.5) * 1.8,
+          source.position.y + Math.cos(reseedAngle) * reseedRadius,
+          source.position.z + Math.sin(reseedAngle) * reseedRadius
+        );
+      }
+
+      const normalized = Math.min(1, Math.abs(field.strength) / maxStrength);
+      const color = new THREE.Color(fieldStrengthToColor(Math.abs(field.strength), maxStrength, colorScheme));
+      const particleTint = sourceColor.clone().lerp(color, 0.68);
+      const glow = 0.35 + normalized * 0.65;
+      const idx = i * 3;
+      positions[idx] = particle.position.x;
+      positions[idx + 1] = particle.position.y;
+      positions[idx + 2] = particle.position.z;
+      colors[idx] = particleTint.r * glow;
+      colors[idx + 1] = particleTint.g * glow;
+      colors[idx + 2] = particleTint.b * glow;
     }
 
-    motion.particles.forEach((particle, index) => {
-      const particleGroup = particleRefs.current[index];
-      if (!particleGroup) {
-        return;
-      }
-
-      if (particle.kind === 'packet') {
-        const progress = fract(t * particle.speed + particle.phaseOffset);
-        const span = (progress - 0.5) * particle.travelSpan;
-        const wobble = Math.sin(progress * TAU * particle.wobble + particle.lateralPhase) * particle.lateralAmplitude;
-        const cross =
-          Math.cos(progress * TAU * (particle.wobble * 0.72) + particle.lateralPhase) * particle.crossAmplitude;
-
-        particleGroup.position.set(
-          particle.direction * span + Math.cos(t * 0.45 + particle.lateralPhase) * 0.1,
-          wobble,
-          cross
-        );
-        particleGroup.scale.setScalar(1 + 0.08 * Math.sin(progress * TAU + source.phase));
-
-        const coreMaterial = coreRefs.current[index]?.material as THREE.MeshStandardMaterial | undefined;
-        const haloMaterial = haloRefs.current[index]?.material as THREE.MeshBasicMaterial | undefined;
-        const scale = particle.size * (0.9 + 0.45 * Math.sin(progress * TAU + source.phase));
-        const haloScale = particle.haloSize * (0.95 + 0.15 * Math.cos(progress * TAU + source.phase));
-        const coreMesh = coreRefs.current[index];
-        const haloMesh = haloRefs.current[index];
-
-        if (coreMesh) {
-          coreMesh.scale.setScalar(scale);
-        }
-
-        if (haloMesh) {
-          haloMesh.scale.setScalar(haloScale);
-        }
-
-        const material = coreMaterial;
-        const haloMaterialInstance = haloMaterial;
-        if (material) {
-          material.opacity = particle.opacityBase + (1 - Math.abs(progress - 0.5) * 2) * 0.28;
-          material.emissiveIntensity = 0.85 + particle.forwardBias * 0.9 + Math.max(0, Math.sin(t * 3 + source.phase)) * 0.25;
-        }
-
-        if (haloMaterialInstance) {
-          haloMaterialInstance.opacity = particle.opacityBase * 0.22 + (1 - Math.abs(progress - 0.5) * 2) * 0.14;
-        }
-      } else {
-        const orbit = t * particle.orbitSpeed + particle.phaseOffset;
-        const radius = particle.orbitRadius + Math.sin(orbit * 0.8) * 0.06;
-        const x = Math.sin(orbit * 0.85) * radius * 0.7 + Math.cos(orbit * 0.27 + source.phase) * 0.2;
-        const y = Math.cos(orbit) * radius * 0.9;
-        const z = Math.sin(orbit * 0.62 + source.phase) * radius * 0.85;
-
-        particleGroup.position.set(x, y, z);
-        particleGroup.scale.setScalar(1 + 0.08 * Math.sin(orbit * 1.6));
-
-        const coreMaterial = coreRefs.current[index]?.material as THREE.MeshStandardMaterial | undefined;
-        const haloMaterial = haloRefs.current[index]?.material as THREE.MeshBasicMaterial | undefined;
-        const coreMesh = coreRefs.current[index];
-        const haloMesh = haloRefs.current[index];
-
-        if (coreMesh) {
-          coreMesh.scale.setScalar(particle.size * (1.0 + 0.2 * Math.sin(orbit * 1.6)));
-        }
-
-        if (haloMesh) {
-          haloMesh.scale.setScalar(particle.haloSize * (1.0 + 0.28 * Math.sin(orbit * 1.1)));
-        }
-
-        if (coreMaterial) {
-          coreMaterial.opacity = particle.opacityBase + 0.12 * (0.5 + 0.5 * Math.sin(orbit * 2.4));
-          coreMaterial.emissiveIntensity = 0.55 + 0.35 * (0.5 + 0.5 * Math.sin(orbit * 1.2));
-        }
-
-        if (haloMaterial) {
-          haloMaterial.opacity = particle.opacityBase * 0.18 + 0.08 * (0.5 + 0.5 * Math.sin(orbit * 2.2));
-        }
-      }
-    });
-
-    motion.wavefronts.forEach((wavefront, index) => {
-      const mesh = wavefrontRefs.current[index];
-      if (!mesh) {
-        return;
-      }
-
-      const progress = fract(t * wavefront.speed + wavefront.phaseOffset);
-      const scale = wavefront.baseRadius + progress * wavefront.expansion;
-
-      mesh.scale.setScalar(scale);
-
-      const material = mesh.material as THREE.MeshBasicMaterial;
-      material.opacity = wavefront.opacityBase * (1 - progress) + 0.04;
-    });
+    positionAttr.needsUpdate = true;
+    colorAttr.needsUpdate = true;
   });
 
   return (
-    <group position={[source.position.x, source.position.y, source.position.z]}>
-      <mesh ref={coreRef} position={[0, 0, 0]}>
-        <sphereGeometry args={[0.26, 24, 24]} />
-        <meshStandardMaterial
-          color={displayColor}
-          emissive={displayColor}
-          emissiveIntensity={0.75}
-          roughness={0.3}
-          metalness={0.05}
-        />
-      </mesh>
-
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[0.36, 24, 24]} />
-        <meshBasicMaterial
-          color={displayColor}
-          transparent
-          opacity={0.08}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {motion.wavefronts.map((wavefront, index) => (
-        <mesh
-          key={wavefront.id}
-          ref={(node) => {
-            wavefrontRefs.current[index] = node;
-          }}
-          rotation={[0, Math.PI / 2, 0]}
-          position={[0, 0, 0]}
-        >
-          <ringGeometry args={[0.92, 1.08, 48]} />
-          <meshBasicMaterial
-            color={wavefront.color}
-            transparent
-            opacity={wavefront.opacityBase}
-            side={THREE.DoubleSide}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
-      ))}
-
-      {motion.particles.map((particle, index) => (
-        <group
-          key={particle.id}
-          ref={(node) => {
-            particleRefs.current[index] = node;
-          }}
-        >
-          <mesh
-            ref={(node) => {
-              coreRefs.current[index] = node;
-            }}
-          >
-            <icosahedronGeometry args={[1, 1]} />
-            <meshStandardMaterial
-              color={particle.color}
-              emissive={particle.color}
-              emissiveIntensity={0.9}
-              transparent
-              opacity={particle.opacityBase}
-              roughness={0.25}
-              metalness={0.08}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-            />
-          </mesh>
-          <mesh
-            ref={(node) => {
-              haloRefs.current[index] = node;
-            }}
-          >
-            <sphereGeometry args={[1, 16, 16]} />
-            <meshBasicMaterial
-              color={particle.color}
-              transparent
-              opacity={particle.opacityBase * 0.22}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-            />
-          </mesh>
-        </group>
-      ))}
-    </group>
+    <points geometry={geometry}>
+      <pointsMaterial
+        size={0.07}
+        sizeAttenuation
+        transparent
+        opacity={0.95}
+        vertexColors
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
   );
-}
-
-function fract(value: number): number {
-  return value - Math.floor(value);
 }

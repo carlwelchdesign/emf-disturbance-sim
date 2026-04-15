@@ -6,6 +6,8 @@ import { useLabStore } from '../../hooks/useLabStore';
 export function MeasurementTools() {
   const addMeasurement = useLabStore((state) => state.addMeasurement);
   const sources = useLabStore((state) => state.sources);
+  const measurements = useLabStore((state) => state.measurements);
+  const atLimit = measurements.length >= 5;
 
   const handleAdd = () => {
     const source = sources[0];
@@ -27,11 +29,14 @@ export function MeasurementTools() {
       </Typography>
       <Tooltip title="Capture a measurement at the first source position." describeChild>
         <span>
-          <Button variant="outlined" fullWidth onClick={handleAdd} disabled={sources.length === 0}>
-            Add Measurement Point
+          <Button variant="outlined" fullWidth onClick={handleAdd} disabled={sources.length === 0 || atLimit}>
+            Add Measurement Point {atLimit ? '(5/5)' : ''}
           </Button>
         </span>
       </Tooltip>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+        V1 supports up to 5 active measurement points.
+      </Typography>
     </Box>
   );
 }

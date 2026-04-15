@@ -80,5 +80,5 @@ export const LOD_CONFIGS: Record<LODLevel, LODConfig> = {
 /** Validation limits for visualization settings */
 export const VISUALIZATION_LIMITS = {
   fieldLineDensity: { min: 10, max: 100 },
-  animationSpeed: { min: 0.1, max: 5.0 },
+  animationSpeed: { min: 0.5, max: 2.0 },
 } as const;

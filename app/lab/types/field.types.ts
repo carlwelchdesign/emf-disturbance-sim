@@ -12,6 +12,18 @@ export interface FieldPoint {
   
   /** Calculated phase at this point (radians) */
   phase: number;
+
+  /** Instantaneous electric field vector at this point */
+  eField?: Vector3D;
+
+  /** Instantaneous magnetic field vector at this point */
+  bField?: Vector3D;
+
+  /** Energy-flow direction derived from E x B */
+  poynting?: Vector3D;
+
+  /** Local propagation direction used by the solver */
+  propagation?: Vector3D;
   
   /** Timestamp when this field value was calculated (for animation) */
   timestamp?: number;

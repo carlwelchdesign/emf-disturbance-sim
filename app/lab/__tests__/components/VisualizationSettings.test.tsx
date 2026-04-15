@@ -42,4 +42,10 @@ describe('VisualizationSettings', () => {
 
     expect(updateSettings).toHaveBeenCalledWith({ animateFields: false });
   });
+
+  it('renders the animation speed slider', () => {
+    render(<VisualizationSettings />);
+
+    expect(screen.getByRole('slider', { name: /animation speed/i })).toBeInTheDocument();
+  });
 });

@@ -15,6 +15,10 @@
 
 - Q: Should divergence/curl be explicitly shown in V1 as a conceptual overlay/animation, or kept for V2+? → A: V1 conceptual overlay (Recommended)
 
+## Requirement Identification
+
+- Requirements and success criteria are tracked using stable `FR-###` and `SC-###` identifiers so plan items, tasks, and checklists can map back to a single source requirement.
+
 ## Product Goals
 
 This feature delivers a **prediction, analysis, and communication platform** for understanding EMF/RF electromagnetic exposure. The platform is structured as a three-layer model:
@@ -45,6 +49,44 @@ The V1 focus is on establishing the visualization foundation with honest, commun
 - Interactive 3D camera controls (orbit, pan, zoom)
 - Communication-oriented UX: honest language about model limitations, accuracy caveats, "estimated" vs "measured" labels
 - Performance: CPU-based calculation for 3-5 sources (GPU acceleration deferred to V2)
+
+**V1 Visualization Defaults**
+
+- Default visualization mode: animated propagation
+- Static field view is available as an explicit toggle for comparison
+- The toggle appears in the Visualization Settings area as a labeled, keyboard-accessible control named "Animation Mode"
+- Animation speed is user-adjustable in a bounded 0.5x-2.0x range centered on a default 1.0x baseline
+- Animation speed scales visual playback only; it does not change source frequency, amplitude, or field magnitude
+- Particle language uses small emissive dots with restrained halos and local drift; at the default camera distance, the particles should read as dots rather than streaks
+- Core particle radius should remain within a small dot envelope (roughly 0.05-0.08 scene units), halo radius should remain within 2x-3x the core radius, and emissive intensity should stay within a restrained 0.6-1.5 visual scale
+- Source ownership must remain visually legible in multi-source scenes through color, glow, or localized cadence changes
+- Particle density is an independent visual channel from brightness and must not be the only way source strength is represented
+- Higher source frequency should increase visible emission cadence and tighten spacing in a readable way; the relationship may be simplified but must remain monotonic
+
+**V1 Environment Behavior**
+
+- Room/space boundaries are visible in V1 and act as spatial context only
+- Environment boundaries do not change field calculations in V1; attenuation/reflection behavior remains a V2 extension
+- Environment dimensions are configurable within documented minimum and maximum bounds (default 20m x 20m x 8m, valid range 5m to 100m per axis)
+
+**V1 Analysis Behavior**
+
+- Divergence/curl cues are shown as a conceptual overlay with its own explanatory label and accuracy disclaimer
+- Measurement points are capped at 5 simultaneously active points so analysis overlays remain readable
+- Measurement readouts use rounded values (one decimal place by default) and unit labels rather than overly precise raw values
+
+**V1 Scenario Presets**
+
+- Clean Vacuum Propagation: baseline reference with one source and no disturbances
+- Metal Barrier Reflection: teaches the difference between reflection and attenuation; conceptual in V1 unless a simple reflective cue is used
+- Dense Wall Attenuation: lossy region that reduces amplitude conceptually
+- Dual Source Interference: two emitters with phase controls for constructive/destructive behavior
+- Noisy Electronics Environment: jitter and signal corruption emphasis
+- Atmospheric Scatter: coherence reduction and diffusion emphasis
+- Medium Transition: simplified medium change with apparent spacing/speed changes
+- Polarization Showcase: advanced educational comparison preset
+
+Applying a preset replaces the current scene by default, with a confirmation prompt when the current scene has been modified since the preset was loaded. Modified presets remain editable in-session and should be distinguishable from the original preset name.
 
 **Out of Scope for V1**:
 - GPU-accelerated compute (CUDA, WebGPU, or compute shaders)
@@ -80,7 +122,7 @@ The V1 focus is on establishing the visualization foundation with honest, commun
 **Control Panel**: A collapsible side panel or overlay provides:
 - Source management (add/remove/select sources)
 - Parameter sliders for selected source (frequency, amplitude, phase, position)
-- Global visualization settings (particle density, color mapping, animation speed)
+- Global visualization settings (particle density, color mapping, animation speed, static/animated propagation toggle)
 - Performance/quality toggles
 
 **Direct Manipulation**: Users can interact with sources directly in the 3D view:
@@ -95,6 +137,7 @@ The V1 focus is on establishing the visualization foundation with honest, commun
 - **Analysis-Oriented**: Provide overlays showing field strength values, near/far labels, safety thresholds, and measurement points
 - **Progressive Disclosure**: Start with simple defaults; reveal advanced controls as users explore
 - **Consistent Color Language**: Use intuitive color mapping for field strength with legend showing values and units
+- **Bounded Motion Language**: Animation cadence, speed, and particle density must be described with enough specificity to distinguish them from one another
 
 ### First-Time User Experience
 
@@ -245,7 +288,7 @@ A user wants to remove sources or clear all sources to start a new experiment.
 
 - **FR-017**: System MUST support a 3D environment boundary (room/space) for context
 - **FR-018**: Environment MUST have configurable dimensions (width, length, height in meters)
-- **FR-019**: System SHOULD display basic environment geometry (walls, floor, ceiling) for spatial reference (V1)
+- **FR-019**: System MUST display basic environment geometry (walls, floor, ceiling) for spatial reference (V1)
 - **FR-020**: System SHOULD support placeholder material properties (e.g., "concrete wall" vs "open air") with simplified attenuation (V2)
 - **FR-021**: Advanced multi-material modeling and reflection/diffraction deferred to V2
 
@@ -259,9 +302,9 @@ A user wants to remove sources or clear all sources to start a new experiment.
 
 ### Functional Requirements - Disturbance System
 
-- **FR-041**: System SHOULD support time-based animation showing wave propagation from sources
-- **FR-042**: System SHOULD allow toggling between static field view and animated propagation view
-- **FR-043**: Animation speed SHOULD be adjustable for educational clarity
+- **FR-041**: System MUST support time-based animation showing wave propagation from sources
+- **FR-042**: System MUST allow toggling between static field view and animated propagation view
+- **FR-043**: Animation speed MUST be adjustable for educational clarity
 
 ### Functional Requirements - Interaction & Camera
 

@@ -9,6 +9,7 @@ import { SourceList } from './SourceList';
 import { EnvironmentControls } from './EnvironmentControls';
 import { VisualizationSettings } from './VisualizationSettings';
 import { MeasurementTools } from './MeasurementTools';
+import { ScenarioPresets } from './ScenarioPresets';
 import { MeasurementList } from '../Analysis/MeasurementList';
 import { FPSMonitor } from '../shared/FPSMonitor';
 import { useLabStore } from '../../hooks/useLabStore';
@@ -115,6 +116,10 @@ export function ControlPanel() {
             </Tooltip>
           </Box>
         </Box>
+
+        <Divider />
+
+        <ScenarioPresets />
 
         <Divider />
 

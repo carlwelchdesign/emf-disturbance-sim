@@ -42,7 +42,7 @@
 - [ ] [P] T006 Expand the Zustand store in `app/lab/hooks/useLabStore.ts` to manage source selection, disturbance regions, scenario application, measurement points, animation mode/speed, and performance state
 - [ ] T007 Add validation and clamping helpers in `app/lab/lib/validation.ts` and `app/lab/lib/source-helpers.ts` for source limits, parameter bounds, disturbance regions, and preset application
 - [ ] [P] T008 Add shared rendering helpers in `app/lab/lib/visualization-helpers.ts` and `app/lab/lib/camera-helpers.ts` for color mapping, cadence labels, near/far labels, and intensity formatting
-- [ ] T009 Add scenario preset catalog and application helpers in `app/lab/modules/scenario/presets.ts` and `app/lab/modules/simulation/simulation-engine.ts` so V1 can switch between curated examples and free-play
+- [x] T009 Add scenario preset catalog and application helpers in `app/lab/modules/scenario/presets.ts` and `app/lab/modules/simulation/simulation-engine.ts` so V1 can switch between curated examples and free-play
 - [ ] T010 Add environment boundary rendering, dimension controls, and static/animated propagation toggle wiring in `app/lab/components/Canvas3D/EnvironmentBoundary.tsx`, `app/lab/components/ControlPanel/EnvironmentControls.tsx`, `app/lab/components/ControlPanel/VisualizationSettings.tsx`, and `app/lab/hooks/useLabStore.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin

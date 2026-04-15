@@ -13,5 +13,8 @@ export interface Vector3D {
 export interface BoundingBox {
   min: Vector3D;
   max: Vector3D;
-  size: number; // Cube side length
+  size: number; // Legacy max-dimension fallback
+  width?: number;
+  height?: number;
+  depth?: number;
 }

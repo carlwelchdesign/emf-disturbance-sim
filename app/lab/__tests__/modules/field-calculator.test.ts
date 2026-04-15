@@ -49,4 +49,14 @@ describe('FieldCalculator - Multi Source', () => {
 
     expect(shifted).not.toBeCloseTo(inPhase, 3);
   });
+
+  it('returns electric, magnetic, and poynting vectors from the solver', () => {
+    const result = backend.calculateFieldAtPoint(observationPoint, [baseSource], 0);
+
+    expect(result.eField).toBeDefined();
+    expect(result.bField).toBeDefined();
+    expect(result.poynting).toBeDefined();
+    expect(Math.hypot(result.eField?.x ?? 0, result.eField?.y ?? 0, result.eField?.z ?? 0)).toBeGreaterThan(0);
+    expect(Math.hypot(result.bField?.x ?? 0, result.bField?.y ?? 0, result.bField?.z ?? 0)).toBeGreaterThan(0);
+  });
 });

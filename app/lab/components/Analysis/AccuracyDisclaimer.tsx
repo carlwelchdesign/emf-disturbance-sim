@@ -33,6 +33,10 @@ export function AccuracyDisclaimer() {
           This visualization uses a simplified RF propagation model for educational purposes.
           Field strength values are approximate and should not be used for compliance or safety assessments.
         </Typography>
+        <Typography variant="caption" sx={{ display: 'block', mt: 0.75 }}>
+          Small particles flow along circular magnetic streamlines and heat-map by local field strength.
+          Divergence and curl cues are shown as conceptual flow guidance only, not as a full Maxwell solver.
+        </Typography>
       </Alert>
     </Paper>
   );

@@ -2,7 +2,7 @@ import { IComputeBackend } from './compute-backend.interface';
 import { RFSource } from '../../types/source.types';
 import { FieldPoint, FieldGrid } from '../../types/field.types';
 import { Vector3D } from '../../types/common.types';
-import { distance } from '../../lib/math-utils';
+import { distance, normalize, cross, add, scale, subtract, magnitude } from '../../lib/math-utils';
 import { calculateWaveNumber } from '../../lib/field-math';
 import { createOmnidirectionalPattern } from '../source/antenna-patterns';
 
@@ -36,8 +36,11 @@ export class CPUBackend implements IComputeBackend {
       };
     }
 
-    let real = 0;
-    let imag = 0;
+    let eReal: Vector3D = { x: 0, y: 0, z: 0 };
+    let eImag: Vector3D = { x: 0, y: 0, z: 0 };
+    let bReal: Vector3D = { x: 0, y: 0, z: 0 };
+    let bImag: Vector3D = { x: 0, y: 0, z: 0 };
+    let propagationSum: Vector3D = { x: 0, y: 0, z: 0 };
 
     // Filter to active sources only
     const activeSources = sources.filter((s) => s.active);
@@ -56,8 +59,9 @@ export class CPUBackend implements IComputeBackend {
         continue;
       }
 
-      // Get antenna gain in direction of observation point
-      const gain = source.gain || this.omnidirectionalPattern.getGain({ x: 0, y: 0, z: 0 });
+      const displacement = subtract(point, source.position);
+      const propagation = normalize(displacement);
+      const gain = source.gain || this.omnidirectionalPattern.getGain(propagation);
 
       // Convert power to watts if needed
       const powerWatts = source.powerUnit === 'dBm'
@@ -70,19 +74,47 @@ export class CPUBackend implements IComputeBackend {
       const amplitude = Math.sqrt(powerWatts * gain) / r;
 
       const waveNumber = calculateWaveNumber(source.frequency);
-      const phaseContribution = source.phase + waveNumber * r;
+      const angularFrequency = 2 * Math.PI * source.frequency;
+      const phaseContribution = source.phase + waveNumber * r - angularFrequency * time;
 
-      real += amplitude * Math.cos(phaseContribution);
-      imag += amplitude * Math.sin(phaseContribution);
+      const reference = Math.abs(propagation.y) < 0.85 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 };
+      let eBasis = normalize(cross(cross(propagation, reference), propagation));
+      if (magnitude(eBasis) === 0) {
+        eBasis = normalize(cross(cross(propagation, { x: 0, y: 0, z: 1 }), propagation));
+      }
+      if (magnitude(eBasis) === 0) {
+        eBasis = { x: 0, y: 1, z: 0 };
+      }
+      const orthogonalBasis = normalize(cross(propagation, eBasis));
+
+      const instantaneousE = add(
+        scale(eBasis, amplitude * Math.cos(phaseContribution)),
+        scale(orthogonalBasis, amplitude * 0.45 * Math.sin(phaseContribution))
+      );
+      const instantaneousB = scale(cross(propagation, instantaneousE), 1 / 376.73);
+      const sourcePoynting = cross(instantaneousE, instantaneousB);
+
+      eReal = add(eReal, instantaneousE);
+      eImag = add(eImag, scale(instantaneousE, Math.sin(phaseContribution)));
+      bReal = add(bReal, instantaneousB);
+      bImag = add(bImag, scale(instantaneousB, Math.sin(phaseContribution)));
+      propagationSum = add(propagationSum, sourcePoynting);
     }
 
-    const totalStrength = Math.sqrt(real * real + imag * imag);
-    const totalPhase = Math.atan2(imag, real);
+    const totalE = add(eReal, scale(eImag, 0.15));
+    const totalB = add(bReal, scale(bImag, 0.15));
+    const totalStrength = magnitude(totalE);
+    const totalPhase = Math.atan2(totalE.y, totalE.x);
+    const poynting = magnitude(propagationSum) > 0 ? normalize(propagationSum) : normalize(cross(totalE, totalB));
 
     return {
       position: point,
-      strength: totalStrength * Math.sign(real || 1),
+      strength: totalStrength,
       phase: totalPhase,
+      eField: totalE,
+      bField: totalB,
+      poynting: magnitude(poynting) > 0 ? poynting : { x: 1, y: 0, z: 0 },
+      propagation: magnitude(propagationSum) > 0 ? normalize(propagationSum) : undefined,
       timestamp: time,
     };
   }

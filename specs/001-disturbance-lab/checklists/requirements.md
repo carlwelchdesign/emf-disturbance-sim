@@ -118,58 +118,58 @@ All checklist items have been verified:
 
 ### Particle Motion Visual Language
 
-- [ ] CHK020 Is the desired particle visual aesthetic ("Jarvis-like": small emissive dots, local glow, slow readable motion) defined with measurable visual properties in the spec rather than only described in the implementation plan? [Clarity, Spec §FR-002; Plan §Summary; Gap]
-- [ ] CHK021 Are particle size, halo radius, and emissive intensity requirements explicitly specified to distinguish the required "small dot + glow" language from ray-line or volumetric rendering alternatives? [Completeness, Spec §FR-002; Gap]
-- [ ] CHK022 Are "source ownership" visual cues — indicating which particles belong to which source in a multi-source scene — defined as a requirement rather than left as an implementation decision? [Completeness, Spec §FR-007, FR-015; Gap]
-- [ ] CHK023 Are particle density requirements specified independently from color-mapped field strength, so density and brightness can be read as distinct visual channels? [Clarity, Spec §FR-002, FR-006, FR-007; Ambiguity]
+- [x] CHK020 Is the desired particle visual aesthetic ("Jarvis-like": small emissive dots, local glow, slow readable motion) defined with measurable visual properties in the spec rather than only described in the implementation plan? [Clarity, Spec §FR-002; Plan §Summary; Gap]
+- [x] CHK021 Are particle size, halo radius, and emissive intensity requirements explicitly specified to distinguish the required "small dot + glow" language from ray-line or volumetric rendering alternatives? [Completeness, Spec §FR-002; Gap]
+- [x] CHK022 Are "source ownership" visual cues — indicating which particles belong to which source in a multi-source scene — defined as a requirement rather than left as an implementation decision? [Completeness, Spec §FR-007, FR-015; Gap]
+- [x] CHK023 Are particle density requirements specified independently from color-mapped field strength, so density and brightness can be read as distinct visual channels? [Clarity, Spec §FR-002, FR-006, FR-007; Ambiguity]
 
 ### Particle Cadence
 
-- [ ] CHK024 Is "slower motion cadence" bounded with specific timing parameters, speed range, or frame-rate-relative thresholds so it can be objectively measured and implemented? [Clarity, Spec §FR-041, FR-043; Ambiguity]
-- [ ] CHK025 Is the mapping between source frequency parameter and particle cadence (visual emission rate or spacing) explicitly specified, including whether the relationship is linear, logarithmic, or qualitative? [Clarity, Spec §FR-041, FR-011; Gap]
+- [x] CHK024 Is "slower motion cadence" bounded with specific timing parameters, speed range, or frame-rate-relative thresholds so it can be objectively measured and implemented? [Clarity, Spec §FR-041, FR-043; Ambiguity]
+- [x] CHK025 Is the mapping between source frequency parameter and particle cadence (visual emission rate or spacing) explicitly specified, including whether the relationship is linear, logarithmic, or qualitative? [Clarity, Spec §FR-041, FR-011; Gap]
 
 ### Static / Animated Propagation Toggle
 
-- [ ] CHK026 Is the static-versus-animated propagation toggle prioritized as MUST (required) or SHOULD (optional) in the spec, and is that priority level consistent with its inclusion as a V1 Core Capability in the scope section? [Consistency, Spec §FR-041–FR-042 and V1 Scope]
-- [ ] CHK027 Are the visual states of static and animated field views independently described so each mode can be implemented and tested without referencing the other? [Completeness, Spec §FR-042; Gap]
-- [ ] CHK028 Is the default mode (static or animated) at initial page load explicitly stated in the requirements? [Completeness, Spec §FR-042; Gap]
-- [ ] CHK029 Are requirements for the toggle control's UI placement, labeling, and accessibility defined, separate from the VisualizationSettings component that implements it? [Completeness, Spec §FR-042, FR-058–FR-064; Gap]
+- [x] CHK026 Is the static-versus-animated propagation toggle prioritized as MUST (required) or SHOULD (optional) in the spec, and is that priority level consistent with its inclusion as a V1 Core Capability in the scope section? [Consistency, Spec §FR-041–FR-042 and V1 Scope]
+- [x] CHK027 Are the visual states of static and animated field views independently described so each mode can be implemented and tested without referencing the other? [Completeness, Spec §FR-042; Gap]
+- [x] CHK028 Is the default mode (static or animated) at initial page load explicitly stated in the requirements? [Completeness, Spec §FR-042; Gap]
+- [x] CHK029 Are requirements for the toggle control's UI placement, labeling, and accessibility defined, separate from the VisualizationSettings component that implements it? [Completeness, Spec §FR-042, FR-058–FR-064; Gap]
 
 ### Animation Speed Control
 
-- [ ] CHK030 Is animation speed defined with a numeric range, default value, and unit or normalized scale so it can be independently tested? [Clarity, Spec §FR-043; Ambiguity]
-- [ ] CHK031 Are the downstream effects of animation speed changes on particle cadence, wavefront spacing, and interference pattern readability described in the requirements? [Completeness, Spec §FR-043; Gap]
-- [ ] CHK032 Is the relationship between animation speed and source frequency (i.e., whether they are independent controls or coupled) explicitly specified? [Clarity, Spec §FR-011, FR-043; Ambiguity]
+- [x] CHK030 Is animation speed defined with a numeric range, default value, and unit or normalized scale so it can be independently tested? [Clarity, Spec §FR-043; Ambiguity]
+- [x] CHK031 Are the downstream effects of animation speed changes on particle cadence, wavefront spacing, and interference pattern readability described in the requirements? [Completeness, Spec §FR-043; Gap]
+- [x] CHK032 Is the relationship between animation speed and source frequency (i.e., whether they are independent controls or coupled) explicitly specified? [Clarity, Spec §FR-011, FR-043; Ambiguity]
 
 ### Environment Boundaries
 
-- [ ] CHK033 Is it explicitly specified whether environment boundaries are cosmetic/visual-only or actively affect field calculations (attenuation, reflection) in V1? [Clarity, Spec §FR-017–FR-019, FR-053; Ambiguity]
-- [ ] CHK034 Is the SHOULD modality of FR-019 (display basic environment geometry) aligned with the V1 Scope section which lists "basic 3D environment (room/space boundaries)" as a Core Capability? [Consistency, Spec §FR-019 and V1 Scope]
-- [ ] CHK035 Are minimum and maximum environment dimensions defined with numeric bounds in the requirements, not just described as "configurable"? [Completeness, Spec §FR-018; Gap]
-- [ ] CHK036 Is fallback behavior specified for when a source is repositioned outside the configured environment boundary? [Edge Case, Spec §FR-014, FR-017; Gap]
+- [x] CHK033 Is it explicitly specified whether environment boundaries are cosmetic/visual-only or actively affect field calculations (attenuation, reflection) in V1? [Clarity, Spec §FR-017–FR-019, FR-053; Ambiguity]
+- [x] CHK034 Is the SHOULD modality of FR-019 (display basic environment geometry) aligned with the V1 Scope section which lists "basic 3D environment (room/space boundaries)" as a Core Capability? [Consistency, Spec §FR-019 and V1 Scope]
+- [x] CHK035 Are minimum and maximum environment dimensions defined with numeric bounds in the requirements, not just described as "configurable"? [Completeness, Spec §FR-018; Gap]
+- [x] CHK036 Is fallback behavior specified for when a source is repositioned outside the configured environment boundary? [Edge Case, Spec §FR-014, FR-017; Gap]
 
 ### Divergence / Curl Conceptual Overlay
 
-- [ ] CHK037 Are the visual representation requirements for divergence/curl flow cues (e.g., arrow glyphs, density gradients, streamlines, or color shift) specified to distinguish them from the main particle field visualization? [Clarity, Spec §V1 Scope, FR-041–FR-043; Gap]
-- [ ] CHK038 Are toggle or display-condition requirements for the divergence/curl overlay defined — i.e., is it always visible, user-toggled, or tied to a specific parameter threshold? [Completeness, Spec §V1 Scope; Gap]
-- [ ] CHK039 Is a specific accuracy disclaimer requirement defined for the divergence/curl overlay, distinct from the general FR-036 disclaimer, that communicates it is a conceptual aid rather than a physically derived field? [Completeness, Spec §FR-036, FR-038; Gap]
-- [ ] CHK040 Are the performance implications of rendering the divergence/curl overlay concurrently with particle motion addressed in the non-functional requirements or performance targets? [Non-Functional, Spec §FR-065–FR-068; Gap]
+- [x] CHK037 Are the visual representation requirements for divergence/curl flow cues (e.g., arrow glyphs, density gradients, streamlines, or color shift) specified to distinguish them from the main particle field visualization? [Clarity, Spec §V1 Scope, FR-041–FR-043; Gap]
+- [x] CHK038 Are toggle or display-condition requirements for the divergence/curl overlay defined — i.e., is it always visible, user-toggled, or tied to a specific parameter threshold? [Completeness, Spec §V1 Scope; Gap]
+- [x] CHK039 Is a specific accuracy disclaimer requirement defined for the divergence/curl overlay, distinct from the general FR-036 disclaimer, that communicates it is a conceptual aid rather than a physically derived field? [Completeness, Spec §FR-036, FR-038; Gap]
+- [x] CHK040 Are the performance implications of rendering the divergence/curl overlay concurrently with particle motion addressed in the non-functional requirements or performance targets? [Non-Functional, Spec §FR-065–FR-068; Gap]
 
 ### Measurement Overlays
 
-- [ ] CHK041 Is the maximum number of simultaneously active measurement points defined in the requirements, including any performance-based cap? [Completeness, Spec §FR-030; Gap]
-- [ ] CHK042 Are measurement point placement interaction mechanics specified (e.g., click-to-place in 3D canvas, drag-to-reposition, click-to-remove), distinct from how source repositioning works? [Clarity, Spec §FR-030, FR-014; Gap]
-- [ ] CHK043 Are display format requirements for measurement readouts — including decimal precision, unit labeling, and label positioning in 3D space — explicitly defined to prevent implementation-driven interpretation? [Clarity, Spec §FR-031, FR-040; Ambiguity]
-- [ ] CHK044 Are performance requirements for measurement point recalculation specifically defined (latency target, throttle/debounce policy), separate from the general FR-003 <100 ms update requirement? [Non-Functional, Spec §FR-003, FR-068; Gap]
+- [x] CHK041 Is the maximum number of simultaneously active measurement points defined in the requirements, including any performance-based cap? [Completeness, Spec §FR-030; Gap]
+- [x] CHK042 Are measurement point placement interaction mechanics specified (e.g., click-to-place in 3D canvas, drag-to-reposition, click-to-remove), distinct from how source repositioning works? [Clarity, Spec §FR-030, FR-014; Gap]
+- [x] CHK043 Are display format requirements for measurement readouts — including decimal precision, unit labeling, and label positioning in 3D space — explicitly defined to prevent implementation-driven interpretation? [Clarity, Spec §FR-031, FR-040; Ambiguity]
+- [x] CHK044 Are performance requirements for measurement point recalculation specifically defined (latency target, throttle/debounce policy), separate from the general FR-003 <100 ms update requirement? [Non-Functional, Spec §FR-003, FR-068; Gap]
 
 ### Scenario & Preset Coverage
 
-- [ ] CHK045 Are the curated scenario presets enumerated in the spec with their initial source counts, positions, frequencies, and educational objectives, rather than being deferred entirely to implementation? [Completeness, Spec §Architecture Scenario Module, Tasks §T009; Gap]
-- [ ] CHK046 Are requirements for switching between presets defined — specifically whether applying a preset replaces the current scene, appends to it, or prompts the user before overwriting? [Clarity, Spec §FR-050–FR-057; Gap]
-- [ ] CHK047 Is the transition behavior when loading a scenario preset (immediate state replacement vs. animated transition vs. confirmation dialog) specified in the requirements? [Completeness, Spec §FR-003, FR-057; Gap]
-- [ ] CHK048 Is the relationship between free-play mode and preset mode defined — i.e., can a user modify a loaded preset, and if so, how is that differentiated from a fresh free-play session? [Clarity, Spec §Architecture Scenario Module; Gap]
+- [x] CHK045 Are the curated scenario presets enumerated in the spec with their initial source counts, positions, frequencies, and educational objectives, rather than being deferred entirely to implementation? [Completeness, Spec §Architecture Scenario Module, Tasks §T009; Gap]
+- [x] CHK046 Are requirements for switching between presets defined — specifically whether applying a preset replaces the current scene, appends to it, or prompts the user before overwriting? [Clarity, Spec §FR-050–FR-057; Gap]
+- [x] CHK047 Is the transition behavior when loading a scenario preset (immediate state replacement vs. animated transition vs. confirmation dialog) specified in the requirements? [Completeness, Spec §FR-003, FR-057; Gap]
+- [x] CHK048 Is the relationship between free-play mode and preset mode defined — i.e., can a user modify a loaded preset, and if so, how is that differentiated from a fresh free-play session? [Clarity, Spec §Architecture Scenario Module; Gap]
 
 ### Cross-Cutting: Consistency & Traceability
 
-- [ ] CHK049 Are the SHOULD-priority requirements in the Disturbance System (FR-041–FR-043) consistently reflected in the task list and plan as required V1 deliverables, or treated as optional enhancements? [Consistency, Spec §FR-041–FR-043; Plan §Summary; Tasks §T006, T010]
-- [ ] CHK050 Does the spec define a requirement ID scheme or traceability matrix so that plan tasks and checklist items can be unambiguously traced to a single source requirement? [Traceability, Gap]
+- [x] CHK049 Are the SHOULD-priority requirements in the Disturbance System (FR-041–FR-043) consistently reflected in the task list and plan as required V1 deliverables, or treated as optional enhancements? [Consistency, Spec §FR-041–FR-043; Plan §Summary; Tasks §T006, T010]
+- [x] CHK050 Does the spec define a requirement ID scheme or traceability matrix so that plan tasks and checklist items can be unambiguously traced to a single source requirement? [Traceability, Gap]
