@@ -31,9 +31,9 @@ npm test && npm run lint
 TypeScript 5.3, React 18.2, Next.js 14.0 (App Router): Follow standard conventions
 
 ## Recent Changes
+- 005-operator-sidebar-redesign: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 004-create-feature-branch: Added TypeScript 5.x, React 18, Next.js 14 + MUI, Zustand, @react-three/fiber, three, Jes
 - 003-improve-emf-solver: Added TypeScript 5.x / React 18 / Next.js 14 + @react-three/fiber, three, @react-three/drei, Zustand, MUI
-- 003-improve-emf-solver: Added TypeScript 5.3+, React 18.2+, Next.js 14 App Router + MUI 9, Zustand 4.4, @react-three/fiber 8.14, Three.js 0.158, @react-three/drei 9.88, Jest, Testing Library
 
 
 <!-- MANUAL ADDITIONS START -->
