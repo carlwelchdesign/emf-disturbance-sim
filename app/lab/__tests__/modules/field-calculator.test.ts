@@ -59,4 +59,25 @@ describe('FieldCalculator - Multi Source', () => {
     expect(Math.hypot(result.eField?.x ?? 0, result.eField?.y ?? 0, result.eField?.z ?? 0)).toBeGreaterThan(0);
     expect(Math.hypot(result.bField?.x ?? 0, result.bField?.y ?? 0, result.bField?.z ?? 0)).toBeGreaterThan(0);
   });
+
+  it('decays with distance in free space', () => {
+    const near = backend.calculateFieldAtPoint({ x: 1, y: 0, z: 0 }, [baseSource], 0).strength;
+    const far = backend.calculateFieldAtPoint({ x: 5, y: 0, z: 0 }, [baseSource], 0).strength;
+
+    expect(near).toBeGreaterThan(far);
+  });
+
+  it('favors the forward lobe of a directional source', () => {
+    const directionalSource: RFSource = {
+      ...baseSource,
+      antennaType: 'directional',
+      orientation: { x: 1, y: 0, z: 0 },
+      gain: 4,
+    };
+
+    const forward = backend.calculateFieldAtPoint({ x: 2, y: 0, z: 0 }, [directionalSource], 0).strength;
+    const offAxis = backend.calculateFieldAtPoint({ x: 0, y: 0, z: 2 }, [directionalSource], 0).strength;
+
+    expect(forward).toBeGreaterThan(offAxis);
+  });
 });

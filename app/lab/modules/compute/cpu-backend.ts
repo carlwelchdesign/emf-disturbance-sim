@@ -3,7 +3,13 @@ import { RFSource } from '../../types/source.types';
 import { FieldPoint, FieldGrid } from '../../types/field.types';
 import { Vector3D } from '../../types/common.types';
 import { distance, normalize, cross, add, scale, subtract, magnitude } from '../../lib/math-utils';
-import { calculateWaveNumber } from '../../lib/field-math';
+import {
+  calculateWaveNumber,
+  calculateFreeSpaceFieldStrength,
+  calculateDirectionalGain,
+  calculateNearFieldRadius,
+  dbmToWatts,
+} from '../../lib/field-math';
 import { createOmnidirectionalPattern } from '../source/antenna-patterns';
 
 /**
@@ -61,23 +67,28 @@ export class CPUBackend implements IComputeBackend {
 
       const displacement = subtract(point, source.position);
       const propagation = normalize(displacement);
-      const gain = source.gain || this.omnidirectionalPattern.getGain(propagation);
+      const orientation = source.orientation ? normalize(source.orientation) : undefined;
+      const baseGain = source.gain ?? this.omnidirectionalPattern.getGain(propagation);
+      const directionalGain = calculateDirectionalGain(
+        propagation,
+        source.antennaType === 'omnidirectional' ? undefined : orientation,
+        source.antennaType === 'phased_array' ? 8 : 4
+      );
+      const gain = baseGain * directionalGain;
 
       // Convert power to watts if needed
       const powerWatts = source.powerUnit === 'dBm'
-        ? Math.pow(10, source.power / 10) / 1000
+        ? dbmToWatts(source.power)
         : source.power;
 
-      // Simplified far-field formula: E = sqrt(P * G) / r
-      // This is a simplification of the Friis transmission equation
-      // Actual field strength would depend on frequency, but we use normalized units for visualization
-      const amplitude = Math.sqrt(powerWatts * gain) / r;
+      const nearFieldRadius = calculateNearFieldRadius(source.frequency);
+      const amplitude = calculateFreeSpaceFieldStrength(powerWatts, gain, r, nearFieldRadius);
 
       const waveNumber = calculateWaveNumber(source.frequency);
       const angularFrequency = 2 * Math.PI * source.frequency;
-      const phaseContribution = source.phase + waveNumber * r - angularFrequency * time;
+      const phaseContribution = angularFrequency * time - waveNumber * r + source.phase;
 
-      const reference = Math.abs(propagation.y) < 0.85 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 };
+      const reference = orientation ?? (Math.abs(propagation.y) < 0.85 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 });
       let eBasis = normalize(cross(cross(propagation, reference), propagation));
       if (magnitude(eBasis) === 0) {
         eBasis = normalize(cross(cross(propagation, { x: 0, y: 0, z: 1 }), propagation));
@@ -87,17 +98,20 @@ export class CPUBackend implements IComputeBackend {
       }
       const orthogonalBasis = normalize(cross(propagation, eBasis));
 
+      const nearFieldDamping = 1 / (1 + Math.pow(nearFieldRadius / Math.max(r, 0.05), 2) * 0.25);
+      const dampedAmplitude = amplitude * nearFieldDamping;
+
       const instantaneousE = add(
-        scale(eBasis, amplitude * Math.cos(phaseContribution)),
-        scale(orthogonalBasis, amplitude * 0.45 * Math.sin(phaseContribution))
+        scale(eBasis, dampedAmplitude * Math.cos(phaseContribution)),
+        scale(orthogonalBasis, dampedAmplitude * 0.35 * Math.sin(phaseContribution))
       );
       const instantaneousB = scale(cross(propagation, instantaneousE), 1 / 376.73);
       const sourcePoynting = cross(instantaneousE, instantaneousB);
 
       eReal = add(eReal, instantaneousE);
-      eImag = add(eImag, scale(instantaneousE, Math.sin(phaseContribution)));
+      eImag = add(eImag, scale(eBasis, dampedAmplitude * Math.sin(phaseContribution)));
       bReal = add(bReal, instantaneousB);
-      bImag = add(bImag, scale(instantaneousB, Math.sin(phaseContribution)));
+      bImag = add(bImag, scale(cross(propagation, eBasis), (dampedAmplitude / 376.73) * Math.sin(phaseContribution)));
       propagationSum = add(propagationSum, sourcePoynting);
     }
 

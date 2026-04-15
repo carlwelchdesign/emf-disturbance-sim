@@ -2,6 +2,9 @@
  * Field math utilities for RF/EMF calculations
  */
 
+import { dot, normalize } from './math-utils';
+import { Vector3D } from '../types/common.types';
+
 // Physical constants
 export const SPEED_OF_LIGHT = 299792458; // m/s
 export const VACUUM_IMPEDANCE = 376.73; // ohms
@@ -60,6 +63,57 @@ export function isNearField(distance: number, frequency: number): boolean {
 export function calculateWaveNumber(frequency: number): number {
   const wavelength = frequencyToWavelength(frequency);
   return (2 * Math.PI) / wavelength;
+}
+
+/**
+ * Convert dBm to watts.
+ * @param powerDbm - Power in dBm.
+ * @returns Power in watts.
+ */
+export function dbmToWatts(powerDbm: number): number {
+  return Math.pow(10, powerDbm / 10) / 1000;
+}
+
+/**
+ * Calculate free-space electric field strength from EIRP.
+ * Uses the standard far-field approximation E = sqrt(30 * EIRP) / r.
+ * @param powerWatts - Transmit power in watts.
+ * @param gain - Linear antenna gain.
+ * @param distanceMeters - Distance from source in meters.
+ * @param nearFieldRadius - Optional softening radius to keep the visual model stable close to the source.
+ * @returns Electric field strength in V/m.
+ */
+export function calculateFreeSpaceFieldStrength(
+  powerWatts: number,
+  gain: number,
+  distanceMeters: number,
+  nearFieldRadius = 0
+): number {
+  const eirp = Math.max(powerWatts, 0) * Math.max(gain, 0);
+  const softenedDistance = Math.max(distanceMeters, nearFieldRadius * 0.25, 0.05);
+  return Math.sqrt(30 * eirp) / softenedDistance;
+}
+
+/**
+ * Calculate a directional gain term from an orientation vector.
+ * Returns 1 for omni sources or when the orientation is unavailable.
+ * @param direction - Unit vector from source to observation point.
+ * @param orientation - Source forward vector.
+ * @param exponent - Lobe sharpness; higher values narrow the beam.
+ */
+export function calculateDirectionalGain(
+  direction: Vector3D,
+  orientation?: Vector3D,
+  exponent = 4
+): number {
+  if (!orientation) {
+    return 1;
+  }
+
+  const forward = normalize(orientation);
+  const arrival = normalize(direction);
+  const alignment = Math.max(dot(forward, arrival), 0);
+  return Math.pow(alignment, Math.max(1, exponent));
 }
 
 /**

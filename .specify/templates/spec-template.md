@@ -100,6 +100,26 @@
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
+### Non-Functional Requirements *(include if applicable)*
+
+<!--
+  ACTION REQUIRED: Include non-functional requirements when they are critical to the feature.
+  For EMF visualization features, always address visualization quality per Constitution VI.
+-->
+
+**Visualization Quality** (when feature includes EMF rendering):
+- **VQ-001**: Visualization MUST maximize data-ink ratio (remove all non-data pixels)
+- **VQ-002**: Visualization MUST show EMF field data directly using truthful, low-clutter particle-cloud or vector representations
+- **VQ-003**: Visualization MUST minimize non-data ink (no chartjunk, excessive grids, or decorative effects)
+- **VQ-004**: Visualization MUST maintain graphical integrity (field magnitudes scale linearly, wavelength matches frequency inverse)
+- **VQ-005**: Color maps MUST be perceptually uniform and accessible (WCAG AA compliant)
+
+**Performance** (when applicable):
+- **PF-001**: [Performance requirement, e.g., "Render at 60fps minimum for smooth animation"]
+
+**Accessibility** (when applicable):
+- **A11Y-001**: [Accessibility requirement, e.g., "Support keyboard navigation for all controls"]
+
 ## Success Criteria *(mandatory)*
 
 <!--

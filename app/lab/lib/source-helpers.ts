@@ -1,4 +1,5 @@
 import { RFSource } from '../types/source.types';
+import { calculateFreeSpaceFieldStrength, dbmToWatts } from './field-math';
 
 /**
  * Create a simple incremental source ID generator.
@@ -35,8 +36,8 @@ export function getSourceDisplayName(source: Pick<RFSource, 'id' | 'label' | 'de
  */
 export function estimateSourceFieldStrength(source: RFSource, distanceMeters = 1): number {
   const powerWatts = source.powerUnit === 'dBm'
-    ? Math.pow(10, source.power / 10) / 1000
+    ? dbmToWatts(source.power)
     : source.power;
   const gain = source.gain ?? 1;
-  return Math.sqrt(Math.max(powerWatts * gain, 0)) / Math.max(distanceMeters, 0.001);
+  return calculateFreeSpaceFieldStrength(powerWatts, gain, distanceMeters);
 }

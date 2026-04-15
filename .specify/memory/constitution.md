@@ -1,23 +1,18 @@
 <!--
 Sync Impact Report
-Version change: 0.0.0 -> 1.0.1
+Version change: 1.0.1 -> 1.1.0
 Modified principles:
-- Template placeholder -> I. Feature-Boundary Architecture
-- Template placeholder -> II. Dependency Inversion and SOLID Delivery
-- III. Test and Validation Gates (scoped to EMF math/rendering, removed persistence concerns)
-- Template placeholder -> IV. Design System and Accessibility Compliance
-- V. Observable, Safe Operations (scoped to performance/WebGL/state, removed auth/billing/persistence)
+- None
 Added sections:
-- Delivery Standards
-- Workflow and Quality Gates
+- VI. Visualization Quality and Graphical Integrity (NEW)
 Removed sections:
 - None
 Amendments:
-- PATCH v1.0.1: Narrowed Principles III and V to EMF Visualizer scope (removed out-of-scope auth, billing, persistence references)
+- MINOR v1.1.0: Added Principle VI for EMF visualization quality standards (data-ink ratio, graphical integrity, truthful particle-cloud rendering)
 Templates requiring updates:
-- ✅ consistent /Users/carl.welch/Documents/Github Projects/emf-visualizer/.specify/templates/plan-template.md
-- ✅ consistent /Users/carl.welch/Documents/Github Projects/emf-visualizer/.specify/templates/spec-template.md
-- ✅ consistent /Users/carl.welch/Documents/Github Projects/emf-visualizer/.specify/templates/tasks-template.md
+- ✅ updated /Users/carl.welch/Documents/Github Projects/emf-visualizer/.specify/templates/plan-template.md
+- ✅ updated /Users/carl.welch/Documents/Github Projects/emf-visualizer/.specify/templates/spec-template.md
+- ✅ updated /Users/carl.welch/Documents/Github Projects/emf-visualizer/.specify/templates/tasks-template.md
 Follow-up TODOs:
 - None
 -->
@@ -81,6 +76,23 @@ Rationale: Physics visualization must remain responsive and predictable. Silent 
 in geometry generation or WebGL errors confuse users. Observable performance enables
 tuning for 60fps targets.
 
+### VI. Visualization Quality and Graphical Integrity
+All EMF visualizations MUST maximize the data-ink ratio: every pixel serves the physics
+story or is removed. MUST show the data directly—prefer truthful, low-clutter
+particle-cloud visualizations for EMF singles, clouds, interferences, and disturbances
+over decorative effects. MUST minimize non-data ink: chartjunk, redundant grid lines,
+unnecessary 3D depth cues, and visual effects that don't encode field information are
+prohibited. MUST maintain graphical integrity: visual representations MUST NOT distort
+physical quantities (field magnitude scales linearly, wavelength matches frequency
+inverse, phase relationships preserved). Color maps MUST be perceptually uniform and
+accessible. Annotations MUST clarify without obscuring the underlying field data.
+
+Rationale: Educational visualization quality depends on signal-to-noise ratio. Excessive
+decoration or misleading visual encodings teach incorrect physics. Students must see
+electromagnetic field behavior directly, not artistic interpretations that sacrifice
+accuracy for aesthetics. Data-ink principles ensure cognitive focus stays on wave
+properties, not rendering artifacts.
+
 ## Delivery Standards
 
 - Specs MUST define user scenarios, measurable success criteria, non-goals, and any UX,
@@ -122,4 +134,4 @@ Compliance review is mandatory for every plan and final implementation review. I
 feature cannot satisfy a principle, the violation and justification MUST be recorded in
 the plan's Complexity Tracking section before implementation proceeds.
 
-**Version**: 1.0.1 | **Ratified**: 2026-04-13 | **Last Amended**: 2026-04-14
+**Version**: 1.1.0 | **Ratified**: 2026-04-13 | **Last Amended**: 2026-04-14

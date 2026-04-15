@@ -86,14 +86,24 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
 
+### Visualization Quality Validation (REQUIRED for EMF rendering features) 🎨
+
+> **Constitution VI: Visualization Quality and Graphical Integrity**  
+> Required when feature includes EMF field visualization
+
+- [ ] T012 [P] [US1] Data-ink ratio check: verify no chartjunk, decorative grids, or non-data pixels
+- [ ] T013 [P] [US1] Graphical integrity test: field magnitude scales linearly, wavelength inverse to frequency
+- [ ] T014 [P] [US1] Color accessibility: verify perceptually uniform colormaps (WCAG AA compliance)
+- [ ] T015 [P] [US1] Direct representation: confirm particle-cloud/vector visualization shows raw field data without distortion
+
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
-- [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
+- [ ] T016 [P] [US1] Create [Entity1] model in src/models/[entity1].py
+- [ ] T017 [P] [US1] Create [Entity2] model in src/models/[entity2].py
+- [ ] T018 [US1] Implement [Service] in src/services/[service].py (depends on T016, T017)
+- [ ] T019 [US1] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T020 [US1] Add validation and error handling
+- [ ] T021 [US1] Add logging for user story 1 operations
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
