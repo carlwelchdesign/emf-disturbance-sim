@@ -86,6 +86,27 @@ export class SimulationEngine implements ISimulationEngine {
     }
     this.backend = backend;
   }
+
+  /**
+   * Run a full-wave Maxwell FDTD solve.
+   * Integrates the Maxwell solver engine with the existing simulation pipeline.
+   */
+  async runMaxwellSolver(
+    request: import('../../types/maxwell.types').SubmitSimulationRunRequest,
+    config: import('../../types/maxwell.types').SimulationConfiguration,
+  ): Promise<import('../maxwell/core/maxwell-solver-engine').MaxwellSolverRunResult> {
+    const { MaxwellSolverEngine } = await import('../maxwell/core/maxwell-solver-engine');
+    const engine = new MaxwellSolverEngine();
+    const submitResponse = engine.submit(request);
+    if (!submitResponse.accepted) {
+      return {
+        runId: submitResponse.runId,
+        success: false,
+        finalStatus: 'rejected',
+      };
+    }
+    return engine.execute(submitResponse.runId, config, request.validationScenarioId);
+  }
 }
 
 /**

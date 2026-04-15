@@ -11,6 +11,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-15
 - TypeScript 5.x / React 18 / Next.js 14 + @react-three/fiber, three, @react-three/drei, Zustand, MUI (003-improve-emf-solver)
 - TypeScript 5.x, React 18, Next.js 14 + MUI, Zustand, @react-three/fiber, three, Jes (004-create-feature-branch)
 - N/A (in-memory client state via Zustand) (004-create-feature-branch)
+- TypeScript 5.x on Next.js 14 / React 18 + Next.js, React, Zustand, Three.js, React Three Fiber, MUI, Jest + Testing Library (006-add-maxwell-solver)
+- In-memory runtime state plus file-based/spec documentation artifacts under `/specs/006-implement-maxwell-solver/` (006-add-maxwell-solver)
 
 - TypeScript 5.3, React 18.2, Next.js 14.0 (App Router) + @react-three/fiber 8.14, @react-three/drei 9.88, three r158, zustand 4.4 (002-disturbance-lab)
 
@@ -31,9 +33,9 @@ npm test && npm run lint
 TypeScript 5.3, React 18.2, Next.js 14.0 (App Router): Follow standard conventions
 
 ## Recent Changes
+- 006-add-maxwell-solver: Added TypeScript 5.x on Next.js 14 / React 18 + Next.js, React, Zustand, Three.js, React Three Fiber, MUI, Jest + Testing Library
+- 006-add-maxwell-solver: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 005-operator-sidebar-redesign: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 004-create-feature-branch: Added TypeScript 5.x, React 18, Next.js 14 + MUI, Zustand, @react-three/fiber, three, Jes
-- 003-improve-emf-solver: Added TypeScript 5.x / React 18 / Next.js 14 + @react-three/fiber, three, @react-three/drei, Zustand, MUI
 
 
 <!-- MANUAL ADDITIONS START -->

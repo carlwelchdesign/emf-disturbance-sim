@@ -6,6 +6,15 @@ import { MeasurementPoint, CreateMeasurementParams } from './measurement.types';
 import { DroneState, CreateDroneParams } from './drone.types';
 import { FactionMetrics } from './field.types';
 import { ScenarioPresetId } from '../modules/scenario/presets';
+import {
+  SimulationRun,
+  SubmitSimulationRunRequest,
+  SubmitSimulationRunResponse,
+  RunErrorRecord,
+  FieldOutputSet,
+  DerivedMetricResult,
+  ValidationReport,
+} from './maxwell.types';
 
 export type SelectionMode = 'none' | 'single' | 'multi';
 
@@ -21,7 +30,8 @@ export type SidebarSectionId =
   | 'selected-entity'
   | 'visualization-controls'
   | 'analysis-measurements'
-  | 'system-view';
+  | 'system-view'
+  | 'maxwell-solver';
 
 export interface PerformanceMetrics {
   currentFPS: number;
@@ -87,4 +97,24 @@ export interface LabStoreState {
   getActiveSources: () => RFSource[];
   getSourceCount: () => number;
   shouldReduceQuality: () => boolean;
+  // === Maxwell Solver State ===
+  maxwellRuns: SimulationRun[];
+  maxwellActiveRunId: string | null;
+  maxwellFieldOutputs: Record<string, FieldOutputSet>;
+  maxwellDerivedMetrics: Record<string, DerivedMetricResult[]>;
+  maxwellValidationReports: Record<string, ValidationReport>;
+  maxwellErrors: Record<string, RunErrorRecord[]>;
+  // === Maxwell Solver Actions ===
+  submitMaxwellRun: (request: SubmitSimulationRunRequest) => SubmitSimulationRunResponse;
+  setActiveMaxwellRun: (runId: string | null) => void;
+  updateMaxwellRunStatus: (runId: string, status: SimulationRun['status'], reason?: string) => void;
+  setMaxwellFieldOutput: (runId: string, output: FieldOutputSet) => void;
+  setMaxwellDerivedMetrics: (runId: string, metrics: DerivedMetricResult[]) => void;
+  setMaxwellValidationReport: (runId: string, report: ValidationReport) => void;
+  setMaxwellErrors: (runId: string, errors: RunErrorRecord[]) => void;
+  getMaxwellRun: (runId: string) => SimulationRun | undefined;
+  getActiveMaxwellFieldOutput: () => FieldOutputSet | undefined;
+  getActiveMaxwellMetrics: () => DerivedMetricResult[] | undefined;
+  getActiveMaxwellValidationReport: () => ValidationReport | undefined;
+  clearMaxwellRun: (runId: string) => void;
 }

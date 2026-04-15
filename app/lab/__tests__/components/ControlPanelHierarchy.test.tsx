@@ -20,6 +20,7 @@ describe('ControlPanel hierarchy', () => {
       'visualization-controls': true,
       'analysis-measurements': true,
       'system-view': true,
+      'maxwell-solver': true,
     },
     toggleSectionExpanded: jest.fn(),
     settings: {
@@ -64,6 +65,7 @@ describe('ControlPanel hierarchy', () => {
       'Visualization Controls',
       'Analysis / Measurements',
       'System / View',
+      'Maxwell Solver',
     ]);
   });
 

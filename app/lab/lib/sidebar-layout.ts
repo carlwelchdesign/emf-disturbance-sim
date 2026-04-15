@@ -7,6 +7,7 @@ export const SIDEBAR_SECTION_ORDER: SidebarSectionId[] = [
   'visualization-controls',
   'analysis-measurements',
   'system-view',
+  'maxwell-solver',
 ];
 
 export const SIDEBAR_SECTION_TITLES: Record<SidebarSectionId, string> = {
@@ -16,6 +17,7 @@ export const SIDEBAR_SECTION_TITLES: Record<SidebarSectionId, string> = {
   'visualization-controls': 'Visualization Controls',
   'analysis-measurements': 'Analysis / Measurements',
   'system-view': 'System / View',
+  'maxwell-solver': 'Maxwell Solver',
 };
 
 export const SIDEBAR_SECTION_DEFAULT_EXPANDED: Record<SidebarSectionId, boolean> = {
@@ -25,4 +27,5 @@ export const SIDEBAR_SECTION_DEFAULT_EXPANDED: Record<SidebarSectionId, boolean>
   'visualization-controls': true,
   'analysis-measurements': true,
   'system-view': true,
+  'maxwell-solver': true,
 };

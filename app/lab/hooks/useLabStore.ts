@@ -16,6 +16,8 @@ import { isSameCameraState } from '../lib/camera-helpers';
 import { getSourceColor } from '../lib/visualization-helpers';
 import { buildScenarioSources, getScenarioPreset } from '../modules/scenario/presets';
 import { SIDEBAR_SECTION_DEFAULT_EXPANDED } from '../lib/sidebar-layout';
+import { globalOrchestrator } from '../modules/maxwell/core/run-orchestrator';
+import { validateRunRequest } from '../modules/maxwell/core/pre-run-validator';
 
 const sourceIdGenerator = createSourceIdGenerator('source');
 let measurementIdCounter = 1;
@@ -54,6 +56,13 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   },
   drones: [],
   activeFactionMetrics: null,
+  // === Maxwell Solver State ===
+  maxwellRuns: [],
+  maxwellActiveRunId: null,
+  maxwellFieldOutputs: {},
+  maxwellDerivedMetrics: {},
+  maxwellValidationReports: {},
+  maxwellErrors: {},
 
   // === Source Actions ===
   addSource: (params = {}) => {
@@ -468,5 +477,92 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
 
   shouldReduceQuality: () => {
     return get().performance.isLowPerformance;
+  },
+
+  // === Maxwell Solver Actions ===
+  submitMaxwellRun: (request) => {
+    const validationErrors = validateRunRequest(request);
+    const response = globalOrchestrator.submitRun(request, validationErrors);
+    if (response.accepted) {
+      const run = globalOrchestrator.getRun(response.runId);
+      if (run) {
+        set((state) => ({ maxwellRuns: [...state.maxwellRuns, run] }));
+      }
+    }
+    return response;
+  },
+
+  setActiveMaxwellRun: (runId) => set({ maxwellActiveRunId: runId }),
+
+  updateMaxwellRunStatus: (runId, status, reason) => {
+    set((state) => ({
+      maxwellRuns: state.maxwellRuns.map((r) =>
+        r.runId === runId ? { ...r, status, statusReason: reason } : r
+      ),
+    }));
+  },
+
+  setMaxwellFieldOutput: (runId, output) => {
+    set((state) => ({
+      maxwellFieldOutputs: { ...state.maxwellFieldOutputs, [runId]: output },
+    }));
+  },
+
+  setMaxwellDerivedMetrics: (runId, metrics) => {
+    set((state) => ({
+      maxwellDerivedMetrics: { ...state.maxwellDerivedMetrics, [runId]: metrics },
+    }));
+  },
+
+  setMaxwellValidationReport: (runId, report) => {
+    set((state) => ({
+      maxwellValidationReports: { ...state.maxwellValidationReports, [runId]: report },
+    }));
+  },
+
+  setMaxwellErrors: (runId, errors) => {
+    set((state) => ({
+      maxwellErrors: { ...state.maxwellErrors, [runId]: errors },
+    }));
+  },
+
+  getMaxwellRun: (runId) => {
+    return get().maxwellRuns.find((r) => r.runId === runId);
+  },
+
+  getActiveMaxwellFieldOutput: () => {
+    const { maxwellActiveRunId, maxwellFieldOutputs } = get();
+    return maxwellActiveRunId ? maxwellFieldOutputs[maxwellActiveRunId] : undefined;
+  },
+
+  getActiveMaxwellMetrics: () => {
+    const { maxwellActiveRunId, maxwellDerivedMetrics } = get();
+    return maxwellActiveRunId ? maxwellDerivedMetrics[maxwellActiveRunId] : undefined;
+  },
+
+  getActiveMaxwellValidationReport: () => {
+    const { maxwellActiveRunId, maxwellValidationReports } = get();
+    return maxwellActiveRunId ? maxwellValidationReports[maxwellActiveRunId] : undefined;
+  },
+
+  clearMaxwellRun: (runId) => {
+    set((state) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [runId]: _fo, ...fieldOutputs } = state.maxwellFieldOutputs;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [runId]: _dm, ...derivedMetrics } = state.maxwellDerivedMetrics;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [runId]: _vr, ...validationReports } = state.maxwellValidationReports;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [runId]: _er, ...errors } = state.maxwellErrors;
+      return {
+        maxwellRuns: state.maxwellRuns.filter((r) => r.runId !== runId),
+        maxwellActiveRunId: state.maxwellActiveRunId === runId ? null : state.maxwellActiveRunId,
+        maxwellFieldOutputs: fieldOutputs,
+        maxwellDerivedMetrics: derivedMetrics,
+        maxwellValidationReports: validationReports,
+        maxwellErrors: errors,
+      };
+    });
   },
 }));
