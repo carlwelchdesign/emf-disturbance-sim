@@ -12,24 +12,36 @@ import {
   formatFrequencyLabel,
   formatPhaseLabel,
 } from '../../lib/visualization-helpers';
+import { SelectionContext } from '../../types/store.types';
+import { DualModeControl } from '../shared/DualModeControl';
+import { useState } from 'react';
 
 export interface SourceControlsProps {
-  source: RFSource | undefined;
+  selectionContext: SelectionContext;
+  selectedSources: RFSource[];
 }
 
-export function SourceControls({ source }: SourceControlsProps) {
+export function SourceControls({ selectionContext, selectedSources }: SourceControlsProps) {
   const updateSource = useLabStore((state) => state.updateSource);
   const removeSource = useLabStore((state) => state.removeSource);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  if (!source) {
+  const source = selectedSources[0];
+
+  if (selectionContext.mode === 'none' || !source) {
     return (
-      <Box sx={{ p: 2 }}>
+      <Box>
         <Typography color="text.secondary">
-          No source selected. Select a source to adjust its parameters.
+          No source selected. Select an entity from Active Entities to edit parameters.
         </Typography>
       </Box>
     );
   }
+
+  const isMulti = selectionContext.mode === 'multi';
+  const hasMixedFrequency = isMulti && selectedSources.some((item) => item.frequency !== source.frequency);
+  const hasMixedPower = isMulti && selectedSources.some((item) => item.power !== source.power);
+  const hasMixedPhase = isMulti && selectedSources.some((item) => item.phase !== source.phase);
 
   const frequencyGHz = source.frequency / 1e9;
   const bandwidthMHz = (source.bandwidthHz ?? 80e6) / 1e6;
@@ -40,12 +52,14 @@ export function SourceControls({ source }: SourceControlsProps) {
   const phaseLabel = formatPhaseLabel(source.phase);
   const fieldStrength = formatFieldStrength(estimateSourceFieldStrength(source));
 
-  const applyUpdate = (params: Partial<RFSource>) => updateSource(source.id, params);
+  const applyUpdate = (params: Partial<RFSource>) => {
+    selectedSources.forEach((item) => updateSource(item.id, params));
+  };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        {source.label || 'Source Controls'}
+    <Box>
+      <Typography variant="body2" sx={{ mb: 1, fontWeight: 700 }}>
+        {isMulti ? `${selectedSources.length} entities selected` : source.label || 'Selected Entity'}
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -79,131 +93,86 @@ export function SourceControls({ source }: SourceControlsProps) {
           onChange={(frequencyHz) => applyUpdate({ frequency: frequencyHz })}
         />
 
-        <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
-            <Typography variant="body2" color="text.secondary">
-              Center Frequency: {frequencyLabel}
-            </Typography>
-            <Typography variant="caption" color="primary.main">
-              {fieldStrength}
-            </Typography>
-          </Box>
-          <Tooltip title="Fine-tune the transmit frequency from 1 to 30 GHz." describeChild>
-            <Box component="span" sx={{ display: 'block' }}>
-              <Slider
-                value={frequencyGHz}
-                onChange={(value) => {
-                  const freq = Array.isArray(value) ? value[0] : value;
-                  applyUpdate({ frequency: freq * 1e9 });
-                }}
-                min={1}
-                max={30}
-                step={0.1}
-                aria-label="Frequency"
-                marks={[
-                  { value: 2.4, label: '2.4' },
-                  { value: 5, label: '5' },
-                  { value: 28, label: '28' },
-                ]}
-              />
-            </Box>
-          </Tooltip>
-        </Box>
+        <DualModeControl
+          label={`Center Frequency${hasMixedFrequency ? ' (mixed)' : ''}`}
+          value={frequencyGHz}
+          min={1}
+          max={30}
+          step={0.1}
+          unit=" GHz"
+          onChange={(value) => applyUpdate({ frequency: value * 1e9 })}
+        />
 
-        <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
-            <Typography variant="body2" color="text.secondary">
-              Spectral Width: {bandwidthLabel}
-            </Typography>
-            <Typography variant="caption" color="primary.main">
-              Wider bands influence more nearby frequencies
-            </Typography>
-          </Box>
-          <Tooltip title="Broaden the emitter's spectral footprint so the cloud reads as a wider frequency band." describeChild>
-            <Box component="span" sx={{ display: 'block' }}>
-              <Slider
-                value={bandwidthMHz}
-                onChange={(value) => {
-                  const bandwidth = Array.isArray(value) ? value[0] : value;
-                  applyUpdate({ bandwidthHz: bandwidth * 1e6 });
-                }}
-                min={1}
-                max={5000}
-                step={1}
-                aria-label="Bandwidth"
-                marks={[
-                  { value: 10, label: '10' },
-                  { value: 100, label: '100' },
-                  { value: 1000, label: '1000' },
-                ]}
-              />
-            </Box>
-          </Tooltip>
-        </Box>
+        <DualModeControl
+          label={`Output Power${hasMixedPower ? ' (mixed)' : ''}`}
+          value={powerMW}
+          min={1}
+          max={1000}
+          step={1}
+          unit=" mW"
+          onChange={(value) => applyUpdate({ power: value / 1000 })}
+        />
 
-        <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
-            <Typography variant="body2" color="text.secondary">
-              Output Power: {powerMW.toFixed(0)} mW
-            </Typography>
-            <Typography variant="caption" color="primary.main">
-              {fieldStrength}
-            </Typography>
-          </Box>
-          <Tooltip title="Adjust the source output from 1 mW up to 1 W." describeChild>
-            <Box component="span" sx={{ display: 'block' }}>
-              <Slider
-                value={powerMW}
-                onChange={(value) => {
-                  const power = Array.isArray(value) ? value[0] : value;
-                  applyUpdate({ power: power / 1000 });
-                }}
-                min={1}
-                max={1000}
-                step={1}
-                aria-label="Power"
-                marks={[
-                  { value: 1, label: '1' },
-                  { value: 100, label: '100' },
-                  { value: 1000, label: '1000' },
-                ]}
-              />
-            </Box>
-          </Tooltip>
-        </Box>
+        <MuiButton
+          variant="text"
+          size="small"
+          sx={{ alignSelf: 'flex-start' }}
+          onClick={() => setAdvancedOpen((current) => !current)}
+          aria-expanded={advancedOpen}
+        >
+          {advancedOpen ? 'Hide advanced controls' : 'Show advanced controls'}
+        </MuiButton>
 
-        <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
-            <Typography variant="body2" color="text.secondary">
-              Phase Offset: {phaseLabel}
-            </Typography>
-            <Typography variant="caption" color="primary.main">
-              {fieldStrength}
-            </Typography>
-          </Box>
-          <Tooltip title="Shift the signal phase to explore interference patterns." describeChild>
-            <Box component="span" sx={{ display: 'block' }}>
-              <Slider
-                value={phaseDeg}
-                onChange={(value) => {
-                  const phase = Array.isArray(value) ? value[0] : value;
-                  applyUpdate({ phase: (phase * Math.PI) / 180 });
-                }}
-                min={0}
-                max={360}
-                step={1}
-                aria-label="Phase"
-                marks={[
-                  { value: 0, label: '0°' },
-                  { value: 180, label: '180°' },
-                  { value: 360, label: '360°' },
-                ]}
-              />
-            </Box>
-          </Tooltip>
-        </Box>
+        {advancedOpen && (
+          <>
+            <DualModeControl
+              label={`Phase Offset${hasMixedPhase ? ' (mixed)' : ''}`}
+              value={phaseDeg}
+              min={0}
+              max={360}
+              step={1}
+              unit="°"
+              onChange={(value) => applyUpdate({ phase: (value * Math.PI) / 180 })}
+            />
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Spectral Width: {bandwidthLabel}
+                </Typography>
+                <Typography variant="caption" color="primary.main">
+                  Wider bands influence more nearby frequencies
+                </Typography>
+              </Box>
+              <Tooltip title="Broaden the emitter's spectral footprint so the cloud reads as a wider frequency band." describeChild>
+                <Box component="span" sx={{ display: 'block' }}>
+                  <Slider
+                    value={bandwidthMHz}
+                    onChange={(value) => {
+                      const bandwidth = Array.isArray(value) ? value[0] : value;
+                      applyUpdate({ bandwidthHz: bandwidth * 1e6 });
+                    }}
+                    min={1}
+                    max={5000}
+                    step={1}
+                    aria-label="Bandwidth"
+                    marks={[
+                      { value: 10, label: '10' },
+                      { value: 100, label: '100' },
+                      { value: 1000, label: '1000' },
+                    ]}
+                  />
+                </Box>
+              </Tooltip>
+            </Box>
+          </>
+        )}
+
+        <Typography variant="caption" color="primary.main">
+          Frequency: {frequencyLabel} · Power: {powerMW.toFixed(0)} mW · {phaseLabel} · {fieldStrength}
+        </Typography>
+
+        <Box sx={{ display: 'flex', gap: 1 }} aria-disabled={isMulti}>
           {(['x', 'y', 'z'] as const).map((axis) => (
             <TextField
               key={axis}
@@ -220,20 +189,28 @@ export function SourceControls({ source }: SourceControlsProps) {
                   },
                 })
               }
+              disabled={isMulti}
               fullWidth
             />
           ))}
         </Box>
+        {isMulti && (
+          <Typography variant="caption" color="text.secondary">
+            Position editing is disabled for multi-select because coordinates are not shared.
+          </Typography>
+        )}
 
         <Tooltip title="Delete this source from the simulation." describeChild>
-          <MuiButton
-            variant="outlined"
-            color="error"
-            onClick={() => removeSource(source.id)}
-            disabled={!source}
-          >
-            Remove Source
-          </MuiButton>
+          <span>
+            <MuiButton
+              variant="outlined"
+              color="error"
+              onClick={() => removeSource(source.id)}
+              disabled={!source || isMulti}
+            >
+              Remove Source
+            </MuiButton>
+          </span>
         </Tooltip>
       </Box>
     </Box>

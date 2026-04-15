@@ -24,6 +24,11 @@ describe('parameter updates integration', () => {
         },
       ],
       selectedSourceId: 'source-1',
+      selectionContext: {
+        mode: 'single',
+        selectedSourceIds: ['source-1'],
+        primarySourceId: 'source-1',
+      },
     });
   });
 

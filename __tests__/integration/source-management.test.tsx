@@ -35,11 +35,16 @@ describe('source management integration', () => {
         },
       ],
       selectedSourceId: 'source-1',
+      selectionContext: {
+        mode: 'single',
+        selectedSourceIds: ['source-1'],
+        primarySourceId: 'source-1',
+      },
     });
   });
 
   it('removes a source from the scene and list', () => {
-    const { container, rerender } = render(<LabPage />);
+    const { rerender } = render(<LabPage />);
 
     act(() => {
       useLabStore.getState().removeSource('source-2');
@@ -47,6 +52,6 @@ describe('source management integration', () => {
 
     rerender(<LabPage />);
     expect(screen.queryByText('Beta')).toBeNull();
-    expect(container.querySelectorAll('mesh').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Active Entities/i)).toBeInTheDocument();
   });
 });

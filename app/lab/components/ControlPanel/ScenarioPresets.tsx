@@ -53,10 +53,7 @@ export function ScenarioPresets() {
 
   return (
     <>
-      <Box sx={{ p: 2 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
-          Scenario Presets
-        </Typography>
+      <Box>
         <Stack spacing={1.25}>
           <FormControl fullWidth size="small">
             <Tooltip title="Load a curated scene configuration for comparison or exploration." describeChild>

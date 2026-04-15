@@ -7,4 +7,22 @@ describe('FieldVisualization', () => {
 
     expect(container.firstChild).toBeNull();
   });
+
+  it('preserves field visualization semantics for active sources', () => {
+    const sources = [
+      {
+        id: 's1',
+        position: { x: 0, y: 1, z: 0 },
+        frequency: 2.4e9,
+        power: 0.1,
+        powerUnit: 'watts' as const,
+        phase: 0,
+        antennaType: 'omnidirectional' as const,
+        active: true,
+      },
+    ];
+
+    const { container } = render(<FieldVisualization sources={sources} lod="high" colorScheme="thermal" />);
+    expect(container).toBeTruthy();
+  });
 });

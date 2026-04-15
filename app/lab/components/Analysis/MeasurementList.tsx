@@ -8,11 +8,15 @@ export function MeasurementList() {
   const measurements = useLabStore((state) => state.measurements);
 
   if (measurements.length === 0) {
-    return <Typography variant="body2" color="text.secondary">No measurements yet.</Typography>;
+    return (
+      <Typography variant="body2" color="text.secondary" aria-live="polite">
+        No measurements yet.
+      </Typography>
+    );
   }
 
   return (
-    <List dense>
+    <List dense aria-label="Measurement readouts">
       {measurements.map((measurement) => (
         <ListItem key={measurement.id} disableGutters>
           <ListItemText

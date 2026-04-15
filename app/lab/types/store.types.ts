@@ -7,6 +7,22 @@ import { DroneState, CreateDroneParams } from './drone.types';
 import { FactionMetrics } from './field.types';
 import { ScenarioPresetId } from '../modules/scenario/presets';
 
+export type SelectionMode = 'none' | 'single' | 'multi';
+
+export interface SelectionContext {
+  mode: SelectionMode;
+  selectedSourceIds: string[];
+  primarySourceId: string | null;
+}
+
+export type SidebarSectionId =
+  | 'simulation-setup'
+  | 'active-entities'
+  | 'selected-entity'
+  | 'visualization-controls'
+  | 'analysis-measurements'
+  | 'system-view';
+
 export interface PerformanceMetrics {
   currentFPS: number;
   averageFPS: number;
@@ -16,6 +32,8 @@ export interface PerformanceMetrics {
 export interface LabStoreState {
   sources: RFSource[];
   selectedSourceId: string | null;
+  selectionContext: SelectionContext;
+  sectionDisclosure: Record<SidebarSectionId, boolean>;
   activeScenarioPresetId: ScenarioPresetId | null;
   scenarioIsDirty: boolean;
   camera: CameraState;
@@ -31,6 +49,11 @@ export interface LabStoreState {
   removeSource: (id: string) => void;
   updateSource: (id: string, params: UpdateSourceParams) => void;
   selectSource: (id: string | null) => void;
+  toggleSourceSelection: (id: string) => void;
+  clearSelection: () => void;
+  setPrimarySelection: (id: string | null) => void;
+  setSectionExpanded: (sectionId: SidebarSectionId, expanded: boolean) => void;
+  toggleSectionExpanded: (sectionId: SidebarSectionId) => void;
   toggleSourceActive: (id: string) => void;
   clearAllSources: () => void;
   applyScenarioPreset: (presetId: ScenarioPresetId) => void;
@@ -59,6 +82,8 @@ export interface LabStoreState {
   // === Selectors ===
   getSourceById: (id: string) => RFSource | undefined;
   getSelectedSource: () => RFSource | undefined;
+  getSelectedSources: () => RFSource[];
+  getSelectionContext: () => SelectionContext;
   getActiveSources: () => RFSource[];
   getSourceCount: () => number;
   shouldReduceQuality: () => boolean;

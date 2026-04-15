@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Stack, Typography, FormControlLabel, Switch, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
+import { Box, Stack, FormControlLabel, Switch, FormControl, InputLabel, Select, MenuItem, Tooltip } from '@mui/material';
 import { useLabStore } from '../../hooks/useLabStore';
 import { LODLevel } from '../../types/visualization.types';
 
@@ -13,10 +13,7 @@ export function EnvironmentControls() {
   const setLOD = useLabStore((state) => state.setLOD);
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
-        Environment
-      </Typography>
+    <Box>
       <Stack spacing={1.5}>
         <Tooltip title="Toggle the ground grid used for spatial reference." describeChild>
           <Box component="span">

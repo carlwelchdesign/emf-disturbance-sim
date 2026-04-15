@@ -28,6 +28,24 @@ Open `http://localhost:3000/lab`.
 - FPS monitoring and adaptive LOD
 - WebGL error handling and accessibility labels
 
+## Operator Sidebar Workflow
+
+The `/lab` sidebar is organized for operator flow in fixed order:
+
+1. **Simulation Setup**: add/clear sources and apply presets
+2. **Active Entities**: inventory of sources and selection surface
+3. **Selected Entity**: focused editing for selected source(s)
+4. **Visualization Controls**: global rendering and display toggles
+5. **Analysis / Measurements**: measurement capture and readouts
+6. **System / View**: environment utilities, camera reset, FPS monitor
+
+### Usage notes
+
+- Use **Active Entities** to select; use **Selected Entity** to edit.
+- Advanced source controls are collapsed by default for progressive disclosure.
+- Precision parameters support dual-mode interaction (slider + numeric entry).
+- Global sections do not mutate source-local settings.
+
 ## Architecture
 
 The lab is organized into small modules:

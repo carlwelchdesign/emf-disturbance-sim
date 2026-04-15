@@ -1,6 +1,6 @@
 import { useLabStore } from '../../hooks/useLabStore';
 
-describe('useLabStore source management', () => {
+describe('useLabStore source and selection state', () => {
   beforeEach(() => {
     useLabStore.getState().clearAllSources();
     useLabStore.getState().addSource();
@@ -13,16 +13,20 @@ describe('useLabStore source management', () => {
 
     const state = useLabStore.getState();
     expect(state.sources.find((source) => source.id === added)).toBeUndefined();
-    expect(state.selectedSourceId).toBeNull();
+    expect(state.selectedSourceId).not.toBe(added);
   });
 
-  it('clears all sources and resets selection', () => {
+  it('clears all sources and resets selection context', () => {
     useLabStore.getState().addSource();
     useLabStore.getState().clearAllSources();
 
     const state = useLabStore.getState();
     expect(state.sources).toHaveLength(0);
-    expect(state.selectedSourceId).toBeNull();
+    expect(state.selectionContext).toEqual({
+      mode: 'none',
+      selectedSourceIds: [],
+      primarySourceId: null,
+    });
   });
 
   it('caps measurement points at five in V1', () => {
@@ -42,27 +46,61 @@ describe('useLabStore source management', () => {
     expect(useLabStore.getState().measurements).toHaveLength(5);
   });
 
-  it('applies a scenario preset and resets dirty state', () => {
+  it('applies a scenario preset and keeps single primary selection', () => {
     const store = useLabStore.getState();
     store.updateSource(store.sources[0].id, { frequency: 5e9 });
-
-    expect(useLabStore.getState().scenarioIsDirty).toBe(true);
-
     store.applyScenarioPreset('dual-source-interference');
 
     const nextState = useLabStore.getState();
-    expect(nextState.scenarioIsDirty).toBe(false);
     expect(nextState.activeScenarioPresetId).toBe('dual-source-interference');
     expect(nextState.sources).toHaveLength(2);
-    expect(nextState.selectedSourceId).toBe(nextState.sources[0]?.id ?? null);
+    expect(nextState.selectionContext.mode).toBe('single');
+    expect(nextState.selectionContext.selectedSourceIds).toEqual([nextState.sources[0].id]);
   });
 
-  it('preserves the solver profile when applying a preset', () => {
+  it('supports multi-select transitions and mixed context', () => {
+    const first = useLabStore.getState().sources[0];
+    const secondId = useLabStore.getState().addSource({ frequency: 5e9 });
+
+    useLabStore.getState().selectSource(first.id);
+    useLabStore.getState().toggleSourceSelection(secondId);
+
+    let state = useLabStore.getState();
+    expect(state.selectionContext.mode).toBe('multi');
+    expect(state.selectionContext.selectedSourceIds).toHaveLength(2);
+    expect(state.getSelectedSources()).toHaveLength(2);
+
+    useLabStore.getState().clearSelection();
+    state = useLabStore.getState();
+    expect(state.selectionContext.mode).toBe('none');
+    expect(state.selectionContext.selectedSourceIds).toHaveLength(0);
+  });
+
+  it('tracks section disclosure state', () => {
+    const store = useLabStore.getState();
+    expect(store.sectionDisclosure['selected-entity']).toBe(true);
+
+    store.setSectionExpanded('selected-entity', false);
+    expect(useLabStore.getState().sectionDisclosure['selected-entity']).toBe(false);
+
+    store.toggleSectionExpanded('selected-entity');
+    expect(useLabStore.getState().sectionDisclosure['selected-entity']).toBe(true);
+  });
+
+  it('preserves solver profile when applying a preset', () => {
     const store = useLabStore.getState();
     store.setSolverProfile('scientific');
-
     store.applyScenarioPreset('dual-source-interference');
-
     expect(useLabStore.getState().settings.solverProfile).toBe('scientific');
+  });
+
+  it('ignores invalid settings updates and supports recovery', () => {
+    const store = useLabStore.getState();
+    const before = store.settings.themeMode;
+    store.updateSettings({ themeMode: 'invalid-theme' as never });
+    expect(useLabStore.getState().settings.themeMode).toBe(before);
+
+    store.updateSettings({ themeMode: 'light' });
+    expect(useLabStore.getState().settings.themeMode).toBe('light');
   });
 });

@@ -31,10 +31,7 @@ export function VisualizationSettings() {
   const setSolverProfile = useLabStore((state) => state.setSolverProfile);
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
-        Visualization
-      </Typography>
+    <Box>
       <Stack spacing={1.5}>
         <FormControl fullWidth size="small">
           <Tooltip title="Choose how field intensity is colored across the 3D scene." describeChild>

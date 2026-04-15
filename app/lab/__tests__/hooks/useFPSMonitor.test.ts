@@ -24,7 +24,6 @@ describe('useFPSMonitor', () => {
       if (typeof selector === 'function') {
         return selector(storeState);
       }
-
       return storeState;
     });
 
@@ -47,13 +46,22 @@ describe('useFPSMonitor', () => {
   it('reduces quality after sustained low fps', () => {
     renderHook(() => useFPSMonitor());
 
-    expect(rafCallback).not.toBeNull();
-
     act(() => {
       rafCallback?.(1000);
     });
 
-    expect(mockUpdatePerformance).toHaveBeenCalled();
+    expect(mockUpdatePerformance).toHaveBeenCalledWith(expect.any(Number));
     expect(mockSetLOD).toHaveBeenCalledWith('low');
+  });
+
+  it('records fps updates for observability thresholds', () => {
+    renderHook(() => useFPSMonitor());
+    act(() => {
+      rafCallback?.(1000);
+    });
+
+    const fpsValues = mockUpdatePerformance.mock.calls.map((call) => call[0]);
+    expect(fpsValues.length).toBeGreaterThan(0);
+    expect(fpsValues.every((value: number) => Number.isFinite(value))).toBe(true);
   });
 });

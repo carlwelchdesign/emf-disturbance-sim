@@ -23,10 +23,7 @@ export function MeasurementTools() {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
-        Measurements
-      </Typography>
+    <Box>
       <Tooltip title="Capture a measurement at the first source position." describeChild>
         <span>
           <Button variant="outlined" fullWidth onClick={handleAdd} disabled={sources.length === 0 || atLimit}>

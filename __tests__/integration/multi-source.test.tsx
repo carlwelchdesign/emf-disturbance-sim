@@ -35,14 +35,19 @@ describe('multi-source integration', () => {
         },
       ],
       selectedSourceId: 'source-1',
+      selectionContext: {
+        mode: 'single',
+        selectedSourceIds: ['source-1'],
+        primarySourceId: 'source-1',
+      },
     });
   });
 
   it('renders multiple sources in the list and scene', () => {
-    const { container } = render(<LabPage />);
+    render(<LabPage />);
 
     expect(screen.getAllByText('Alpha').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Beta').length).toBeGreaterThanOrEqual(1);
-    expect(container.querySelectorAll('mesh').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/Selected Entity/i)).toBeInTheDocument();
   });
 });

@@ -15,6 +15,7 @@ import { createSourceIdGenerator } from '../lib/source-helpers';
 import { isSameCameraState } from '../lib/camera-helpers';
 import { getSourceColor } from '../lib/visualization-helpers';
 import { buildScenarioSources, getScenarioPreset } from '../modules/scenario/presets';
+import { SIDEBAR_SECTION_DEFAULT_EXPANDED } from '../lib/sidebar-layout';
 
 const sourceIdGenerator = createSourceIdGenerator('source');
 let measurementIdCounter = 1;
@@ -34,6 +35,12 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     },
   ],
   selectedSourceId: 'default-source',
+  selectionContext: {
+    mode: 'single',
+    selectedSourceIds: ['default-source'],
+    primarySourceId: 'default-source',
+  },
+  sectionDisclosure: { ...SIDEBAR_SECTION_DEFAULT_EXPANDED },
   activeScenarioPresetId: null,
   scenarioIsDirty: false,
   camera: DEFAULT_CAMERA,
@@ -84,6 +91,11 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     set((state) => ({
       sources: [...state.sources, sanitizedSource],
       selectedSourceId: id,
+      selectionContext: {
+        mode: 'single',
+        selectedSourceIds: [id],
+        primarySourceId: id,
+      },
       scenarioIsDirty: true,
     }));
 
@@ -91,11 +103,23 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   },
 
   removeSource: (id) => {
-    set((state) => ({
-      sources: state.sources.filter((s) => s.id !== id),
-      selectedSourceId: state.selectedSourceId === id ? null : state.selectedSourceId,
-      scenarioIsDirty: true,
-    }));
+    set((state) => {
+      const nextSources = state.sources.filter((s) => s.id !== id);
+      const nextSelectedIds = state.selectionContext.selectedSourceIds.filter((sourceId) => sourceId !== id);
+      const nextPrimary = state.selectionContext.primarySourceId === id ? nextSelectedIds[0] ?? null : state.selectionContext.primarySourceId;
+      const mode = nextSelectedIds.length === 0 ? 'none' : nextSelectedIds.length === 1 ? 'single' : 'multi';
+
+      return {
+        sources: nextSources,
+        selectedSourceId: state.selectedSourceId === id ? nextPrimary : state.selectedSourceId,
+        selectionContext: {
+          mode,
+          selectedSourceIds: nextSelectedIds,
+          primarySourceId: nextPrimary,
+        },
+        scenarioIsDirty: true,
+      };
+    });
   },
 
   updateSource: (id, params) => {
@@ -108,7 +132,84 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   },
 
   selectSource: (id) => {
-    set({ selectedSourceId: id });
+    set({
+      selectedSourceId: id,
+      selectionContext: {
+        mode: id ? 'single' : 'none',
+        selectedSourceIds: id ? [id] : [],
+        primarySourceId: id,
+      },
+    });
+  },
+
+  toggleSourceSelection: (id) => {
+    set((state) => {
+      const exists = state.selectionContext.selectedSourceIds.includes(id);
+      const selectedSourceIds = exists
+        ? state.selectionContext.selectedSourceIds.filter((selectedId) => selectedId !== id)
+        : [...state.selectionContext.selectedSourceIds, id];
+
+      const primarySourceId = selectedSourceIds.length === 0
+        ? null
+        : state.selectionContext.primarySourceId && selectedSourceIds.includes(state.selectionContext.primarySourceId)
+        ? state.selectionContext.primarySourceId
+        : selectedSourceIds[0];
+
+      return {
+        selectedSourceId: primarySourceId,
+        selectionContext: {
+          mode: selectedSourceIds.length === 0 ? 'none' : selectedSourceIds.length === 1 ? 'single' : 'multi',
+          selectedSourceIds,
+          primarySourceId,
+        },
+      };
+    });
+  },
+
+  clearSelection: () => {
+    set({
+      selectedSourceId: null,
+      selectionContext: {
+        mode: 'none',
+        selectedSourceIds: [],
+        primarySourceId: null,
+      },
+    });
+  },
+
+  setPrimarySelection: (id) => {
+    set((state) => {
+      if (!id || !state.selectionContext.selectedSourceIds.includes(id)) {
+        return state;
+      }
+
+      return {
+        selectedSourceId: id,
+        selectionContext: {
+          ...state.selectionContext,
+          primarySourceId: id,
+          mode: state.selectionContext.selectedSourceIds.length > 1 ? 'multi' : 'single',
+        },
+      };
+    });
+  },
+
+  setSectionExpanded: (sectionId, expanded) => {
+    set((state) => ({
+      sectionDisclosure: {
+        ...state.sectionDisclosure,
+        [sectionId]: expanded,
+      },
+    }));
+  },
+
+  toggleSectionExpanded: (sectionId) => {
+    set((state) => ({
+      sectionDisclosure: {
+        ...state.sectionDisclosure,
+        [sectionId]: !state.sectionDisclosure[sectionId],
+      },
+    }));
   },
 
   toggleSourceActive: (id) => {
@@ -126,6 +227,12 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     set({
       sources: [],
       selectedSourceId: null,
+      selectionContext: {
+        mode: 'none',
+        selectedSourceIds: [],
+        primarySourceId: null,
+      },
+      sectionDisclosure: { ...SIDEBAR_SECTION_DEFAULT_EXPANDED },
       activeScenarioPresetId: null,
       scenarioIsDirty: false,
       measurements: [],
@@ -163,6 +270,11 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     set((state) => ({
       sources,
       selectedSourceId: sources[0]?.id ?? null,
+      selectionContext: {
+        mode: sources.length === 0 ? 'none' : 'single',
+        selectedSourceIds: sources[0] ? [sources[0].id] : [],
+        primarySourceId: sources[0]?.id ?? null,
+      },
       activeScenarioPresetId: preset.id,
       scenarioIsDirty: false,
       camera: { ...DEFAULT_CAMERA, ...(preset.camera ?? {}) },
@@ -207,6 +319,10 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
 
   // === Settings Actions ===
   updateSettings: (params) => {
+    if (params.themeMode !== undefined && !['dark', 'light'].includes(params.themeMode)) {
+      return;
+    }
+
     set((state) => ({
       settings: { ...state.settings, ...params },
       scenarioIsDirty: true,
@@ -327,8 +443,19 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   },
 
   getSelectedSource: () => {
-    const { sources, selectedSourceId } = get();
-    return sources.find((s) => s.id === selectedSourceId);
+    const { sources, selectionContext } = get();
+    const selectedId = selectionContext.primarySourceId;
+    return sources.find((s) => s.id === selectedId);
+  },
+
+  getSelectedSources: () => {
+    const { sources, selectionContext } = get();
+    const selectedIds = new Set(selectionContext.selectedSourceIds);
+    return sources.filter((source) => selectedIds.has(source.id));
+  },
+
+  getSelectionContext: () => {
+    return get().selectionContext;
   },
 
   getActiveSources: () => {

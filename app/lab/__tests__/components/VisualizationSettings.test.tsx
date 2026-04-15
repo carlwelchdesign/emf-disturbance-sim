@@ -18,6 +18,10 @@ describe('VisualizationSettings', () => {
           animationSpeed: 1,
           solverProfile: 'balanced',
           themeMode: 'dark',
+          showThreatMetrics: false,
+          showEmitterInteractions: false,
+          showFieldChart: false,
+          showFlightPaths: false,
         },
         updateSettings,
         setSolverProfile: jest.fn(),
@@ -55,5 +59,13 @@ describe('VisualizationSettings', () => {
     render(<VisualizationSettings />);
 
     expect(screen.getByLabelText(/field fidelity/i)).toBeInTheDocument();
+  });
+
+  it('keeps visualization controls scoped to global settings', () => {
+    render(<VisualizationSettings />);
+
+    expect(screen.queryByText(/selected entity/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/remove source/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/x/i)).not.toBeInTheDocument();
   });
 });

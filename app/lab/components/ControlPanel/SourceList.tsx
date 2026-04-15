@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Box, List, ListItem, ListItemButton, IconButton, Typography, Stack, Chip, Tooltip } from '@mui/material';
+import { Box, List, ListItem, ListItemButton, IconButton, Typography, Stack, Tooltip, Checkbox } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RadioButtonChecked from '@mui/icons-material/RadioButtonChecked';
 import RadioButtonUnchecked from '@mui/icons-material/RadioButtonUnchecked';
@@ -20,7 +20,9 @@ import { getSourceDisplayName } from '../../lib/source-helpers';
 export function SourceList() {
   const sources = useLabStore((state) => state.sources);
   const selectedSourceId = useLabStore((state) => state.selectedSourceId);
-  const selectSource = useLabStore((state) => state.selectSource);
+  const selectionContext = useLabStore((state) => state.selectionContext);
+  const toggleSourceSelection = useLabStore((state) => state.toggleSourceSelection);
+  const setPrimarySelection = useLabStore((state) => state.setPrimarySelection);
   const removeSource = useLabStore((state) => state.removeSource);
   const toggleSourceActive = useLabStore((state) => state.toggleSourceActive);
 
@@ -35,7 +37,7 @@ export function SourceList() {
   }
 
   const handleSelect = (sourceId: string) => {
-    selectSource(sourceId);
+    setPrimarySelection(sourceId);
   };
 
   const handleToggleActive = (sourceId: string, event: React.MouseEvent) => {
@@ -67,14 +69,15 @@ export function SourceList() {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
-        Sources ({sources.length})
+    <Box>
+      <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+        Source Inventory ({sources.length})
       </Typography>
       
       <List disablePadding>
         {sources.map((source: RFSource, index) => {
           const isSelected = source.id === selectedSourceId;
+          const isChecked = selectionContext.selectedSourceIds.includes(source.id);
           const displayName = getSourceDisplayName(source, index);
           const activeToggleLabel = `${source.active ? 'Deactivate' : 'Activate'} ${displayName}`;
           const deleteLabel = `Delete ${displayName}`;
@@ -105,6 +108,13 @@ export function SourceList() {
             >
               <ListItemButton onClick={() => handleSelect(source.id)} dense>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', pr: 1 }}>
+                  <Checkbox
+                    size="small"
+                    checked={isChecked}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={() => toggleSourceSelection(source.id)}
+                    slotProps={{ input: { 'aria-label': `Select ${displayName}` } }}
+                  />
                   {/* Active/Inactive Toggle */}
                   <Tooltip title={activeToggleLabel} describeChild>
                     <IconButton
@@ -122,10 +132,10 @@ export function SourceList() {
                   </Tooltip>
 
                   {/* Source Info */}
-                  <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" noWrap sx={{ fontWeight: isSelected ? 600 : 400 }}>
-                      {displayName}
-                    </Typography>
+                    <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" noWrap sx={{ fontWeight: isSelected ? 600 : 400 }}>
+                        {displayName}
+                      </Typography>
                     
                     {source.deviceType && (
                       <Typography variant="caption" color="text.secondary" noWrap>
@@ -133,18 +143,9 @@ export function SourceList() {
                       </Typography>
                     )}
                     
-                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                      <Chip
-                        label={formatFrequency(source.frequency)}
-                        size="small"
-                        sx={{ height: 18, fontSize: '0.7rem' }}
-                      />
-                      <Chip
-                        label={formatPower(source.power)}
-                        size="small"
-                        sx={{ height: 18, fontSize: '0.7rem' }}
-                      />
-                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatFrequency(source.frequency)} · {formatPower(source.power)}
+                    </Typography>
                   </Stack>
                 </Box>
               </ListItemButton>

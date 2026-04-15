@@ -24,6 +24,11 @@ describe('Single Source Integration', () => {
         },
       ],
       selectedSourceId: 'default-source',
+      selectionContext: {
+        mode: 'single',
+        selectedSourceIds: ['default-source'],
+        primarySourceId: 'default-source',
+      },
     });
   });
 
