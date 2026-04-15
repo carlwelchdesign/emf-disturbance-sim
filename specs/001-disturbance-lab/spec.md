@@ -5,12 +5,22 @@
 **Status**: Draft  
 **Input**: User description: "a polished single-page or hybrid interactive EMF visualization lab built with React, TypeScript, Next.js App Router, React Three Fiber, three, and local state. Include product goals, recommended UX/product approach, V1/V2 scope, scenarios, disturbance system, simulation model, rendering, state, testing, and open questions only if truly necessary."
 
+## Clarifications
+
+### Session 2026-04-14
+
+- Q: What should the V1 visualization prioritize? → A: Particle / wavefront engine
+
+### Session 2026-04-15
+
+- Q: Should divergence/curl be explicitly shown in V1 as a conceptual overlay/animation, or kept for V2+? → A: V1 conceptual overlay (Recommended)
+
 ## Product Goals
 
 This feature delivers a **prediction, analysis, and communication platform** for understanding EMF/RF electromagnetic exposure. The platform is structured as a three-layer model:
 
-1. **Visualization Layer (V1 Core)**: Interactive 3D visualization of electromagnetic fields, enabling users to understand field behavior and interference patterns
-2. **Analysis Layer (V1.5-V2)**: Tools for measuring, comparing, and analyzing field strength at specific points, with overlays showing exposure levels and safety thresholds
+1. **Visualization Layer (V1 Core)**: Interactive 3D particle / wavefront visualization of electromagnetic fields, enabling users to understand field behavior and interference patterns
+2. **Analysis Layer (V1)**: Tools for measuring, comparing, and analyzing field strength at specific points, with overlays showing exposure levels, near/far labels, and simplified safety indicators
 3. **Professional Platform Layer (V2+)**: Reporting, assessment workflows, and EN 62232-oriented compliance outputs for professional users
 
 The V1 focus is on establishing the visualization foundation with honest, communication-oriented UX that acknowledges model limitations and builds trust through transparency about accuracy boundaries.
@@ -20,17 +30,18 @@ The V1 focus is on establishing the visualization foundation with honest, commun
 - **Prediction & Understanding**: Provide visual tools for predicting and understanding EMF/RF field behavior in real-world scenarios
 - **Analysis & Measurement**: Enable users to analyze field strength, identify hotspots, and understand exposure levels relative to safety guidelines
 - **Communication & Trust**: Create clear, honest visualizations that communicate uncertainty and model limitations, building trust through transparency
-- **Practical V1 Scope**: Deliver a working visualization tool without overengineering; defer GPU acceleration, advanced physics, and professional reporting to future phases
+- **Practical V1 Scope**: Deliver a working motion-first visualization tool without overengineering; defer GPU acceleration, advanced physics, and professional reporting to future phases
 
 ### V1 Scope (MVP)
 
 **Core Capabilities**:
-- Single-page interactive 3D EMF/RF visualization with point sources
+- Single-page interactive 3D EMF/RF visualization with point sources rendered as a motion-first particle / wavefront engine
 - Source/antenna modeling: configurable frequency, power, and position (V1: omnidirectional; beam steering deferred)
 - Environment-aware simulation: basic 3D environment (room/space boundaries) with placeholder material properties
 - Near-field vs far-field distinction: simplified inverse-distance model (full near-field modeling deferred to V2)
-- Real-time visualization of field strength distribution using color-coded overlays
-- Analysis overlays: field strength measurements at sample points, basic exposure level indicators
+- Real-time visualization of field strength distribution using color-coded overlays, particle cadence, and wavefront motion
+- Conceptual divergence/curl flow cues in V1 as an explanatory overlay, not a full solver
+- Analysis overlays: field strength measurements at sample points, near/far labels, and basic exposure level indicators
 - Interactive 3D camera controls (orbit, pan, zoom)
 - Communication-oriented UX: honest language about model limitations, accuracy caveats, "estimated" vs "measured" labels
 - Performance: CPU-based calculation for 3-5 sources (GPU acceleration deferred to V2)
@@ -46,10 +57,8 @@ The V1 focus is on establishing the visualization foundation with honest, commun
 
 ### V2 Scope (Future Enhancements)
 
-**V1.5 - Analysis Layer**:
 - Advanced analysis overlays: heatmaps showing cumulative exposure, compliance threshold visualization
-- Measurement tools: precise field strength readings at user-defined points
-- Scenario management: save/load common EMF configurations (home office, cell tower proximity, Wi-Fi mesh)
+- Scenario management beyond curated presets: save/load common EMF configurations (home office, cell tower proximity, Wi-Fi mesh)
 - Session persistence via local storage or URL parameters
 
 **V2 - Professional Platform Layer**:
@@ -66,12 +75,12 @@ The V1 focus is on establishing the visualization foundation with honest, commun
 
 ### Interaction Model
 
-**Primary Workspace**: A 3D canvas occupies the majority of the viewport, showing the EMF field visualization in an interactive 3D environment.
+**Primary Workspace**: A 3D canvas occupies the majority of the viewport, showing a motion-first EMF particle / wavefront visualization in an interactive 3D environment.
 
 **Control Panel**: A collapsible side panel or overlay provides:
 - Source management (add/remove/select sources)
 - Parameter sliders for selected source (frequency, amplitude, phase, position)
-- Global visualization settings (field line density, color mapping, animation speed)
+- Global visualization settings (particle density, color mapping, animation speed)
 - Performance/quality toggles
 
 **Direct Manipulation**: Users can interact with sources directly in the 3D view:
@@ -83,14 +92,14 @@ The V1 focus is on establishing the visualization foundation with honest, commun
 
 - **Honest Communication**: Label all visualizations with accuracy caveats ("Estimated", "Simplified Model", "Not for Compliance Use")
 - **Trust Through Transparency**: Clearly communicate model limitations, simplifications, and uncertainty bounds in the UI
-- **Analysis-Oriented**: Provide overlays showing field strength values, safety thresholds, and measurement points
+- **Analysis-Oriented**: Provide overlays showing field strength values, near/far labels, safety thresholds, and measurement points
 - **Progressive Disclosure**: Start with simple defaults; reveal advanced controls as users explore
 - **Consistent Color Language**: Use intuitive color mapping for field strength with legend showing values and units
 
 ### First-Time User Experience
 
 1. User lands on page with a single EMF source pre-configured at center
-2. Simple field visualization is immediately visible
+2. A dynamic particle / wavefront visualization is immediately visible
 3. Prominent "Add Source" button invites exploration
 4. Hovering over UI elements provides contextual tooltips
 5. Default parameters are sensible and produce clear interference patterns
@@ -107,10 +116,10 @@ A student wants to understand what an electromagnetic field "looks like" around 
 
 **Acceptance Scenarios**:
 
-1. **Given** the page loads, **When** user views the 3D canvas, **Then** a single EMF source is visible at the center with field lines radiating outward
-2. **Given** a source is displayed, **When** user adjusts the frequency slider, **Then** the field line wavelength updates in real-time to reflect the new frequency
-3. **Given** a source is displayed, **When** user adjusts the amplitude slider, **Then** the field strength visualization (color intensity or line density) updates to reflect the new amplitude
-4. **Given** a source is displayed, **When** user rotates the 3D camera, **Then** the view updates smoothly at 30+ FPS with field lines maintaining spatial relationship to the source
+1. **Given** the page loads, **When** user views the 3D canvas, **Then** a single EMF source is visible at the center with animated particles or wavefronts radiating outward
+2. **Given** a source is displayed, **When** user adjusts the frequency slider, **Then** the wavefront cadence or spacing updates in real-time to reflect the new frequency
+3. **Given** a source is displayed, **When** user adjusts the amplitude slider, **Then** the field strength visualization (color intensity, particle brightness, or band density) updates to reflect the new amplitude
+4. **Given** a source is displayed, **When** user rotates the 3D camera, **Then** the view updates smoothly at a 60 FPS target with the wavefronts maintaining spatial relationship to the source
 
 ---
 
@@ -124,11 +133,11 @@ A physics student wants to explore constructive and destructive interference bet
 
 **Acceptance Scenarios**:
 
-1. **Given** a single source exists, **When** user clicks "Add Source", **Then** a new EMF source appears at a default position with field visualization immediately updating
-2. **Given** two sources with identical frequency exist, **When** sources are positioned close together, **Then** interference patterns (constructive and destructive) are visible where fields overlap
+1. **Given** a single source exists, **When** user clicks "Add Source", **Then** a new EMF source appears at a default position with the particle / wavefront visualization immediately updating
+2. **Given** two sources with identical frequency exist, **When** sources are positioned close together, **Then** interference patterns (constructive and destructive) are visible where the particle / wavefronts overlap
 3. **Given** two sources exist, **When** user adjusts the phase of one source, **Then** the interference pattern shifts in real-time, showing phase relationship impact
 4. **Given** multiple sources exist, **When** user drags a source to a new position, **Then** the interference pattern updates in real-time as the source moves
-5. **Given** three or more sources exist, **When** all are visible, **Then** the visualization maintains performance at 30+ FPS
+5. **Given** three or more sources exist, **When** all are visible, **Then** the visualization maintains a 60 FPS target with a 30 FPS floor under load
 
 ---
 
@@ -142,8 +151,8 @@ A user wants to experiment with different EMF parameters to understand their eff
 
 **Acceptance Scenarios**:
 
-1. **Given** a source is selected, **When** user increases frequency, **Then** field line wavelength decreases (more oscillations per unit distance)
-2. **Given** a source is selected, **When** user increases amplitude, **Then** field strength indicators (color saturation, brightness, or explicit strength markers) increase proportionally
+1. **Given** a source is selected, **When** user increases frequency, **Then** wavefront spacing tightens and particle cadence increases
+2. **Given** a source is selected, **When** user increases amplitude, **Then** field strength indicators (color saturation, brightness, or particle density) increase proportionally
 3. **Given** a source is selected, **When** user adjusts phase from 0° to 180°, **Then** the field pattern shifts spatially, and interference patterns with other sources change
 4. **Given** multiple sources exist, **When** user changes a parameter on one source, **Then** only that source's field updates, and interference recalculates for affected regions
 
@@ -166,7 +175,24 @@ A user wants to view the EMF field from different angles and distances to unders
 
 ---
 
-### User Story 5 - Remove and Manage Sources (Priority: P3)
+### User Story 5 - Inspect Field Intensity and Measurement Points (Priority: P2)
+
+A user wants to place measurement points, inspect local field intensity, and compare regions without leaving the main scene.
+
+**Why this priority**: Measurement is the bridge between visualization and analysis. It is needed in V1 so users can verify what the field is doing at specific points and understand near/far behavior.
+
+**Independent Test**: Can be tested by placing one or more measurement points, reading the displayed field strength values, and confirming the near/far labels update as the camera or sources change.
+
+**Acceptance Scenarios**:
+
+1. **Given** the scene is loaded, **When** user places a measurement point, **Then** the point appears in the 3D view with an estimated field intensity readout
+2. **Given** a measurement point exists, **When** source parameters or positions change, **Then** the displayed value updates in real time
+3. **Given** the camera or source configuration implies a near-field or far-field region, **When** user views the overlay, **Then** the UI labels the region and states that the model is simplified
+4. **Given** analysis overlays are visible, **When** user toggles them off, **Then** the main visualization remains uncluttered and readable
+
+---
+
+### User Story 6 - Remove and Manage Sources (Priority: P3)
 
 A user wants to remove sources or clear all sources to start a new experiment.
 
@@ -184,7 +210,7 @@ A user wants to remove sources or clear all sources to start a new experiment.
 
 ### Edge Cases
 
-- **What happens when sources are positioned at identical locations?** The fields should superimpose correctly, potentially showing maximum constructive interference if in phase. No crashes or visual artifacts should occur.
+- **What happens when sources are positioned at identical locations?** The dynamic field visualization should superimpose correctly, potentially showing maximum constructive interference if in phase. No crashes or visual artifacts should occur.
 - **How does the system handle 10+ simultaneous sources?** Performance should degrade gracefully with visual quality settings automatically adjusting if frame rate drops below 30 FPS, or a warning message appears suggesting source reduction.
 - **What happens when frequency/amplitude values reach extreme ranges?** Sliders should have reasonable min/max bounds (e.g., frequency: 0.1-10 Hz for visualization purposes, amplitude: 0-100 arbitrary units). Values at extremes should still produce valid visualizations without overflow errors.
 - **How does the system handle rapid parameter changes (slider dragging)?** Visualization updates should be throttled or debounced to maintain frame rate stability without causing visual stuttering.
@@ -196,12 +222,12 @@ A user wants to remove sources or clear all sources to start a new experiment.
 ### Functional Requirements - Core Visualization
 
 - **FR-001**: System MUST render a 3D coordinate space representing the laboratory environment
-- **FR-002**: System MUST visualize electromagnetic field lines or field strength distribution around each source
+- **FR-002**: System MUST visualize electromagnetic field behavior around each source using a motion-first particle / wavefront representation or an equivalent dynamic field language
 - **FR-003**: System MUST update field visualization in real-time (< 100ms latency) when source parameters change
 - **FR-004**: System MUST support at least 5 simultaneous EMF point sources without dropping below 30 FPS
 - **FR-005**: System MUST display interference patterns where multiple sources' fields overlap
 - **FR-006**: Field visualization MUST use consistent color mapping to represent field strength (e.g., blue for weak, red for strong)
-- **FR-007**: System MUST maintain visual clarity: field lines or strength indicators must remain distinguishable even with multiple sources
+- **FR-007**: System MUST maintain visual clarity: particle / wavefront cues or strength indicators must remain distinguishable even with multiple sources
 
 ### Functional Requirements - EMF Source Management
 
@@ -231,11 +257,11 @@ A user wants to remove sources or clear all sources to start a new experiment.
 - **FR-039**: Any safety threshold comparisons MUST be labeled "Informational Only - Not for Compliance Use"
 - **FR-040**: System MUST avoid misleading precision (e.g., show "~5.2 V/m" not "5.23847 V/m" for simplified models)
 
-### Functional Requirements - Disturbance System (V2 Consideration)
+### Functional Requirements - Disturbance System
 
-- **FR-041**: System SHOULD support time-based animation showing wave propagation from sources (V2)
-- **FR-042**: System SHOULD allow toggling between static field view and animated propagation view (V2)
-- **FR-043**: Animation speed SHOULD be adjustable for educational clarity (V2)
+- **FR-041**: System SHOULD support time-based animation showing wave propagation from sources
+- **FR-042**: System SHOULD allow toggling between static field view and animated propagation view
+- **FR-043**: Animation speed SHOULD be adjustable for educational clarity
 
 ### Functional Requirements - Interaction & Camera
 
@@ -261,8 +287,8 @@ A user wants to remove sources or clear all sources to start a new experiment.
 
 - **FR-030**: System MUST provide field strength measurements at user-selected sample points
 - **FR-031**: Analysis overlays MUST show field strength values in appropriate units (V/m, W/m², or dBm)
-- **FR-032**: System SHOULD display safety threshold indicators (e.g., ICNIRP reference levels) with "approximate" labels (V1.5)
-- **FR-033**: System SHOULD support comparison against exposure guidelines (informational only, not for compliance) (V1.5)
+- **FR-032**: System SHOULD display safety threshold indicators (e.g., ICNIRP reference levels) with "approximate" labels (V1)
+- **FR-033**: System SHOULD support comparison against exposure guidelines (informational only, not for compliance) (V1)
 - **FR-034**: All analysis results MUST be labeled with accuracy caveats ("Estimated", "Simplified Model", "Not for Compliance")
 - **FR-035**: EN 62232 compliance reporting and professional assessment workflows deferred to V2
 
@@ -272,7 +298,7 @@ A user wants to remove sources or clear all sources to start a new experiment.
 - **FR-051**: System MUST track currently selected source for parameter editing
 - **FR-052**: System MUST maintain camera state (position, target, orientation)
 - **FR-053**: System MUST track environment configuration (dimensions, materials if applicable)
-- **FR-054**: System MUST track analysis settings (measurement points, overlay visibility, safety thresholds)
+- **FR-054**: System MUST track analysis settings (measurement points, overlay visibility, safety thresholds, near/far labels)
 - **FR-055**: System MUST track global visualization settings (color scheme, quality level)
 - **FR-056**: State MUST be held in client-side memory (no server persistence required for V1)
 - **FR-057**: State changes MUST trigger appropriate re-renders of affected visualizations only (no full-page refresh)
@@ -290,7 +316,7 @@ A user wants to remove sources or clear all sources to start a new experiment.
 ### Functional Requirements - Performance & Rendering
 
 - **FR-065**: System MUST achieve initial render within 2 seconds on modern hardware (< 3 years old)
-- **FR-066**: System MUST maintain 30+ FPS during interaction with up to 3-5 sources (V1 target with CPU calculation)
+- **FR-066**: System MUST maintain a 60 FPS target during interaction with up to 3-5 sources, with 30 FPS as the minimum acceptable floor under load (V1 target with CPU calculation)
 - **FR-067**: System MUST use level-of-detail (LOD) or quality reduction if performance degrades
 - **FR-068**: System MUST debounce or throttle expensive calculations during rapid parameter changes
 - **FR-069**: Rendering MUST use hardware acceleration (WebGL) for 3D visualization
@@ -331,11 +357,11 @@ A user wants to remove sources or clear all sources to start a new experiment.
 
 ### Measurable Outcomes
 
-- **SC-001**: Users can add their first RF source and see field visualization within 5 seconds of page load
-- **SC-002**: System maintains 30+ FPS with 3-5 simultaneous sources during active parameter manipulation (V1 CPU-based target)
+- **SC-001**: Users can add their first RF source and see animated particle / wavefront visualization within 5 seconds of page load
+- **SC-002**: System maintains a 60 FPS target with a 30 FPS floor under load for 3-5 simultaneous sources during active parameter manipulation (V1 CPU-based target)
 - **SC-003**: Parameter changes (frequency, power, position) produce visible visual feedback within 100ms
 - **SC-004**: All visualizations include visible accuracy disclaimers ("Estimated", "Simplified Model")
-- **SC-005**: Users can place measurement points and see field strength values with units (V/m or W/m²)
+- **SC-005**: Users can place measurement points and see field strength values with units (V/m or W/m²) and near/far labeling within 100ms
 - **SC-006**: Near-field vs far-field regions are visually distinguishable or labeled in the UI
 - **SC-007**: Camera orbit, zoom, and pan controls respond smoothly without perceptible lag
 - **SC-008**: System provides clear feedback when performance limits are approached (source count warnings)
@@ -345,7 +371,7 @@ A user wants to remove sources or clear all sources to start a new experiment.
 
 - **Target Environment**: Users are accessing the platform via modern desktop/laptop browsers (Chrome, Firefox, Safari, Edge) with WebGL 2.0 support
 - **Input Devices**: Primary input is mouse and keyboard; touch support is out of scope for V1
-- **Physics Simplification**: Visualization uses simplified EMF/RF propagation models (point sources, inverse-distance, basic superposition) rather than full Maxwell's equations or ray-tracing for real-time performance
+- **Physics Simplification**: Visualization uses simplified EMF/RF propagation models grounded in the supplied formulas (plane wave, superposition, attenuation, reflection, noise, point source, near/far falloff) rather than a full Maxwell solver or ray-tracing for real-time performance
 - **Use Case**: Primary users are learning about RF/EMF exposure, assessing home/office scenarios, or exploring "what-if" scenarios; not intended for professional compliance assessments in V1
 - **Accuracy Level**: V1 provides "order of magnitude" estimates suitable for education and rough analysis; professional-grade accuracy with EN 62232 compliance deferred to V2
 - **Single User**: No collaborative or multi-user features; each session is independent
@@ -365,7 +391,7 @@ The architecture must maintain clear separation of concerns across these modules
 2. **Simulation Module**: Field calculation engine, propagation models, superposition logic (independent of rendering)
 3. **Compute Module**: Performance-critical calculation layer (CPU in V1, GPU-ready interface for V2)
 4. **Reporting Module**: Future assessment and EN 62232 report generation (V2, stub interface in V1)
-5. **Scenario Module**: Environment configuration, source templates, preset scenarios (V1.5)
+5. **Scenario Module**: Environment configuration, source templates, curated presets, and analysis workflows (V1)
 6. **Environment Module**: 3D space definition, material properties, boundary modeling (basic in V1, rich in V2)
 7. **Source Module**: Antenna/device modeling, power patterns, frequency management (omnidirectional in V1, directional in V2)
 8. **Visualization Module**: 3D rendering, overlays, color mapping, camera controls (Three.js/R3F wrapper)
@@ -401,7 +427,7 @@ The architecture must maintain clear separation of concerns across these modules
 
 ### Visual/Rendering Testing
 
-- **Field Visualization**: Verify field lines/strength indicators appear correctly around sources
+- **Field Visualization**: Verify particle / wavefront cues and strength indicators appear correctly around sources
 - **Interference Patterns**: Verify that two identical in-phase sources show constructive interference, and out-of-phase sources show destructive interference
 - **Snapshot Testing**: Use visual regression testing to catch unintended changes in rendering
 - **Performance Testing**: Measure FPS under various load conditions (1, 5, 10 sources) and verify degradation is graceful

@@ -1,13 +1,13 @@
 # Tasks: EMF Disturbance and Interference Lab
 
 **Input**: Design documents from `/specs/001-disturbance-lab/`
-**Prerequisites**: plan.md, spec.md, research.md, data-model.md, quickstart.md
+**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, quickstart.md
 
-**Tests**: Included as requested in feature specification testing approach
+**Tests**: Included because the feature spec defines testing and validation expectations.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
-## Format: `[ID] [P?] [Story] Description`
+## Format: `[ID] [P?] [Story] Description with file path`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
@@ -15,304 +15,173 @@
 
 ## Path Conventions
 
-- Next.js App Router structure: `app/lab/` for feature code
-- All paths shown assume Next.js App Router project structure per plan.md
+- Next.js App Router feature code lives in `app/lab/`
+- Shared lab types, hooks, and helpers already exist under `app/lab/`
+- New feature modules can be added under `app/lab/modules/` when the story needs a clean boundary
 
 ---
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Project initialization and basic structure
+**Purpose**: Align the feature shell and visual language with the subtle dot-field direction.
 
-- [ ] T001 Create Next.js project structure with App Router and TypeScript in project root
-- [ ] T002 Install dependencies: @mui/material, @emotion/react, @emotion/styled, @react-three/fiber@8.14, @react-three/drei@9.88, three@0.158, zustand@4.4 per plan.md
-- [ ] T003 [P] Install dev dependencies: jest@29.7, @testing-library/react@14.0, ts-jest@29.1, @types/three
-- [ ] T004 [P] Configure Jest with ts-jest in jest.config.js and create jest.setup.js for React Three Fiber mocks
-- [ ] T005 [P] Configure TypeScript strict mode in tsconfig.json with paths for @/app aliases
-- [ ] T006 [P] Create MUI theme file and ThemeProvider wrapper at app/lab/theme/theme.ts and app/lab/theme/ThemeProvider.tsx with dark scientific palette and typography per research.md
-- [ ] T007 Create directory structure: app/lab/components/, app/lab/hooks/, app/lab/modules/, app/lab/theme/, app/lab/types/, app/lab/__tests__/
+- [ ] T001 [P] Finalize the single-page lab shell in `app/lab/page.tsx` and `app/lab/layout.tsx` so the canvas, control panel, and analysis overlays mount in the intended order
+- [ ] T002 [P] Refresh the dark HUD theme tokens and spacing in `app/lab/theme/theme.ts` and `app/lab/theme/ThemeProvider.tsx` for the restrained Jarvis-like aesthetic
+- [ ] T003 [P] Tighten the shared fallback and performance surfaces in `app/lab/components/shared/WebGLErrorBoundary.tsx`, `app/lab/components/shared/PerformanceWarning.tsx`, and `app/lab/components/shared/FPSMonitor.tsx`
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Core type definitions, interfaces, and state management that MUST be complete before ANY user story can be implemented
+**Purpose**: Core math, state, and mapping utilities that every user story depends on.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T008 [P] Create Vector3D and BoundingBox types in app/lab/types/common.types.ts
-- [ ] T009 [P] Create RFSource interface with validation constants in app/lab/types/source.types.ts per data-model.md
-- [ ] T010 [P] Create FieldPoint and FieldGrid interfaces in app/lab/types/field.types.ts per data-model.md
-- [ ] T011 [P] Create CameraState interface with defaults in app/lab/types/camera.types.ts per data-model.md
-- [ ] T012 [P] Create VisualizationSettings interface with LOD types in app/lab/types/visualization.types.ts per data-model.md
-- [ ] T013 [P] Create MeasurementPoint interface in app/lab/types/measurement.types.ts per data-model.md
-- [ ] T014 [P] Create Environment interface in app/lab/types/environment.types.ts per data-model.md
-- [ ] T015 Create unified type exports in app/lab/types/index.ts
-- [ ] T016 Create IComputeBackend interface in app/lab/modules/compute/compute-backend.interface.ts per plan.md modular architecture
-- [ ] T017 Create ISimulationEngine interface in app/lab/modules/simulation/types.ts
-- [ ] T018 Create IAntennaPattern interface in app/lab/modules/source/types.ts
-- [ ] T019 [P] Create Zustand store with sources, environment, measurements, settings slices in app/lab/hooks/useLabStore.ts
-- [ ] T020 [P] Create validation utilities for RFSource parameters in app/lab/lib/validation.ts per data-model.md validation rules
-- [ ] T021 [P] Create math utilities (distance, vector operations) in app/lab/lib/math-utils.ts
+- [ ] T004 Implement pure EMF and visualization helpers in `app/lab/lib/field-math.ts`, `app/lab/lib/math-utils.ts`, and `app/lab/modules/compute/cpu-backend.ts` for plane waves, superposition, attenuation, reflection, noise, point-source falloff, and conceptual divergence/curl cues
+- [ ] [P] T005 Extend the core lab types in `app/lab/types/source.types.ts`, `app/lab/types/environment.types.ts`, `app/lab/types/measurement.types.ts`, `app/lab/types/camera.types.ts`, `app/lab/types/visualization.types.ts`, `app/lab/types/field.types.ts`, and `app/lab/types/store.types.ts`
+- [ ] [P] T006 Expand the Zustand store in `app/lab/hooks/useLabStore.ts` to manage source selection, disturbance regions, scenario application, measurement points, animation mode/speed, and performance state
+- [ ] T007 Add validation and clamping helpers in `app/lab/lib/validation.ts` and `app/lab/lib/source-helpers.ts` for source limits, parameter bounds, disturbance regions, and preset application
+- [ ] [P] T008 Add shared rendering helpers in `app/lab/lib/visualization-helpers.ts` and `app/lab/lib/camera-helpers.ts` for color mapping, cadence labels, near/far labels, and intensity formatting
+- [ ] T009 Add scenario preset catalog and application helpers in `app/lab/modules/scenario/presets.ts` and `app/lab/modules/simulation/simulation-engine.ts` so V1 can switch between curated examples and free-play
+- [ ] T010 Add environment boundary rendering, dimension controls, and static/animated propagation toggle wiring in `app/lab/components/Canvas3D/EnvironmentBoundary.tsx`, `app/lab/components/ControlPanel/EnvironmentControls.tsx`, `app/lab/components/ControlPanel/VisualizationSettings.tsx`, and `app/lab/hooks/useLabStore.ts`
 
-**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+**Checkpoint**: Foundation ready - user story implementation can now begin
 
 ---
 
 ## Phase 3: User Story 1 - Observe Single EMF Source (Priority: P1) 🎯 MVP
 
-**Goal**: Load page with single default EMF source, visualize field around it, adjust frequency/amplitude parameters, observe real-time updates at 30+ FPS
+**Goal**: Load the lab and see a single source rendered as calm, readable dot particles with local glow and subtle motion.
 
-**Independent Test**: Load page → see default source with field visualization → adjust frequency slider → verify wavelength changes → adjust amplitude slider → verify field strength changes → rotate camera → verify 30+ FPS
+**Independent Test**: Open the lab, verify one emitter is visible, confirm the particles are small dots instead of ray lines, and adjust amplitude/frequency/phase while the motion stays smooth and readable.
 
-### Tests for User Story 1 ⚠️
+### Tests for User Story 1
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
-
-- [ ] T022 [P] [US1] Unit test for field calculation with single source in app/lab/__tests__/modules/field-calculator.test.ts
-- [ ] T023 [P] [US1] Unit test for inverse-distance falloff validation in app/lab/__tests__/modules/field-calculator.test.ts
-- [ ] T024 [P] [US1] Unit test for frequency-to-wavelength conversion in app/lab/__tests__/lib/field-math.test.ts
-- [ ] T025 [P] [US1] Component test for SourceControls parameter updates in app/lab/__tests__/components/SourceControls.test.tsx
-- [ ] T026 [P] [US1] Integration test for parameter change → field recalculation → render update in __tests__/integration/single-source.test.tsx
+- [ ] [P] [US1] Add unit coverage for the core EMF helpers in `app/lab/__tests__/lib/field-math.test.ts`
+- [ ] [P] [US1] Add single-source render coverage in `app/lab/__tests__/components/Canvas3D/FieldVisualization.test.tsx`
+- [ ] [P] [US1] Add source-control feedback coverage in `app/lab/__tests__/components/SourceControls.test.tsx`
 
 ### Implementation for User Story 1
 
-- [ ] T027 [P] [US1] Implement omnidirectional antenna pattern in app/lab/modules/source/antenna-patterns.ts (returns 1.0 gain for all directions)
-- [ ] T028 [P] [US1] Implement CPU field calculator with superposition formula in app/lab/modules/compute/cpu-backend.ts per data-model.md
-- [ ] T029 [US1] Implement simulation engine orchestrating compute backend in app/lab/modules/simulation/simulation-engine.ts
-- [ ] T030 [US1] Create field calculation hook using simulation engine in app/lab/hooks/useFieldCalculator.ts
-- [ ] T031 [P] [US1] Create Canvas3D wrapper component with React Three Fiber setup in app/lab/components/Canvas3D/Canvas3D.tsx
-- [ ] T032 [P] [US1] Create SourceMarker 3D component displaying source position in app/lab/components/Canvas3D/SourceMarker.tsx
-- [ ] T033 [US1] Create FieldVisualization component rendering field lines from calculated grid in app/lab/components/Canvas3D/FieldVisualization.tsx
-- [ ] T034 [US1] Implement color mapping utility (field strength to color) in app/lab/lib/visualization-helpers.ts with thermal color scheme
-- [ ] T035 [P] [US1] Create Button wrapper component using MUI Button in app/lab/components/shared/Button.tsx
-- [ ] T036 [P] [US1] Create Slider wrapper component using MUI Slider with ARIA labels in app/lab/components/shared/Slider.tsx
-- [ ] T037 [US1] Create SourceControls component with frequency and amplitude sliders in app/lab/components/ControlPanel/SourceControls.tsx
-- [ ] T038 [US1] Create ControlPanel container component in app/lab/components/ControlPanel/ControlPanel.tsx
-- [ ] T039 [US1] Create AccuracyDisclaimer component with "Simplified Model" label in app/lab/components/Analysis/AccuracyDisclaimer.tsx per spec.md trust/accuracy requirements
-- [ ] T040 [US1] Create main page component integrating Canvas3D, ControlPanel, AccuracyDisclaimer in app/lab/page.tsx
-- [ ] T041 [US1] Initialize Zustand store with single default source (2.4 GHz Wi-Fi, 100mW) per data-model.md defaults
-- [ ] T042 [US1] Connect SourceControls to Zustand store actions for parameter updates
+- [ ] [P] [US1] Implement the source emission-to-particle mapping in `app/lab/modules/simulation/simulation-engine.ts`
+- [ ] [US1] Replace any remaining ray-line feel with the subtle dot/halo visualization in `app/lab/components/Canvas3D/FieldVisualization.tsx`
+- [ ] [US1] Make the source core and marker respond to frequency, power, and phase in `app/lab/components/Canvas3D/SourceMarker.tsx`
+- [ ] [US1] Wire the default source and baseline scene into `app/lab/page.tsx` and `app/lab/hooks/useLabStore.ts`
+- [ ] [US1] Add motion-first overlay copy and simplified-model disclaimers in `app/lab/components/Analysis/AccuracyDisclaimer.tsx` and `app/lab/components/Analysis/FieldStrengthOverlay.tsx`
 
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently - single source visualization with interactive parameters
+**Checkpoint**: User Story 1 should now be fully functional and independently testable
 
 ---
 
 ## Phase 4: User Story 4 - Navigate 3D Space (Priority: P1)
 
-**Goal**: Orbit, pan, and zoom camera in 3D view with smooth controls at 30+ FPS, reset camera to default position
+**Goal**: Orbit, pan, zoom, and reset the camera while the particle field stays readable.
 
-**Independent Test**: Load page → drag to orbit → scroll to zoom → right-click drag to pan → click Reset View → verify camera returns to default
+**Independent Test**: Load the lab, orbit and zoom the scene, pan the view, then hit Reset View and confirm the camera returns cleanly without breaking particle motion.
 
-**Dependencies**: Requires User Story 1 (canvas and basic visualization must exist to navigate)
+### Tests for User Story 4
 
-### Tests for User Story 4 ⚠️
-
-- [ ] T043 [P] [US4] Unit test for orbit calculation around target point in app/lab/__tests__/hooks/useCameraControls.test.ts
-- [ ] T044 [P] [US4] Unit test for zoom clamping (0.5-5.0 range) in app/lab/__tests__/hooks/useCameraControls.test.ts
-- [ ] T045 [P] [US4] Component test for CameraControls drag handling in app/lab/__tests__/components/CameraControls.test.tsx
+- [ ] [P] [US4] Add camera control math coverage in `app/lab/__tests__/hooks/useCameraControls.test.ts`
+- [ ] [P] [US4] Add camera helper coverage in `app/lab/__tests__/lib/camera-helpers.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T046 [P] [US4] Create camera manipulation utilities (orbit, pan, zoom) in app/lab/lib/camera-helpers.ts
-- [ ] T047 [US4] Create useCameraControls hook with mouse event handlers in app/lab/hooks/useCameraControls.ts
-- [ ] T048 [US4] Create CameraControls component wrapping OrbitControls from drei in app/lab/components/Canvas3D/CameraControls.tsx
-- [ ] T049 [US4] Integrate CameraControls into Canvas3D component in app/lab/components/Canvas3D/Canvas3D.tsx
-- [ ] T050 [US4] Create Reset View button in ControlPanel calling camera reset action in app/lab/components/ControlPanel/ControlPanel.tsx
-- [ ] T051 [US4] Add camera state to Zustand store and wire reset action in app/lab/hooks/useLabStore.ts
+- [ ] [US4] Extend `app/lab/hooks/useCameraControls.ts` and `app/lab/components/Canvas3D/CameraControls.tsx` to support orbit, pan, zoom, reset, and subtle guide feedback
+- [ ] [US4] Connect camera state and reset affordances through `app/lab/types/camera.types.ts`, `app/lab/hooks/useLabStore.ts`, and `app/lab/components/ControlPanel/ControlPanel.tsx`
 
-**Checkpoint**: At this point, User Stories 1 AND 4 should both work independently - navigable 3D visualization with single source
+**Checkpoint**: User Story 4 should now be independently functional and testable
 
 ---
 
 ## Phase 5: User Story 2 - Add Multiple Sources and Observe Interference (Priority: P2)
 
-**Goal**: Add 2-3 sources, position them at different locations, observe constructive/destructive interference patterns, adjust phase to shift patterns
+**Goal**: Add additional sources and show constructive/destructive interference as a calm, readable field interaction.
 
-**Independent Test**: Load page → click Add Source → drag sources to position them → set identical frequencies → adjust phase on one source → observe interference fringes shifting → verify 30+ FPS with 3-5 sources
+**Independent Test**: Add 2-3 sources, position them apart and together, and verify the overlap visibly changes brightness, density, and phase feel without turning into streaks.
 
-**Dependencies**: Requires User Story 1 (field visualization) and User Story 4 (camera controls for viewing patterns from different angles)
+### Tests for User Story 2
 
-### Tests for User Story 2 ⚠️
-
-- [ ] T052 [P] [US2] Unit test for superposition of two sources (constructive interference) in app/lab/__tests__/modules/field-calculator.test.ts
-- [ ] T053 [P] [US2] Unit test for superposition of two sources (destructive interference, 180° phase) in app/lab/__tests__/modules/field-calculator.test.ts
-- [ ] T054 [P] [US2] Unit test for phase shift impact on interference pattern in app/lab/__tests__/modules/field-calculator.test.ts
-- [ ] T055 [P] [US2] Integration test for multi-source field calculation and rendering in __tests__/integration/multi-source.test.tsx
-- [ ] T056 [P] [US2] Performance test validating 30+ FPS with 5 sources in __tests__/performance/multi-source-fps.test.ts
+- [ ] [P] [US2] Add multi-source interference coverage in `app/lab/__tests__/modules/field-interference.test.ts`
+- [ ] [P] [US2] Add scenario/preset application coverage in `app/lab/__tests__/components/ControlPanel/FrequencyPresets.test.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T057 [P] [US2] Extend CPU field calculator to handle multiple sources via superposition in app/lab/modules/compute/cpu-backend.ts
-- [ ] T058 [P] [US2] Create source ID generator utility in app/lab/lib/source-helpers.ts
-- [ ] T059 [P] [US2] Create color palette utility for auto-assigning source colors in app/lab/lib/visualization-helpers.ts
-- [ ] T060 [US2] Create SourceList component displaying all sources in app/lab/components/ControlPanel/SourceList.tsx
-- [ ] T061 [US2] Add "Add Source" button to ControlPanel in app/lab/components/ControlPanel/ControlPanel.tsx
-- [ ] T062 [US2] Add phase slider to SourceControls component in app/lab/components/ControlPanel/SourceControls.tsx
-- [ ] T063 [US2] Implement addSource action in Zustand store (generate ID, assign default position offset, auto-color) in app/lab/hooks/useLabStore.ts
-- [ ] T064 [US2] Update FieldVisualization to render multiple sources with distinct colors in app/lab/components/Canvas3D/FieldVisualization.tsx
-- [ ] T065 [US2] Update SourceMarker to show source-specific colors from store in app/lab/components/Canvas3D/SourceMarker.tsx
-- [ ] T066 [US2] Implement source selection logic (click source to select, highlight in list and 3D view) in app/lab/hooks/useLabStore.ts
-- [ ] T067 [US2] Enable 3D drag-to-reposition for selected source using drei's DragControls in app/lab/components/Canvas3D/SourceMarker.tsx
+- [ ] [P] [US2] Implement interference and source-overlap calculations in `app/lab/modules/compute/cpu-backend.ts` and `app/lab/modules/simulation/simulation-engine.ts`
+- [ ] [US2] Build the curated scenario and preset UI in `app/lab/components/ControlPanel/FrequencyPresets.tsx` and `app/lab/components/ControlPanel/SourceList.tsx`
+- [ ] [US2] Update `app/lab/components/Canvas3D/FieldVisualization.tsx` and `app/lab/components/Analysis/FieldStrengthDisplay.tsx` for overlap brightness, constructive/destructive cues, and source ownership
 
-**Checkpoint**: At this point, User Stories 1, 2, AND 4 should all work independently - multi-source interference visualization with camera controls
+**Checkpoint**: User Story 2 should now be independently functional
 
 ---
 
 ## Phase 6: User Story 3 - Manipulate Source Parameters (Priority: P2)
 
-**Goal**: Select any source, adjust frequency/amplitude/phase controls, observe real-time visual feedback for each parameter change
+**Goal**: Edit frequency, amplitude, phase, and position while the lab updates in real time.
 
-**Independent Test**: Create 2 sources → select first source → increase frequency → verify wavelength decreases → select second source → adjust amplitude → verify only second source field strength changes → adjust phase → verify interference pattern shifts
+**Independent Test**: Select any source, adjust its parameters, and confirm the visual response tracks the edited source without affecting unrelated sources.
 
-**Dependencies**: Requires User Story 2 (multiple sources with selection) and User Story 1 (parameter controls foundation)
+### Tests for User Story 3
 
-### Tests for User Story 3 ⚠️
-
-- [ ] T068 [P] [US3] Unit test for parameter validation (frequency range 1MHz-100GHz) in app/lab/__tests__/lib/validation.test.ts
-- [ ] T069 [P] [US3] Unit test for parameter validation (power range 1mW-100W) in app/lab/__tests__/lib/validation.test.ts
-- [ ] T070 [P] [US3] Unit test for parameter validation (phase range 0-2π) in app/lab/__tests__/lib/validation.test.ts
-- [ ] T071 [P] [US3] Component test for slider throttling to prevent FPS drops in app/lab/__tests__/components/Slider.test.tsx
-- [ ] T072 [P] [US3] Integration test for parameter change affecting only selected source in __tests__/integration/parameter-updates.test.tsx
+- [ ] [P] [US3] Add source-parameter editing coverage in `app/lab/__tests__/components/SourceControls.test.tsx`
+- [ ] [P] [US3] Add input and slider coverage in `app/lab/__tests__/components/Slider.test.tsx`
 
 ### Implementation for User Story 3
 
-- [ ] T073 [P] [US3] Implement frequency validation with clamping in app/lab/lib/validation.ts per data-model.md SOURCE_LIMITS
-- [ ] T074 [P] [US3] Implement power validation with unit conversion (watts ↔ dBm) in app/lab/lib/validation.ts
-- [ ] T075 [P] [US3] Implement phase validation with wrapping in app/lab/lib/validation.ts
-- [ ] T076 [US3] Add throttling/debouncing to Slider component (16ms for 60fps) in app/lab/components/shared/Slider.tsx
-- [ ] T077 [US3] Create common frequency presets dropdown (Wi-Fi 2.4/5GHz, Bluetooth, LTE, 5G) in app/lab/components/ControlPanel/FrequencyPresets.tsx per data-model.md COMMON_FREQUENCIES
-- [ ] T078 [US3] Add position input fields (x, y, z) to SourceControls in app/lab/components/ControlPanel/SourceControls.tsx
-- [ ] T079 [US3] Wire parameter sliders to updateSource Zustand action with validation in app/lab/components/ControlPanel/SourceControls.tsx
-- [ ] T080 [US3] Display source label/deviceType hint in SourceList in app/lab/components/ControlPanel/SourceList.tsx
-- [ ] T081 [US3] Add real-time field strength indicator next to each parameter slider showing current effect in app/lab/components/ControlPanel/SourceControls.tsx
+- [ ] [US3] Implement source parameter editors and direct-manipulation feedback in `app/lab/components/ControlPanel/SourceControls.tsx`, `app/lab/components/ControlPanel/VisualizationSettings.tsx`, and `app/lab/components/Canvas3D/SourceMarker.tsx`
+- [ ] [US3] Enforce keyboard-entry, bounds, and selected-source update flows in `app/lab/hooks/useLabStore.ts` and `app/lab/lib/validation.ts`
 
-**Checkpoint**: All P1/P2 user stories should now be independently functional - full parameter manipulation with multi-source interference
+**Checkpoint**: User Story 3 should now be independently functional
 
 ---
 
-## Phase 7: User Story 5 - Remove and Manage Sources (Priority: P3)
+## Phase 7: User Story 5 - Inspect Field Intensity and Measurement Points (Priority: P2)
 
-**Goal**: Remove individual sources or clear all sources to start new experiments without page refresh
+**Goal**: Place measurement points, inspect local field intensity, and compare regions without leaving the scene.
 
-**Independent Test**: Add 3 sources → select second source → click Remove Source → verify source disappears from both 3D view and list → click Clear All → verify empty state → add new source → verify starts fresh
+**Independent Test**: Place one or more measurement points, read the displayed field strength, and confirm the near/far labels update as the camera or sources change.
 
-**Dependencies**: Requires User Story 2 (multiple sources and list)
+### Tests for User Story 5
 
-### Tests for User Story 5 ⚠️
-
-- [ ] T082 [P] [US5] Unit test for removeSource action maintains state consistency in app/lab/__tests__/hooks/useLabStore.test.ts
-- [ ] T083 [P] [US5] Unit test for clearAllSources resets to empty state in app/lab/__tests__/hooks/useLabStore.test.ts
-- [ ] T084 [P] [US5] Integration test for remove source updates visualization correctly in __tests__/integration/source-management.test.tsx
+- [ ] [P] [US5] Add measurement-point coverage in `app/lab/__tests__/components/MeasurementPoint.test.tsx`
+- [ ] [P] [US5] Add overlay/disclaimer coverage in `app/lab/__tests__/components/AccuracyDisclaimer.test.tsx`
 
 ### Implementation for User Story 5
 
-- [ ] T085 [US5] Implement removeSource action in Zustand store (remove by ID, clear selection if removed) in app/lab/hooks/useLabStore.ts
-- [ ] T086 [US5] Implement clearAllSources action in Zustand store (reset to empty array, clear selection) in app/lab/hooks/useLabStore.ts
-- [ ] T087 [US5] Add Remove Source button to SourceControls (disabled when no selection) in app/lab/components/ControlPanel/SourceControls.tsx
-- [ ] T088 [US5] Add Clear All button to ControlPanel with confirmation dialog in app/lab/components/ControlPanel/ControlPanel.tsx
-- [ ] T089 [US5] Add delete icon button to each source in SourceList in app/lab/components/ControlPanel/SourceList.tsx
-- [ ] T090 [US5] Handle empty state UI (show "Add a source to begin" message) in app/lab/components/ControlPanel/ControlPanel.tsx
-- [ ] T091 [US5] Update FieldVisualization to handle empty sources array gracefully in app/lab/components/Canvas3D/FieldVisualization.tsx
+- [ ] [US5] Implement measurement point placement and derived field readouts in `app/lab/components/ControlPanel/MeasurementTools.tsx`, `app/lab/components/Canvas3D/MeasurementPoint.tsx`, and `app/lab/modules/simulation/simulation-engine.ts`
+- [ ] [US5] Update `app/lab/components/Analysis/MeasurementList.tsx`, `app/lab/components/Analysis/FieldStrengthOverlay.tsx`, and `app/lab/components/Analysis/FieldStrengthDisplay.tsx` to show estimated intensity, near/far context, and simplified-model disclaimers
+- [ ] [US5] Wire measurement state into `app/lab/hooks/useLabStore.ts` and `app/lab/types/measurement.types.ts` for add/update/remove/clear flows
 
-**Checkpoint**: All user stories (P1-P3) should now be independently functional - complete source lifecycle management
+**Checkpoint**: User Story 5 should now be independently testable
 
 ---
 
-## Phase 8: Analysis Overlays and Measurement Tools
+## Phase 8: User Story 6 - Remove and Manage Sources (Priority: P3)
 
-**Goal**: Place measurement points in 3D space, display field strength values with units, show near/far field region labels
+**Goal**: Remove sources or clear the scene to restart an experiment cleanly.
 
-**Independent Test**: Add sources → click to place measurement point → verify field strength displayed with "~" prefix and disclaimer → verify units shown (V/m or W/m²) → verify near/far field boundary labeled
+**Independent Test**: Add multiple sources, remove them individually or all at once, and confirm the visualization and control panel both return to a clean state without errors.
 
-**Dependencies**: Requires User Story 1 (field calculation) and User Story 4 (camera controls for positioning)
+### Tests for User Story 6
 
-### Tests for Analysis Phase ⚠️
+- [ ] [P] [US6] Add source removal and clear-all coverage in `app/lab/__tests__/hooks/useLabStore.test.ts`
+- [ ] [P] [US6] Add control-panel cleanup coverage in `app/lab/__tests__/components/ControlPanel/ControlPanel.test.tsx`
 
-- [ ] T092 [P] Unit test for near/far field boundary calculation (r > λ/2π) in app/lab/__tests__/lib/field-math.test.ts
-- [ ] T093 [P] Unit test for unit conversion (field strength to power density) in app/lab/__tests__/lib/field-math.test.ts
-- [ ] T094 [P] Component test for MeasurementPoint display with disclaimer in app/lab/__tests__/components/MeasurementPoint.test.tsx
-- [ ] T095 [P] Integration test for measurement point placement and value update in __tests__/integration/measurement-tools.test.tsx
+### Implementation for User Story 6
 
-### Implementation for Analysis Phase
+- [ ] [US6] Finish source removal, clear-all confirmation, and selection cleanup in `app/lab/components/ControlPanel/ControlPanel.tsx`, `app/lab/components/ControlPanel/SourceList.tsx`, and `app/lab/hooks/useLabStore.ts`
+- [ ] [US6] Ensure empty-state and recovery flows return the scene to a clean baseline in `app/lab/page.tsx` and `app/lab/components/Analysis/AccuracyDisclaimer.tsx`
 
-- [ ] T096 [P] Implement near/far field boundary calculation in app/lab/lib/field-math.ts (boundary at λ/2π from source)
-- [ ] T097 [P] Implement field strength unit conversion utilities in app/lab/lib/field-math.ts (V/m, W/m², dBm)
-- [ ] T098 [P] Create MeasurementPoint 3D marker component in app/lab/components/Canvas3D/MeasurementPoint.tsx
-- [ ] T099 Create MeasurementTools component with "Add Measurement Point" button in app/lab/components/ControlPanel/MeasurementTools.tsx
-- [ ] T100 Create FieldStrengthDisplay component showing value with "~" prefix in app/lab/components/Analysis/FieldStrengthDisplay.tsx per spec.md accuracy communication
-- [ ] T101 Create MeasurementList component showing all measurement points in app/lab/components/Analysis/MeasurementList.tsx
-- [ ] T102 Add measurement point placement handler (click in 3D space) in app/lab/hooks/useLabStore.ts
-- [ ] T103 Add near/far field region visualization (colored zones or labels) in app/lab/components/Canvas3D/FieldVisualization.tsx
-- [ ] T104 Integrate MeasurementTools and MeasurementList into ControlPanel in app/lab/components/ControlPanel/ControlPanel.tsx
-- [ ] T105 Display "Simplified Model" disclaimer next to all measurement values in app/lab/components/Analysis/FieldStrengthDisplay.tsx
-
-**Checkpoint**: Analysis overlays complete - measurements with honest accuracy communication
+**Checkpoint**: User Story 6 should now be independently functional
 
 ---
 
-## Phase 9: Environment and Visualization Settings
+## Phase 9: Polish & Cross-Cutting Concerns
 
-**Goal**: Configure global visualization settings (color scheme, field line density, grid display), set environment boundaries, monitor FPS
+**Purpose**: Improvements that affect multiple user stories.
 
-**Independent Test**: Open visualization settings → change color scheme to rainbow → verify field colors update → adjust field line density → verify rendering updates → enable FPS monitor → verify counter visible → verify 30+ FPS maintained
-
-**Dependencies**: Requires Phase 8 (full visualization system in place)
-
-### Tests for Environment Phase ⚠️
-
-- [ ] T106 [P] Unit test for color scheme mapping (thermal, rainbow, monochrome) in app/lab/__tests__/lib/visualization-helpers.test.ts
-- [ ] T107 [P] Unit test for LOD level adjustment based on FPS in app/lab/__tests__/hooks/useFPSMonitor.test.ts
-- [ ] T108 [P] Component test for VisualizationSettings panel updates in app/lab/__tests__/components/VisualizationSettings.test.tsx
-- [ ] T109 [P] Performance test for graceful degradation with 10 sources in __tests__/performance/lod-adjustment.test.ts
-
-### Implementation for Environment Phase
-
-- [ ] T110 [P] Implement thermal color mapping in app/lab/lib/visualization-helpers.ts (blue → green → yellow → red)
-- [ ] T111 [P] Implement rainbow color mapping in app/lab/lib/visualization-helpers.ts (spectrum)
-- [ ] T112 [P] Implement monochrome color mapping in app/lab/lib/visualization-helpers.ts (grayscale)
-- [ ] T113 [P] Implement LOD configuration system in app/lab/lib/visualization-helpers.ts per data-model.md LOD_CONFIGS
-- [ ] T114 Create FPSMonitor component displaying current FPS in app/lab/components/shared/FPSMonitor.tsx
-- [ ] T115 Create useFPSMonitor hook calculating FPS from requestAnimationFrame in app/lab/hooks/useFPSMonitor.ts
-- [ ] T116 Create VisualizationSettings panel component with color scheme, density, toggles in app/lab/components/ControlPanel/VisualizationSettings.tsx
-- [ ] T117 Create EnvironmentBoundary component rendering 3D grid/box in app/lab/components/Canvas3D/EnvironmentBoundary.tsx
-- [ ] T118 Add environment settings to Zustand store (boundaries, show grid) in app/lab/hooks/useLabStore.ts
-- [ ] T119 Implement automatic LOD adjustment (reduce density when FPS < 30) in app/lab/hooks/useFieldCalculator.ts
-- [ ] T120 Add performance warning overlay when sources exceed recommended limit in app/lab/components/shared/PerformanceWarning.tsx
-- [ ] T121 Integrate VisualizationSettings and FPSMonitor into ControlPanel in app/lab/components/ControlPanel/ControlPanel.tsx
-
-**Checkpoint**: Full visualization controls with performance monitoring and graceful degradation
-
----
-
-## Phase 10: Polish & Cross-Cutting Concerns
-
-**Purpose**: Improvements that affect multiple user stories, accessibility, documentation, error handling
-
-- [ ] T122 [P] Add ARIA labels to all interactive controls in app/lab/components/shared/Button.tsx and Slider.tsx using MUI props per constitution accessibility requirements
-- [ ] T123 [P] Add keyboard navigation (Tab, Enter, Space, Arrow keys) to all controls in app/lab/components/ControlPanel/ControlPanel.tsx
-- [ ] T124 [P] Add focus indicators and theme overrides in app/lab/theme/theme.ts
-- [ ] T125 [P] Create WebGL error boundary component with fallback message in app/lab/components/shared/WebGLErrorBoundary.tsx per spec.md edge cases
-- [ ] T126 [P] Create responsive canvas resize handler in app/lab/components/Canvas3D/Canvas3D.tsx per spec.md edge cases
-- [ ] T127 [P] Add tooltips with contextual help to all controls in app/lab/components/ControlPanel/ControlPanel.tsx per spec.md first-time user experience
-- [ ] T128 [P] Add unit tests for math utilities (distance, vector ops) in app/lab/__tests__/lib/math-utils.test.ts
-- [ ] T129 [P] Add unit tests for validation utilities in app/lab/__tests__/lib/validation.test.ts
-- [ ] T130 [P] Add component snapshot tests for AccuracyDisclaimer in app/lab/__tests__/components/AccuracyDisclaimer.test.tsx to verify disclaimer presence
-- [ ] T131 Add end-to-end test for User Journey 1 (load → adjust → observe) in __tests__/integration/user-journey-1.test.tsx per spec.md testing approach
-- [ ] T132 Add end-to-end test for User Journey 2 (add sources → interference) in __tests__/integration/user-journey-2.test.tsx
-- [ ] T133 Add end-to-end test for User Journey 3 (multi-angle view) in __tests__/integration/user-journey-3.test.tsx
-- [ ] T134 [P] Add error handling for NaN/Infinity in field calculations in app/lab/modules/compute/cpu-backend.ts per spec.md edge cases
-- [ ] T135 [P] Add error handling for WebGL context loss with recovery in app/lab/components/Canvas3D/Canvas3D.tsx per plan.md constitution
-- [ ] T136 [P] Add parameter clamping at slider UI boundaries in app/lab/components/shared/Slider.tsx per spec.md edge cases
-- [ ] T137 [P] Add memory leak prevention (cleanup useEffect hooks) in all components with subscriptions
-- [ ] T138 [P] Update README.md with quickstart instructions per quickstart.md prerequisites section
-- [ ] T139 [P] Create CONTRIBUTING.md documenting modular architecture and testing requirements per plan.md modular boundaries
-- [ ] T140 Run quickstart.md validation (npm run dev → open /lab → verify single source renders)
-- [ ] T141 Code cleanup: remove console.logs, add JSDoc comments to public APIs, verify all types exported in app/lab/types/index.ts
-- [ ] T142 Performance optimization: profile field calculation with React DevTools Profiler, optimize hot paths per quickstart.md performance first principle
-- [ ] T143 Security check: verify no XSS vulnerabilities in user input fields, sanitize source labels in app/lab/lib/validation.ts
-- [ ] T144 Cross-browser testing: verify WebGL initialization on Chrome, Firefox, Safari, Edge per spec.md cross-browser testing
-- [ ] T145 Accessibility audit: verify all controls keyboard-navigable, verify screen reader labels present, verify focus management
+- [ ] [P] Tighten motion, microcopy, and accessibility across `app/lab/components/Analysis/*.tsx` and `app/lab/components/shared/*.tsx`
+- [ ] [P] Run the quickstart validation path and fix any remaining issues in `Makefile`, `app/lab/__tests__/**`, and the lab feature files
+- [ ] [P] Review the V1 divergence/curl overlay language across `app/lab/components/Analysis/AccuracyDisclaimer.tsx`, `app/lab/components/Analysis/FieldStrengthOverlay.tsx`, and `specs/001-disturbance-lab/spec.md` for consistency
 
 ---
 
@@ -322,130 +191,86 @@
 
 - **Setup (Phase 1)**: No dependencies - can start immediately
 - **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Story 1 (Phase 3)**: Depends on Foundational - can start immediately after Phase 2
-- **User Story 4 (Phase 4)**: Depends on User Story 1 (requires canvas to navigate)
-- **User Story 2 (Phase 5)**: Depends on User Story 1 and User Story 4 (requires single source foundation and camera controls)
-- **User Story 3 (Phase 6)**: Depends on User Story 2 (requires multi-source selection)
-- **User Story 5 (Phase 7)**: Depends on User Story 2 (requires source list)
-- **Analysis (Phase 8)**: Depends on User Story 1 and User Story 4 (requires field calculation and camera positioning)
-- **Environment (Phase 9)**: Depends on Phase 8 (requires full visualization system)
-- **Polish (Phase 10)**: Depends on all desired user stories being complete
+- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+  - User stories can then proceed in parallel if staffing allows
+  - Or sequentially in priority order (P1 → P2 → P3)
+- **Polish (Final Phase)**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
 
 - **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 4 (P1)**: Can start after User Story 1 - Requires canvas and basic visualization
-- **User Story 2 (P2)**: Can start after User Story 1 and User Story 4 - Requires single source foundation and camera controls
-- **User Story 3 (P2)**: Can start after User Story 2 - Requires multi-source selection
-- **User Story 5 (P3)**: Can start after User Story 2 - Requires source list
+- **User Story 4 (P1)**: Can start after Foundational (Phase 2) - Uses the same shared camera foundation
+- **User Story 2 (P2)**: Can start after Foundational (Phase 2) - Builds on the single-source renderer
+- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1 and US2 but stays independently testable
+- **User Story 5 (P2)**: Can start after Foundational (Phase 2) - Uses the shared measurement model
+- **User Story 6 (P3)**: Can start after Foundational (Phase 2) - Cleans up source state only
 
 ### Within Each User Story
 
-- Tests (if included) MUST be written and FAIL before implementation
-- Type definitions and interfaces before implementations
-- Business logic (modules/) before UI components
-- Core components before container components
-- Story complete before moving to next priority
+- Tests MUST be written and fail before implementation when included
+- Models and state types before services and renderers
+- Services before UI wiring
+- Core implementation before integration polish
+- Story complete before moving to the next priority
 
 ### Parallel Opportunities
 
-- All Setup tasks marked [P] can run in parallel (T003-T006)
-- All type definition tasks in Foundational marked [P] can run in parallel (T008-T014, T020-T021)
-- Within User Story 1 tests, all test files marked [P] can run in parallel (T022-T026)
-- Within User Story 1 implementation, specific pairs can run in parallel:
-  - T027 (antenna patterns) + T028 (CPU backend) + T031 (Canvas3D) + T032 (SourceMarker) + T035 (Button) + T036 (Slider)
-- Within User Story 4 tests, all test files marked [P] can run in parallel (T043-T045)
-- Within User Story 2 tests, all test files marked [P] can run in parallel (T052-T056)
-- Within User Story 2 implementation, specific tasks can run in parallel:
-  - T057 (extend calculator) + T058 (ID generator) + T059 (color palette)
-- Within User Story 3 tests, all test files marked [P] can run in parallel (T068-T072)
-- Within User Story 3 implementation, validation tasks can run in parallel (T073-T075)
-- Within User Story 5 tests, all test files marked [P] can run in parallel (T082-T084)
-- Within Analysis tests, all test files marked [P] can run in parallel (T092-T095)
-- Within Analysis implementation, specific tasks can run in parallel (T096-T098)
-- Within Environment tests, all test files marked [P] can run in parallel (T106-T109)
-- Within Environment implementation, color mapping tasks can run in parallel (T110-T113)
-- All Polish tasks marked [P] can run in parallel (T122-T130, T134-T139, T143-T145)
+- All Setup tasks marked [P] can run in parallel
+- All Foundational tasks marked [P] can run in parallel once the shared shell exists
+- Once Foundational phase completes, all user stories can start in parallel if needed
+- All tests for a user story marked [P] can run in parallel
+- Different user stories can be worked on in parallel by separate contributors
 
 ---
 
-## Parallel Example: User Story 1 Tests
+## Parallel Example: User Story 1
 
 ```bash
-# Launch all tests for User Story 1 together (write tests first, ensure they fail):
-Task T022: "Unit test for field calculation with single source in app/lab/__tests__/modules/field-calculator.test.ts"
-Task T023: "Unit test for inverse-distance falloff validation in app/lab/__tests__/modules/field-calculator.test.ts"
-Task T024: "Unit test for frequency-to-wavelength conversion in app/lab/__tests__/lib/field-math.test.ts"
-Task T025: "Component test for SourceControls parameter updates in app/lab/__tests__/components/SourceControls.test.tsx"
-Task T026: "Integration test for parameter change → field recalculation → render update in __tests__/integration/single-source.test.tsx"
-```
+# Launch all tests for User Story 1 together:
+Task: "Add unit coverage for the core EMF helpers in app/lab/__tests__/lib/field-math.test.ts"
+Task: "Add single-source render coverage in app/lab/__tests__/components/Canvas3D/FieldVisualization.test.tsx"
 
-## Parallel Example: User Story 1 Core Modules
-
-```bash
-# Launch all independent module implementations for User Story 1 together:
-Task T027: "Implement omnidirectional antenna pattern in app/lab/modules/source/antenna-patterns.ts"
-Task T028: "Implement CPU field calculator with superposition formula in app/lab/modules/compute/cpu-backend.ts"
-Task T031: "Create Canvas3D wrapper component with React Three Fiber setup in app/lab/components/Canvas3D/Canvas3D.tsx"
-Task T032: "Create SourceMarker 3D component displaying source position in app/lab/components/Canvas3D/SourceMarker.tsx"
-Task T035: "Create Button wrapper component using MUI Button in app/lab/components/shared/Button.tsx"
-Task T036: "Create Slider wrapper component using MUI Slider with ARIA labels in app/lab/components/shared/Slider.tsx"
+# Launch the main implementation steps together:
+Task: "Implement the source emission-to-particle mapping in app/lab/modules/simulation/simulation-engine.ts"
+Task: "Replace any remaining ray-line feel with the subtle dot/halo visualization in app/lab/components/Canvas3D/FieldVisualization.tsx"
 ```
 
 ---
 
 ## Implementation Strategy
 
-### MVP First (User Story 1 + User Story 4 Only)
+### MVP First (User Story 1 Only)
 
 1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1 (single source visualization)
-4. Complete Phase 4: User Story 4 (camera controls)
-5. **STOP and VALIDATE**: Test User Stories 1+4 independently - can user view and adjust single source from multiple angles?
-6. Deploy/demo if ready
+2. Complete Phase 2: Foundational
+3. Complete Phase 3: User Story 1
+4. Validate the single-source experience before broadening scope
 
 ### Incremental Delivery
 
-1. Complete Setup + Foundational → Foundation ready
-2. Add User Story 1 + User Story 4 → Test independently → Deploy/Demo (MVP! - single source visualizer with camera controls)
-3. Add User Story 2 → Test independently → Deploy/Demo (multi-source interference!)
-4. Add User Story 3 → Test independently → Deploy/Demo (full parameter control)
-5. Add User Story 5 → Test independently → Deploy/Demo (complete source management)
-6. Add Analysis Phase → Deploy/Demo (measurement tools)
-7. Add Environment Phase → Deploy/Demo (full settings and performance monitoring)
-8. Each phase adds value without breaking previous phases
+1. Complete Setup + Foundational
+2. Add User Story 1 and User Story 4 for the baseline lab experience
+3. Add User Story 2 for interference and presets
+4. Add User Story 3 for deeper parameter control
+5. Add User Story 5 for measurement and analysis
+6. Add User Story 6 for cleanup and management
 
 ### Parallel Team Strategy
 
-With multiple developers:
-
 1. Team completes Setup + Foundational together
 2. Once Foundational is done:
-   - Developer A: User Story 1 (single source) + User Story 4 (camera) - these are tightly coupled for MVP
-   - Developer B: User Story 2 (multi-source) - waits for Developer A to finish US1+US4
-   - Developer C: Analysis Phase (measurements) - can start in parallel with Developer B after US1+US4 done
-3. Stories complete and integrate independently
-4. Developer B then does User Story 3 (parameter manipulation)
-5. Developer C then does Environment Phase (visualization settings)
-6. Developer A then does User Story 5 (source management)
-7. All developers collaborate on Polish phase
+   - Developer A: User Story 1
+   - Developer B: User Story 4
+   - Developer C: User Story 2
+3. Story-specific polish happens after the core scenarios are complete
 
 ---
 
 ## Notes
 
 - [P] tasks = different files, no dependencies
-- [Story] label maps task to specific user story for traceability
+- [Story] label maps task to a specific user story for traceability
 - Each user story should be independently completable and testable
-- Verify tests fail before implementing
-- Commit after each task or logical group
-- Stop at any checkpoint to validate story independently
-- Tests are included per feature specification testing approach requirement
-- All tasks follow strict checklist format: `- [ ] T### [P?] [Story?] Description with file path`
-- Modular architecture enforced: clear boundaries between UI, Simulation, Compute, Source, Environment, Visualization, Scenario, Reporting modules
-- V1 practical scope: CPU-only, omnidirectional sources, simplified near/far-field, basic environment
-- Trust/accuracy paramount: ALL visualizations include disclaimers per spec.md communication requirements
-- Performance target: 30+ FPS with 3-5 sources, graceful degradation with warnings
-- Accessibility: ARIA labels, keyboard navigation, focus indicators per constitution
-- Edge cases handled: WebGL context loss, parameter validation, NaN/Infinity prevention per spec.md
+- Keep the visualization subtle: dots, halos, local drift, and readable motion
+- Divergence/curl stays a V1 conceptual overlay, not a full Maxwell solver
+- Avoid same-file conflicts where possible

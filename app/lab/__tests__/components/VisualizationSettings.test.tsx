@@ -1,0 +1,45 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { VisualizationSettings } from '../../components/ControlPanel/VisualizationSettings';
+import { useLabStore } from '../../hooks/useLabStore';
+
+jest.mock('../../hooks/useLabStore');
+
+describe('VisualizationSettings', () => {
+  const updateSettings = jest.fn();
+
+  beforeEach(() => {
+    (useLabStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({
+        settings: {
+          colorScheme: 'thermal',
+          showFPS: false,
+          animateFields: true,
+          animationSpeed: 1,
+          themeMode: 'dark',
+        },
+        updateSettings,
+      })
+    );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('toggles the theme mode setting', () => {
+    render(<VisualizationSettings />);
+
+    fireEvent.click(screen.getByRole('switch', { name: /dark theme/i }));
+
+    expect(updateSettings).toHaveBeenCalledWith({ themeMode: 'light' });
+  });
+
+  it('toggles the animation setting', () => {
+    render(<VisualizationSettings />);
+
+    fireEvent.click(screen.getByRole('switch', { name: /animate fields/i }));
+
+    expect(updateSettings).toHaveBeenCalledWith({ animateFields: false });
+  });
+});

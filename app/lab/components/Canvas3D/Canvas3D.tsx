@@ -1,0 +1,105 @@
+'use client';
+
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { ReactNode, useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import { CameraState } from '../../types/camera.types';
+import { CameraControls } from './CameraControls';
+
+export interface Canvas3DProps {
+  /**
+   * Camera configuration
+   */
+  camera?: CameraState;
+
+  /**
+   * Child components to render in 3D scene
+   */
+  children: ReactNode;
+
+  /**
+   * Optional className for styling
+   */
+  className?: string;
+}
+
+/**
+ * Canvas3D wrapper component
+ * Sets up React Three Fiber with proper camera and rendering
+ * Includes responsive resize handling and WebGL context recovery
+ */
+export function Canvas3D({ camera, children, className }: Canvas3DProps) {
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      cleanupRef.current?.();
+      cleanupRef.current = null;
+    };
+  }, []);
+
+  return (
+    <div className={className} style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <CameraControls />
+      <Canvas
+        camera={{
+          position: camera ? [camera.position.x, camera.position.y, camera.position.z] : [5, 5, 5],
+          fov: camera?.fov || 75,
+          near: camera?.near || 0.1,
+          far: camera?.far || 1000,
+        }}
+        style={{ background: '#020617' }}
+        resize={{ scroll: false, debounce: { scroll: 50, resize: 100 } }}
+        dpr={[1, 2]} // Device pixel ratio for sharp rendering
+        onCreated={({ gl }) => {
+          cleanupRef.current?.();
+
+          const handleContextLost = (event: Event) => {
+            event.preventDefault();
+            console.warn('WebGL context lost, attempting recovery...');
+          };
+
+          gl.domElement.addEventListener('webglcontextlost', handleContextLost);
+
+          cleanupRef.current = () => {
+            gl.domElement.removeEventListener('webglcontextlost', handleContextLost);
+          };
+        }}
+        >
+        <color attach="background" args={['#020617']} />
+        <fog attach="fog" args={['#020617', 10, 30]} />
+
+        {/* Ambient light for visibility */}
+        <ambientLight intensity={0.5} />
+        
+        {/* Directional light for depth */}
+        <directionalLight position={[10, 10, 10]} intensity={0.8} />
+
+        <CameraSync camera={camera} />
+        {children}
+      </Canvas>
+    </div>
+  );
+}
+
+function CameraSync({ camera }: { camera?: CameraState }) {
+  const { camera: sceneCamera } = useThree();
+  const perspectiveCamera = sceneCamera as THREE.PerspectiveCamera;
+
+  useFrame(() => {
+    if (!camera) {
+      return;
+    }
+
+    sceneCamera.position.set(camera.position.x, camera.position.y, camera.position.z);
+    sceneCamera.up.set(camera.up.x, camera.up.y, camera.up.z);
+    perspectiveCamera.fov = camera.fov;
+    perspectiveCamera.zoom = camera.zoom;
+    perspectiveCamera.near = camera.near;
+    perspectiveCamera.far = camera.far;
+    sceneCamera.lookAt(new THREE.Vector3(camera.target.x, camera.target.y, camera.target.z));
+    sceneCamera.updateProjectionMatrix();
+  });
+
+  return null;
+}
