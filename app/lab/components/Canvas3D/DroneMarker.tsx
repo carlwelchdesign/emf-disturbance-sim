@@ -38,29 +38,22 @@ function DroneMesh({ color }: { color: string }) {
         <boxGeometry args={[0.28, 0.08, 0.28]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} />
       </mesh>
-      {/* Arms + rotors */}
+      {/* Rotors */}
       {armPositions.map(([x, y, z], i) => (
-        <group key={i} position={[x, y, z]}>
-          {/* Arm */}
-          <mesh rotation={[0, (Math.PI / 4) * (i % 2 === 0 ? 1 : -1) + Math.PI / 4, 0]}>
-            <boxGeometry args={[0.38, 0.025, 0.04]} />
-            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.2} />
-          </mesh>
-          {/* Rotor disc */}
-          <mesh
-            ref={(el) => { if (el) rotorRefs.current[i] = el; }}
-            position={[0, 0.04, 0]}
-          >
-            <cylinderGeometry args={[0.14, 0.14, 0.01, 16]} />
-            <meshStandardMaterial
-              color={color}
-              emissive={color}
-              emissiveIntensity={0.6}
-              transparent
-              opacity={0.55}
-            />
-          </mesh>
-        </group>
+        <mesh
+          key={i}
+          ref={(el) => { if (el) rotorRefs.current[i] = el; }}
+          position={[x, y + 0.04, z]}
+        >
+          <cylinderGeometry args={[0.14, 0.14, 0.01, 16]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={0.6}
+            transparent
+            opacity={0.55}
+          />
+        </mesh>
       ))}
       {/* Downward status light */}
       <pointLight color={color} intensity={0.6} distance={1.5} position={[0, -0.1, 0]} />
