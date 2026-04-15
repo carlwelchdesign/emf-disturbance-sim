@@ -63,12 +63,12 @@ As a user, I can load curated scenarios with multiple emitters and clear explana
 - **FR-001**: The system MUST visualize field interaction from multiple emitters in a way that shows overlap, reinforcement, and cancellation.
 - **FR-002**: The system MUST distinguish between direct propagation, interference regions, and weaker far-field influence.
 - **FR-003**: The system MUST preserve visible source identity when multiple emitters are active at once.
-- **FR-004**: The system MUST allow users to compare a simpler field view against a more physically grounded field view.
+- **FR-004**: The system MUST allow users to compare a clearly labeled simpler field view against a clearly labeled more physically grounded field view.
 - **FR-005**: The system MUST support scenarios with two, three, four, and five emitters.
-- **FR-006**: The system MUST make it clear when a scene has no active emitters.
+- **FR-006**: The system MUST make it clear when a scene has no active emitters by showing an explicit empty-state cue instead of an active field visualization.
 - **FR-007**: The system MUST keep field intensity and direction changes bounded so the scene remains readable.
 - **FR-008**: The system MUST support curated presets that each communicate a different field behavior.
-- **FR-009**: The system MUST allow users to understand whether they are viewing a teaching simplification or a more scientific approximation.
+- **FR-009**: The system MUST allow users to understand whether they are viewing a teaching simplification or a more scientific approximation through visible labels or controls.
 - **FR-010**: The system MUST maintain consistent interpretation of frequency, phase, amplitude, and distance across the visualization.
 
 ### Key Entities *(include if feature involves data)*
@@ -89,8 +89,9 @@ As a user, I can load curated scenarios with multiple emitters and clear explana
 - **VQ-005**: Color treatment MUST remain consistent, perceptually clear, and accessible.
 
 **Performance**:
-- **PF-001**: The field display MUST remain smooth during normal interaction with multiple active emitters.
-- **PF-002**: The scene MUST remain responsive when users adjust source parameters or switch presets.
+- **PF-001**: The field display MUST maintain 60 FPS during normal interaction with up to three active emitters and MUST avoid sustained drops below 45 FPS when up to five active emitters are active.
+- **PF-002**: The scene MUST apply source-parameter changes and preset switches within 250 ms and remain responsive to camera input while those updates are applied.
+- **PF-003**: When frame rate falls below 30 FPS for more than one second, the scene MUST reduce visual detail automatically while preserving readable field cues.
 
 **Accessibility**:
 - **A11Y-001**: All controls used to inspect or adjust field behavior MUST be reachable without requiring pointer-only input.

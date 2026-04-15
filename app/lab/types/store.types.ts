@@ -1,6 +1,6 @@
 import { RFSource, CreateSourceParams, UpdateSourceParams } from './source.types';
 import { CameraState } from './camera.types';
-import { VisualizationSettings, LODLevel } from './visualization.types';
+import { VisualizationSettings, LODLevel, SolverProfile } from './visualization.types';
 import { Environment } from './environment.types';
 import { MeasurementPoint, CreateMeasurementParams } from './measurement.types';
 import { ScenarioPresetId } from '../modules/scenario/presets';
@@ -32,6 +32,7 @@ export interface LabStoreState {
   resetCamera: () => void;
   updateSettings: (params: Partial<VisualizationSettings>) => void;
   setLOD: (lod: LODLevel) => void;
+  setSolverProfile: (solverProfile: SolverProfile) => void;
   updateEnvironment: (params: Partial<Environment>) => void;
   addMeasurement: (params: CreateMeasurementParams) => string;
   removeMeasurement: (id: string) => void;

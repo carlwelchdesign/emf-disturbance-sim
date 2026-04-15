@@ -4,6 +4,29 @@
  */
 
 import { Vector3 } from 'three';
+import { CameraState } from '../types/camera.types';
+
+export interface Vector3Like {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export function isSameVector3(left: Vector3Like, right: Vector3Like): boolean {
+  return left.x === right.x && left.y === right.y && left.z === right.z;
+}
+
+export function isSameCameraState(left: CameraState, right: CameraState): boolean {
+  return (
+    isSameVector3(left.position, right.position) &&
+    isSameVector3(left.target, right.target) &&
+    isSameVector3(left.up, right.up) &&
+    left.fov === right.fov &&
+    left.zoom === right.zoom &&
+    left.near === right.near &&
+    left.far === right.far
+  );
+}
 
 /**
  * Orbit result containing new camera position

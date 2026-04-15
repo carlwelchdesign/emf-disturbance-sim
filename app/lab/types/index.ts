@@ -34,6 +34,7 @@ export type {
   VisualizationSettings,
   ColorScheme,
   LODLevel,
+  SolverProfile,
   LODConfig,
 } from './visualization.types';
 

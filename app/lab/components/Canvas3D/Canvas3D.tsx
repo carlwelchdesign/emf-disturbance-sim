@@ -1,9 +1,10 @@
 'use client';
 
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { ReactNode, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { CameraState } from '../../types/camera.types';
+import { isSameCameraState } from '../../lib/camera-helpers';
 import { CameraControls } from './CameraControls';
 
 export interface Canvas3DProps {
@@ -85,9 +86,14 @@ export function Canvas3D({ camera, children, className }: Canvas3DProps) {
 function CameraSync({ camera }: { camera?: CameraState }) {
   const { camera: sceneCamera } = useThree();
   const perspectiveCamera = sceneCamera as THREE.PerspectiveCamera;
+  const lastAppliedCameraRef = useRef<CameraState | null>(null);
 
-  useFrame(() => {
+  useEffect(() => {
     if (!camera) {
+      return;
+    }
+
+    if (lastAppliedCameraRef.current && isSameCameraState(lastAppliedCameraRef.current, camera)) {
       return;
     }
 
@@ -97,9 +103,19 @@ function CameraSync({ camera }: { camera?: CameraState }) {
     perspectiveCamera.zoom = camera.zoom;
     perspectiveCamera.near = camera.near;
     perspectiveCamera.far = camera.far;
-    sceneCamera.lookAt(new THREE.Vector3(camera.target.x, camera.target.y, camera.target.z));
+    sceneCamera.lookAt(camera.target.x, camera.target.y, camera.target.z);
     sceneCamera.updateProjectionMatrix();
-  });
+
+    lastAppliedCameraRef.current = {
+      position: { ...camera.position },
+      target: { ...camera.target },
+      up: { ...camera.up },
+      fov: camera.fov,
+      zoom: camera.zoom,
+      near: camera.near,
+      far: camera.far,
+    };
+  }, [camera, perspectiveCamera, sceneCamera]);
 
   return null;
 }

@@ -56,4 +56,13 @@ describe('useLabStore source management', () => {
     expect(nextState.sources).toHaveLength(2);
     expect(nextState.selectedSourceId).toBe(nextState.sources[0]?.id ?? null);
   });
+
+  it('preserves the solver profile when applying a preset', () => {
+    const store = useLabStore.getState();
+    store.setSolverProfile('scientific');
+
+    store.applyScenarioPreset('dual-source-interference');
+
+    expect(useLabStore.getState().settings.solverProfile).toBe('scientific');
+  });
 });

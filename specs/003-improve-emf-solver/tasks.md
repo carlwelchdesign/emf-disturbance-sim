@@ -36,8 +36,8 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] [US1] Refine `app/lab/components/Canvas3D/FieldVisualization.tsx` so particle clouds react more strongly to field overlap, phase, and source identity
-- [ ] T007 [US1] Add interaction-zone and source-comparison cues to `app/lab/components/Canvas3D/FieldVisualization.tsx` and `app/lab/lib/visualization-helpers.ts`
+- [x] T006 [P] [US1] Refine `app/lab/components/Canvas3D/FieldVisualization.tsx` so particle clouds react more strongly to field overlap, phase, and source identity
+- [x] T007 [US1] Add interaction-zone and source-comparison cues to `app/lab/components/Canvas3D/FieldVisualization.tsx` and `app/lab/lib/visualization-helpers.ts`
 - [ ] T008 [US1] Wire the selected solver profile into `app/lab/components/Canvas3D/FieldVisualization.tsx` so the scene can switch between simplified and more scientific behavior
 
 **Checkpoint**: User Story 1 should now present a readable scientific multi-emitter comparison
@@ -81,7 +81,9 @@
 **Purpose**: Finish shared polish and verify the overall lab remains coherent
 
 - [ ] T015 [P] Harmonize bandwidth, phase, and frequency copy in `app/lab/components/ControlPanel/SourceControls.tsx` and `app/lab/lib/visualization-helpers.ts`
-- [ ] T016 Validate the full lab flow against `specs/003-improve-emf-solver/quickstart.md` and resolve any regressions in touched files
+- [ ] T016 Validate the full lab flow against `specs/003-improve-emf-solver/quickstart.md` and resolve any regressions in `app/lab/**` touched by this feature
+- [x] T017 [P] Add explicit empty-state handling for inactive scenes in `app/lab/components/Canvas3D/FieldVisualization.tsx` and `app/lab/page.tsx`
+- [x] T018 [P] Add targeted regression coverage for `app/lab/__tests__/components/Canvas3D/FieldVisualization.test.tsx`, `app/lab/__tests__/hooks/useFPSMonitor.test.ts`, and `app/lab/__tests__/hooks/useLabStore.test.ts` covering empty scenes and adaptive quality
 
 ---
 

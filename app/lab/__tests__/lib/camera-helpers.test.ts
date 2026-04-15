@@ -7,6 +7,7 @@ import {
   calculatePan,
   calculateZoom,
   calculateDistance,
+  isSameCameraState,
 } from '../../lib/camera-helpers';
 
 describe('camera-helpers', () => {
@@ -196,6 +197,22 @@ describe('camera-helpers', () => {
       const distance = calculateDistance(pos, pos);
 
       expect(distance).toBe(0);
+    });
+  });
+
+  describe('isSameCameraState', () => {
+    it('detects equivalent camera states', () => {
+      const camera = {
+        position: { x: 5, y: 5, z: 5 },
+        target: { x: 0, y: 0, z: 0 },
+        up: { x: 0, y: 1, z: 0 },
+        fov: 75,
+        zoom: 1,
+        near: 0.1,
+        far: 1000,
+      };
+
+      expect(isSameCameraState(camera, { ...camera, position: { ...camera.position } })).toBe(true);
     });
   });
 });

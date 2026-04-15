@@ -5,30 +5,30 @@
 
 ## Summary
 
-Strengthen the EMF lab so multi-emitter scenes read as a clearer scientific field study: richer interference, broader spectral footprint, better directionality, and explicit fidelity controls, while staying browser-responsive and avoiding a full numerical Maxwell solver rewrite.
+The current work is to make the 3D lab feel less clunky by reducing per-frame renderer overhead while preserving the existing EMF field behavior and scientific cues. The plan focuses on the R3F particle-cloud path, camera synchronization, adaptive quality controls already present in the lab store, and an explicit empty-state path for inactive scenes.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.3+, React 18.2+, Next.js 14 App Router  
-**Primary Dependencies**: MUI 9, Zustand 4.4, @react-three/fiber 8.14, Three.js 0.158, @react-three/drei 9.88, Jest, Testing Library  
-**Storage**: N/A; local client state only  
-**Testing**: Jest, React Testing Library, TypeScript type-check, Next.js production build  
-**Target Platform**: Modern desktop and laptop browsers  
+**Language/Version**: TypeScript 5.x / React 18 / Next.js 14  
+**Primary Dependencies**: @react-three/fiber, three, @react-three/drei, Zustand, MUI  
+**Storage**: N/A  
+**Testing**: Jest, ESLint, TypeScript type-check  
+**Target Platform**: Browser-based desktop web app  
 **Project Type**: Web application  
-**Performance Goals**: Maintain smooth interaction at 60 fps during normal lab use with up to five active emitters  
-**Constraints**: Keep the visualization truthful, bounded, and low-clutter; preserve existing lab architecture; avoid a full Maxwell/FDTD overhaul  
-**Scale/Scope**: One lab experience, one main canvas, one persistent control panel, curated multi-emitter presets, and one scientific fidelity workflow
+**Performance Goals**: Maintain 60 FPS during normal interaction with up to three active emitters, keep multi-emitter scenes readable above 45 FPS with up to five emitters, and apply source/preset changes within 250 ms  
+**Constraints**: Preserve field fidelity, keep behavior within `app/lab`, avoid broad architecture changes, retain accessible MUI controls, and show a clear empty-state cue when no emitters are active  
+**Scale/Scope**: Single lab experience with up to five emitters and layered field visualization
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- Feature-boundary architecture: pass
-- Dependency inversion and SOLID delivery: pass
-- Test and validation gates: pass
-- Design system and accessibility compliance: pass
-- Observable, safe operations: pass
-- Visualization quality and graphical integrity: pass
+- Feature-boundary architecture: pass; changes stay inside the lab feature and its shared helpers.
+- Dependency inversion and SOLID delivery: pass; the plan favors small helpers/hooks over inline orchestration.
+- Test and validation gates: pass with follow-up; renderer, store, and UI changes need targeted tests.
+- Design system and accessibility compliance: pass; control surfaces remain MUI-based.
+- Observable, safe operations: pass; FPS monitoring and low-performance fallback already exist and should be preserved.
+- Visualization quality and graphical integrity: pass; optimize presentation without changing the field story or adding decorative clutter.
 
 ## Project Structure
 
@@ -46,21 +46,17 @@ specs/003-improve-emf-solver/
 
 ```text
 app/lab/
-├── components/
-│   ├── Canvas3D/
-│   └── ControlPanel/
+├── components/Canvas3D/
+├── components/ControlPanel/
+├── components/shared/
 ├── hooks/
 ├── lib/
-├── modules/
-│   ├── compute/
-│   ├── scenario/
-│   └── source/
-├── types/
-└── __tests__/
+├── modules/scenario/
+└── types/
 ```
 
-**Structure Decision**: Keep the feature inside `app/lab/` and extend the existing solver, visualization, preset, and control-panel modules rather than introducing a new top-level subsystem.
+**Structure Decision**: Keep the work inside `app/lab` and its shared utilities so the optimization stays local to the 3D lab without creating new top-level app boundaries.
 
 ## Complexity Tracking
 
-No constitution violations require justification.
+No constitution violations are expected.

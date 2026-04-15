@@ -60,7 +60,9 @@ export function ScenarioPresets() {
         <Stack spacing={1.25}>
           <FormControl fullWidth size="small">
             <Tooltip title="Load a curated scene configuration for comparison or exploration." describeChild>
-              <InputLabel id="scenario-presets-label">Preset</InputLabel>
+              <InputLabel id="scenario-presets-label" shrink>
+                Preset
+              </InputLabel>
             </Tooltip>
             <Select
               labelId="scenario-presets-label"

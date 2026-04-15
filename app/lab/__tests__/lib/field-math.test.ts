@@ -3,6 +3,9 @@ import {
   calculateNearFieldRadius,
   isNearField,
   fieldStrengthToPowerDensity,
+  calculateFieldOverlapScore,
+  calculateCancellationScore,
+  calculateContestedZoneScore,
 } from '../../lib/field-math';
 
 describe('field-math', () => {
@@ -29,5 +32,15 @@ describe('field-math', () => {
 
   it('converts field strength to power density', () => {
     expect(fieldStrengthToPowerDensity(10)).toBeGreaterThan(0);
+  });
+
+  it('scores overlap, cancellation, and contested zones', () => {
+    const overlap = calculateFieldOverlapScore(0.8, 0.6);
+    const cancellation = calculateCancellationScore(0.05, 0.8, 0.6);
+    const contested = calculateContestedZoneScore(overlap, cancellation);
+
+    expect(overlap).toBeGreaterThan(0);
+    expect(cancellation).toBeGreaterThan(0.5);
+    expect(contested).toBeGreaterThan(0);
   });
 });

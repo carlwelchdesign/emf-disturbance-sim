@@ -6,7 +6,12 @@ import { RFSource } from '../../types/source.types';
 import { useLabStore } from '../../hooks/useLabStore';
 import { FrequencyPresets } from './FrequencyPresets';
 import { estimateSourceFieldStrength } from '../../lib/source-helpers';
-import { formatFieldStrength } from '../../lib/visualization-helpers';
+import {
+  formatBandwidthLabel,
+  formatFieldStrength,
+  formatFrequencyLabel,
+  formatPhaseLabel,
+} from '../../lib/visualization-helpers';
 
 export interface SourceControlsProps {
   source: RFSource | undefined;
@@ -28,8 +33,11 @@ export function SourceControls({ source }: SourceControlsProps) {
 
   const frequencyGHz = source.frequency / 1e9;
   const bandwidthMHz = (source.bandwidthHz ?? 80e6) / 1e6;
+  const frequencyLabel = formatFrequencyLabel(source.frequency);
+  const bandwidthLabel = formatBandwidthLabel(source.bandwidthHz ?? 80e6);
   const powerMW = source.power * 1000;
   const phaseDeg = (source.phase * 180) / Math.PI;
+  const phaseLabel = formatPhaseLabel(source.phase);
   const fieldStrength = formatFieldStrength(estimateSourceFieldStrength(source));
 
   const applyUpdate = (params: Partial<RFSource>) => updateSource(source.id, params);
@@ -49,7 +57,7 @@ export function SourceControls({ source }: SourceControlsProps) {
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
             <Typography variant="body2" color="text.secondary">
-              Frequency: {frequencyGHz.toFixed(2)} GHz
+              Center Frequency: {frequencyLabel}
             </Typography>
             <Typography variant="caption" color="primary.main">
               {fieldStrength}
@@ -80,7 +88,7 @@ export function SourceControls({ source }: SourceControlsProps) {
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
             <Typography variant="body2" color="text.secondary">
-              Bandwidth: {bandwidthMHz.toFixed(0)} MHz
+              Spectral Width: {bandwidthLabel}
             </Typography>
             <Typography variant="caption" color="primary.main">
               Wider bands influence more nearby frequencies
@@ -111,7 +119,7 @@ export function SourceControls({ source }: SourceControlsProps) {
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
             <Typography variant="body2" color="text.secondary">
-              Power: {powerMW.toFixed(0)} mW
+              Output Power: {powerMW.toFixed(0)} mW
             </Typography>
             <Typography variant="caption" color="primary.main">
               {fieldStrength}
@@ -142,7 +150,7 @@ export function SourceControls({ source }: SourceControlsProps) {
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
             <Typography variant="body2" color="text.secondary">
-              Phase: {phaseDeg.toFixed(0)}°
+              Phase Offset: {phaseLabel}
             </Typography>
             <Typography variant="caption" color="primary.main">
               {fieldStrength}
@@ -175,6 +183,7 @@ export function SourceControls({ source }: SourceControlsProps) {
             <TextField
               key={axis}
               label={axis.toUpperCase()}
+              slotProps={{ inputLabel: { shrink: true } }}
               size="small"
               type="number"
               value={source.position[axis]}

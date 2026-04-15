@@ -36,7 +36,9 @@ export function EnvironmentControls() {
         </Tooltip>
         <FormControl fullWidth size="small">
           <Tooltip title="Lower levels of detail improve performance when FPS drops." describeChild>
-            <InputLabel id="lod-label">LOD</InputLabel>
+            <InputLabel id="lod-label" shrink>
+              LOD
+            </InputLabel>
           </Tooltip>
           <Select
             labelId="lod-label"

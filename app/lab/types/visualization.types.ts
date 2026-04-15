@@ -26,6 +26,9 @@ export interface VisualizationSettings {
   /** Current level of detail (auto-adjusted based on performance) */
   lod: LODLevel;
 
+  /** Field fidelity profile used to balance clarity and scientific detail */
+  solverProfile: SolverProfile;
+
   /** Global UI theme mode */
   themeMode: ThemeMode;
 }
@@ -39,6 +42,9 @@ export type LODLevel = 'high' | 'medium' | 'low';
 /** Global theme mode */
 export type ThemeMode = 'dark' | 'light';
 
+/** Field fidelity profile */
+export type SolverProfile = 'simplified' | 'balanced' | 'scientific';
+
 /** Default visualization settings */
 export const DEFAULT_VISUALIZATION: VisualizationSettings = {
   fieldLineDensity: 50,
@@ -49,6 +55,7 @@ export const DEFAULT_VISUALIZATION: VisualizationSettings = {
   showLabels: true,
   showGrid: true,
   lod: 'high',
+  solverProfile: 'balanced',
   themeMode: 'dark',
 };
 

@@ -57,7 +57,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
   {
     id: 'metal-barrier-reflection',
     name: 'Metal Barrier Reflection',
-    description: 'Conceptual reflective scenario with a strong return wave and source symmetry.',
+    description: 'Two emitters frame a conceptual reflective return so the reversal and phase shift are easy to see.',
     sources: [
       source('Emitter A', { x: -3, y: 1.5, z: 0 }, { power: 0.15, bandwidthHz: 120e6 }),
       source('Reflection Cue', { x: 3, y: 1.5, z: 0 }, { power: 0.08, phase: Math.PI, bandwidthHz: 90e6 }),
@@ -72,7 +72,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
   {
     id: 'dense-wall-attenuation',
     name: 'Dense Wall Attenuation',
-    description: 'A higher-loss region concept where the visible field softens across the scene.',
+    description: 'A single emitter passes through a higher-loss region so the field visibly softens across the scene.',
     sources: [source('Emitter A', { x: -2.5, y: 1.5, z: 0 }, { power: 0.12, bandwidthHz: 180e6 })],
     settings: {
       animateFields: true,
@@ -85,7 +85,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
   {
     id: 'dual-source-interference',
     name: 'Dual Source Interference',
-    description: 'Two emitters with phase offset to emphasize constructive and destructive overlap.',
+    description: 'Two emitters with phase offset emphasize constructive and destructive overlap in a compact study.',
     sources: [
       source('Emitter A', { x: -2.2, y: 1.5, z: 0 }, { power: 0.12, phase: 0 }),
       source('Emitter B', { x: 2.2, y: 1.5, z: 0 }, { power: 0.12, phase: Math.PI, bandwidthHz: 60e6 }),
@@ -100,7 +100,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
   {
     id: 'noisy-electronics',
     name: 'Noisy Electronics Environment',
-    description: 'A cluttered, slightly unstable scene with small phase and amplitude variation.',
+    description: 'Three emitters add jitter, amplitude variation, and spectral clutter to show noisy field instability.',
     sources: [
       source('Emitter A', { x: 0, y: 1.5, z: 0 }, { power: 0.1, bandwidthHz: 160e6 }),
       source('Noise Source', { x: 1.5, y: 1.2, z: -1.5 }, { power: 0.04, phase: Math.PI / 3, bandwidthHz: 220e6 }),
@@ -117,7 +117,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
   {
     id: 'atmospheric-scatter',
     name: 'Atmospheric Scatter',
-    description: 'Multiple low-power sources create a diffuse, slightly scattered reading.',
+    description: 'Four low-power emitters create a diffuse, slightly scattered reading with reduced coherence.',
     sources: [
       source('Emitter A', { x: -3, y: 1.5, z: -1.5 }, { power: 0.08, bandwidthHz: 140e6 }),
       source('Scatter B', { x: 2.2, y: 1.4, z: 1.2 }, { power: 0.05, phase: 0.7, bandwidthHz: 180e6 }),
@@ -134,7 +134,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
   {
     id: 'medium-transition',
     name: 'Medium Transition',
-    description: 'A simplified medium-change cue that shifts apparent propagation spacing.',
+    description: 'Three emitters demonstrate how apparent propagation spacing changes across a medium transition.',
     sources: [
       source('Emitter A', { x: -2.5, y: 1.5, z: 0 }, { power: 0.1, bandwidthHz: 100e6 }),
       source('Transition Cue', { x: 2.5, y: 1.5, z: 0 }, { power: 0.08, phase: 0.5, bandwidthHz: 140e6 }),
@@ -150,7 +150,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
   {
     id: 'polarization-showcase',
     name: 'Polarization Showcase',
-    description: 'A comparison-oriented setup for visualizing polarization concepts in a disturbed scene.',
+    description: 'Five emitters compare polarization concepts in a disturbed scene with distinct directional cues.',
     sources: [
       source('Linear Cue', { x: -2.2, y: 1.5, z: 0 }, { power: 0.1, bandwidthHz: 70e6 }),
       source('Orthogonal Cue', { x: 2.2, y: 1.5, z: 0 }, { power: 0.1, phase: Math.PI / 2, bandwidthHz: 70e6 }),

@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useLabStore } from '../../hooks/useLabStore';
-import { ColorScheme, VISUALIZATION_LIMITS } from '../../types/visualization.types';
+import { ColorScheme, SolverProfile, VISUALIZATION_LIMITS } from '../../types/visualization.types';
 import { Slider } from '../shared/Slider';
 
 export function VisualizationSettings() {
@@ -21,8 +21,10 @@ export function VisualizationSettings() {
   const showFPS = useLabStore((state) => state.settings.showFPS);
   const animateFields = useLabStore((state) => state.settings.animateFields);
   const animationSpeed = useLabStore((state) => state.settings.animationSpeed);
+  const solverProfile = useLabStore((state) => state.settings.solverProfile);
   const themeMode = useLabStore((state) => state.settings.themeMode);
   const updateSettings = useLabStore((state) => state.updateSettings);
+  const setSolverProfile = useLabStore((state) => state.setSolverProfile);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -32,7 +34,9 @@ export function VisualizationSettings() {
       <Stack spacing={1.5}>
         <FormControl fullWidth size="small">
           <Tooltip title="Choose how field intensity is colored across the 3D scene." describeChild>
-            <InputLabel id="color-scheme-label">Color Scheme</InputLabel>
+            <InputLabel id="color-scheme-label" shrink>
+              Color Scheme
+            </InputLabel>
           </Tooltip>
           <Select
             labelId="color-scheme-label"
@@ -66,6 +70,23 @@ export function VisualizationSettings() {
             />
           </Box>
         </Tooltip>
+        <FormControl fullWidth size="small">
+          <Tooltip title="Choose how much field detail and directional structure to emphasize." describeChild>
+            <InputLabel id="solver-profile-label" shrink>
+              Field Fidelity
+            </InputLabel>
+          </Tooltip>
+          <Select
+            labelId="solver-profile-label"
+            value={solverProfile}
+            label="Field Fidelity"
+            onChange={(event) => setSolverProfile(event.target.value as SolverProfile)}
+          >
+            <MenuItem value="simplified">Simplified</MenuItem>
+            <MenuItem value="balanced">Balanced</MenuItem>
+            <MenuItem value="scientific">Scientific</MenuItem>
+          </Select>
+        </FormControl>
         <Tooltip title="Switch between the lab's dark scientific theme and a brighter presentation mode." describeChild>
           <Box component="span">
             <FormControlLabel

@@ -16,9 +16,11 @@ describe('VisualizationSettings', () => {
           showFPS: false,
           animateFields: true,
           animationSpeed: 1,
+          solverProfile: 'balanced',
           themeMode: 'dark',
         },
         updateSettings,
+        setSolverProfile: jest.fn(),
       })
     );
   });
@@ -47,5 +49,11 @@ describe('VisualizationSettings', () => {
     render(<VisualizationSettings />);
 
     expect(screen.getByRole('slider', { name: /animation speed/i })).toBeInTheDocument();
+  });
+
+  it('renders the field fidelity selector', () => {
+    render(<VisualizationSettings />);
+
+    expect(screen.getByLabelText(/field fidelity/i)).toBeInTheDocument();
   });
 });

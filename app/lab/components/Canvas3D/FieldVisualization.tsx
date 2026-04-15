@@ -5,9 +5,18 @@ import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFieldCalculator } from '../../hooks/useFieldCalculator';
 import { useLabStore } from '../../hooks/useLabStore';
-import { fieldStrengthToColor, getSourceColor } from '../../lib/visualization-helpers';
+import {
+  classifyFieldInteraction,
+  fieldStrengthToColor,
+  getSourceColor,
+} from '../../lib/visualization-helpers';
+import {
+  calculateCancellationScore,
+  calculateContestedZoneScore,
+  calculateFieldOverlapScore,
+} from '../../lib/field-math';
 import { RFSource } from '../../types/source.types';
-import { ColorScheme, LODLevel } from '../../types/visualization.types';
+import { ColorScheme, LODLevel, SolverProfile } from '../../types/visualization.types';
 
 export interface FieldVisualizationProps {
   sources: RFSource[];
@@ -94,21 +103,39 @@ function EmitterCloud({
   sourceIndex: number;
 }) {
   const { calculateFieldAtPoint } = useFieldCalculator();
-  const { animateFields, animationSpeed, fieldLineDensity } = useLabStore((state) => state.settings);
+  const { animateFields, animationSpeed, fieldLineDensity, solverProfile } = useLabStore((state) => state.settings);
 
   const sourceTint = useMemo(() => new THREE.Color(source.color ?? getSourceColor(sourceIndex)), [source.color, sourceIndex]);
+  const scratch = useMemo(
+    () => ({
+      flow: new THREE.Vector3(),
+      eField: new THREE.Vector3(),
+      bField: new THREE.Vector3(),
+      swirlAxis: new THREE.Vector3(),
+      radial: new THREE.Vector3(),
+      jitter: new THREE.Vector3(),
+      fieldBias: new THREE.Vector3(),
+      tint: new THREE.Color(),
+      fieldColor: new THREE.Color(),
+    }),
+    []
+  );
 
   const bands = useMemo(() => {
     const lodFactor = lod === 'high' ? 1 : lod === 'medium' ? 0.78 : 0.58;
+    const profile = PROFILE_FACTORS[solverProfile];
     const bandwidthHz = source.bandwidthHz ?? DEFAULT_BANDWIDTH_HZ;
-    const bandwidthFactor = 1 + Math.min(2.2, Math.log10(Math.max(bandwidthHz, 1e6) / 1e6 + 1) * 0.45);
+    const bandwidthFactor = 1 + Math.min(2.2, Math.log10(Math.max(bandwidthHz, 1e6) / 1e6 + 1) * 0.45) * profile.bandwidthBoost;
 
     return LAYERS.map((layer, layerIndex) => {
       const count = Math.max(
         28,
-        Math.min(120, Math.round(fieldLineDensity * lodFactor * layer.countScale * 1.3 * bandwidthFactor))
+        Math.min(
+          120,
+          Math.round(fieldLineDensity * lodFactor * layer.countScale * 1.3 * bandwidthFactor * profile.densityScale)
+        )
       );
-      const baseRadius = 0.42 + Math.min(1.0, Math.abs(source.power) * 1.2) + bandwidthFactor * 0.08;
+      const baseRadius = (0.42 + Math.min(1.0, Math.abs(source.power) * 1.2)) * profile.radiusScale + bandwidthFactor * 0.08;
       const particles: CloudParticle[] = [];
 
       for (let i = 0; i < count; i++) {
@@ -130,9 +157,9 @@ function EmitterCloud({
           radial: emissionRadius,
           phaseSeed: t * TAU + sourceIndex * 0.55 + layerIndex * 0.35,
           layer: layer.id,
-          drift: ((i % 2 === 0 ? 1 : -1) * (0.08 + layerIndex * 0.03)) * bandwidthFactor,
-          spin: (0.4 + (i % 7) * 0.045 + layerIndex * 0.06) * (0.9 + bandwidthFactor * 0.08),
-          compression: 1 - layer.compression,
+          drift: ((i % 2 === 0 ? 1 : -1) * (0.08 + layerIndex * 0.03)) * bandwidthFactor * profile.driftScale,
+          spin: (0.4 + (i % 7) * 0.045 + layerIndex * 0.06) * (0.9 + bandwidthFactor * 0.08) * profile.spinScale,
+          compression: 1 - layer.compression * profile.compressionScale,
         });
       }
 
@@ -142,7 +169,17 @@ function EmitterCloud({
         geometry: createLayerGeometry(count),
       };
     });
-  }, [fieldLineDensity, lod, source.bandwidthHz, source.power, source.position.x, source.position.y, source.position.z, sourceIndex]);
+  }, [
+    fieldLineDensity,
+    lod,
+    solverProfile,
+    source.bandwidthHz,
+    source.power,
+    source.position.x,
+    source.position.y,
+    source.position.z,
+    sourceIndex,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -178,23 +215,23 @@ function EmitterCloud({
         const field = calculateFieldAtPoint(samplePoint, allSources, time);
         const strength = Math.abs(field.strength);
         const normalized = Math.min(1, strength / maxStrength);
-        const poynting = field.poynting ?? new THREE.Vector3(1, 0, 0);
-        const flow = new THREE.Vector3(poynting.x, poynting.y, poynting.z);
+        const poynting = field.poynting ?? X_AXIS;
+        const flow = scratch.flow.set(poynting.x, poynting.y, poynting.z);
 
         if (flow.lengthSq() === 0) {
           flow.copy(X_AXIS);
         }
         flow.normalize();
 
-        const eField = new THREE.Vector3(field.eField?.x ?? 0, field.eField?.y ?? 0, field.eField?.z ?? 0);
-        const bField = new THREE.Vector3(field.bField?.x ?? 0, field.bField?.y ?? 0, field.bField?.z ?? 0);
-        const swirlAxis = new THREE.Vector3().crossVectors(particle.direction, flow);
+        const eField = scratch.eField.set(field.eField?.x ?? 0, field.eField?.y ?? 0, field.eField?.z ?? 0);
+        const bField = scratch.bField.set(field.bField?.x ?? 0, field.bField?.y ?? 0, field.bField?.z ?? 0);
+        const swirlAxis = scratch.swirlAxis.crossVectors(particle.direction, flow);
         if (swirlAxis.lengthSq() === 0) {
           swirlAxis.copy(particle.tangent);
         }
         swirlAxis.normalize();
 
-        const radial = particle.position.clone().sub(source.position);
+        const radial = scratch.radial.copy(particle.position).sub(source.position);
         if (radial.lengthSq() === 0) {
           radial.copy(particle.direction);
         }
@@ -203,13 +240,28 @@ function EmitterCloud({
         const phasePulse = Math.sin((field.phase ?? 0) + particle.phaseSeed * 0.75);
         const frequencyPulse = Math.sin((source.frequency * time * 0.25) + particle.phaseSeed);
         const bandwidthHz = source.bandwidthHz ?? DEFAULT_BANDWIDTH_HZ;
-        const bandwidthFactor = 1 + Math.min(2.2, Math.log10(Math.max(bandwidthHz, 1e6) / 1e6 + 1) * 0.45);
-        const waveEnvelope = 0.38 + 0.24 * phasePulse + 0.18 * frequencyPulse + normalized * 0.12 + bandwidthFactor * 0.06;
+        const profile = PROFILE_FACTORS[solverProfile];
+        const bandwidthFactor = 1 + Math.min(2.2, Math.log10(Math.max(bandwidthHz, 1e6) / 1e6 + 1) * 0.45) * profile.bandwidthBoost;
+        const waveEnvelope =
+          0.38 + 0.24 * phasePulse + 0.18 * frequencyPulse + normalized * 0.12 + bandwidthFactor * 0.06;
 
-        const interferenceCompression = 1 - normalized * layer.compression * (0.9 + bandwidthFactor * 0.12);
+        const overlapScore = calculateFieldOverlapScore(normalized, bandwidthFactor * profile.interactionBoost);
+        const cancellationScore = calculateCancellationScore(
+          normalized * (1 - Math.abs(phasePulse)),
+          normalized,
+          Math.abs(phasePulse)
+        );
+        const contestedScore = calculateContestedZoneScore(overlapScore, cancellationScore);
+        const interactionCue = classifyFieldInteraction(overlapScore, cancellationScore, contestedScore);
+
+        const interferenceCompression = 1 - normalized * layer.compression * (0.9 + bandwidthFactor * 0.12) * profile.compressionScale;
         const densityPulse = 0.02 + normalized * layer.blur + bandwidthFactor * 0.01;
-        const swirlFlow = (0.16 + normalized * 0.54 + Math.abs(phasePulse) * 0.12) * delta * (0.92 + bandwidthFactor * 0.06);
-        const jitter = new THREE.Vector3(
+        const swirlFlow =
+          (0.16 + normalized * 0.54 + Math.abs(phasePulse) * 0.12) *
+          delta *
+          (0.92 + bandwidthFactor * 0.06) *
+          profile.flowScale;
+        const jitter = scratch.jitter.set(
           Math.sin(time * 0.95 + particle.phaseSeed),
           Math.cos(time * 0.8 + particle.phaseSeed * 0.9),
           Math.sin(time * 1.05 + particle.phaseSeed * 1.3)
@@ -228,7 +280,7 @@ function EmitterCloud({
         particle.tangent.lerp(swirlAxis.clone(), 0.1 + Math.abs(phasePulse) * 0.05).normalize();
 
         const radius = particle.radial + waveEnvelope * (0.04 + normalized * 0.09);
-        const cloudSpread = 0.18 + normalized * 0.3 + bandwidthFactor * 0.05;
+        const cloudSpread = (0.18 + normalized * 0.3 + bandwidthFactor * 0.05) * profile.spreadScale;
         const target = new THREE.Vector3(
           source.position.x + particle.direction.x * radius * interferenceCompression + particle.tangent.x * swirlFlow + jitter.x * cloudSpread,
           source.position.y + particle.direction.y * radius * interferenceCompression + particle.tangent.y * swirlFlow + jitter.y * cloudSpread,
@@ -247,19 +299,25 @@ function EmitterCloud({
         }
 
         // Nudge the particle cloud to stay aligned with the vector field.
-        const fieldBias = new THREE.Vector3(
-          flow.x * (0.08 + normalized * 0.05),
-          flow.y * (0.08 + normalized * 0.05),
-          flow.z * (0.08 + normalized * 0.05)
-        )
-          .add(eField.clone().multiplyScalar(0.006 + normalized * 0.004))
-          .add(bField.clone().multiplyScalar(0.008 + normalized * 0.004))
-          .add(radial.clone().multiplyScalar((0.02 + normalized * 0.02) * (0.9 + bandwidthFactor * 0.08)))
-          .add(swirlAxis.clone().multiplyScalar(0.02 + Math.abs(phasePulse) * 0.02));
+        const fieldBias = scratch.fieldBias
+          .set(
+            flow.x * (0.08 + normalized * 0.05),
+            flow.y * (0.08 + normalized * 0.05),
+            flow.z * (0.08 + normalized * 0.05)
+          )
+          .addScaledVector(eField, 0.006 + normalized * 0.004)
+          .addScaledVector(bField, 0.008 + normalized * 0.004)
+          .addScaledVector(
+            radial,
+            (0.02 + normalized * 0.02) * (0.9 + bandwidthFactor * 0.08) * profile.fieldBiasScale
+          )
+          .addScaledVector(swirlAxis, 0.02 + Math.abs(phasePulse) * 0.02);
         particle.position.add(fieldBias);
 
-        const tint = sourceTint.clone().lerp(new THREE.Color(fieldStrengthToColor(strength, maxStrength, colorScheme)), layer.tintMix);
-        const glow = layer.baseOpacity + normalized * (0.34 + layerIndexBonus(bandIndex));
+        const tint = scratch.tint.copy(sourceTint).lerp(scratch.fieldColor.set(fieldStrengthToColor(strength, maxStrength, colorScheme)), layer.tintMix);
+        const interactionBoost =
+          interactionCue === 'contested' ? 1.15 : interactionCue === 'constructive' ? 1.08 : interactionCue === 'destructive' ? 0.94 : 1;
+        const glow = (layer.baseOpacity + normalized * (0.34 + layerIndexBonus(bandIndex))) * interactionBoost * profile.glowScale;
         const idx = i * 3;
         positions[idx] = particle.position.x;
         positions[idx + 1] = particle.position.y;
@@ -311,6 +369,60 @@ function EmitterCloud({
     particle.drift = spinBias;
   }
 }
+
+const PROFILE_FACTORS: Record<SolverProfile, {
+  densityScale: number;
+  radiusScale: number;
+  driftScale: number;
+  spinScale: number;
+  compressionScale: number;
+  bandwidthBoost: number;
+  flowScale: number;
+  spreadScale: number;
+  fieldBiasScale: number;
+  interactionBoost: number;
+  glowScale: number;
+}> = {
+  simplified: {
+    densityScale: 0.82,
+    radiusScale: 0.95,
+    driftScale: 0.8,
+    spinScale: 0.88,
+    compressionScale: 1.12,
+    bandwidthBoost: 0.9,
+    flowScale: 0.9,
+    spreadScale: 0.92,
+    fieldBiasScale: 0.9,
+    interactionBoost: 0.85,
+    glowScale: 0.95,
+  },
+  balanced: {
+    densityScale: 1,
+    radiusScale: 1,
+    driftScale: 1,
+    spinScale: 1,
+    compressionScale: 1,
+    bandwidthBoost: 1,
+    flowScale: 1,
+    spreadScale: 1,
+    fieldBiasScale: 1,
+    interactionBoost: 1,
+    glowScale: 1,
+  },
+  scientific: {
+    densityScale: 1.18,
+    radiusScale: 1.08,
+    driftScale: 1.12,
+    spinScale: 1.08,
+    compressionScale: 0.92,
+    bandwidthBoost: 1.12,
+    flowScale: 1.08,
+    spreadScale: 1.08,
+    fieldBiasScale: 1.1,
+    interactionBoost: 1.12,
+    glowScale: 1.04,
+  },
+};
 
 function createLayerGeometry(count: number) {
   const geometry = new THREE.BufferGeometry();

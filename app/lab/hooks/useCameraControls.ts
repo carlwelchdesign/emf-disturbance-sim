@@ -3,9 +3,10 @@
  * Handles orbit, pan, and zoom interactions
  */
 
-import { useCallback, useRef, MouseEvent as ReactMouseEvent } from 'react';
+import { useCallback, useEffect, useRef, MouseEvent as ReactMouseEvent } from 'react';
 import { useLabStore } from './useLabStore';
 import { calculateOrbit, calculatePan, calculateZoom, calculateDistance } from '../lib/camera-helpers';
+import { CameraState } from '../types/camera.types';
 
 /**
  * Mouse button constants
@@ -15,6 +16,7 @@ const MOUSE_BUTTONS = {
   MIDDLE: 1,
   RIGHT: 2,
 } as const;
+const CAMERA_EPSILON = 1e-9;
 
 /**
  * Camera control modes
@@ -37,12 +39,49 @@ interface UseCameraControlsReturn {
  * Provides mouse event handlers for orbit, pan, and zoom
  */
 export function useCameraControls(): UseCameraControlsReturn {
-  const { camera, updateCamera, resetCamera: storeResetCamera } = useLabStore();
-  
+  const camera = useLabStore((state) => state.camera);
+  const updateCamera = useLabStore((state) => state.updateCamera);
+  const storeResetCamera = useLabStore((state) => state.resetCamera);
+
   // Track interaction state
   const controlModeRef = useRef<ControlMode>('none');
   const lastMousePos = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
+  const cameraRef = useRef<CameraState>(camera);
+
+  useEffect(() => {
+    cameraRef.current = camera;
+  }, [camera]);
+
+  const publishCamera = useCallback(
+    (nextCamera: Partial<CameraState>) => {
+      const currentCamera = cameraRef.current;
+      const mergedCamera = { ...currentCamera, ...nextCamera };
+      const nearlyEqual = (left: number, right: number) => Math.abs(left - right) <= CAMERA_EPSILON;
+
+      const hasChanged =
+        !nearlyEqual(mergedCamera.position.x, currentCamera.position.x) ||
+        !nearlyEqual(mergedCamera.position.y, currentCamera.position.y) ||
+        !nearlyEqual(mergedCamera.position.z, currentCamera.position.z) ||
+        !nearlyEqual(mergedCamera.target.x, currentCamera.target.x) ||
+        !nearlyEqual(mergedCamera.target.y, currentCamera.target.y) ||
+        !nearlyEqual(mergedCamera.target.z, currentCamera.target.z) ||
+        !nearlyEqual(mergedCamera.up.x, currentCamera.up.x) ||
+        !nearlyEqual(mergedCamera.up.y, currentCamera.up.y) ||
+        !nearlyEqual(mergedCamera.up.z, currentCamera.up.z) ||
+        !nearlyEqual(mergedCamera.fov, currentCamera.fov) ||
+        !nearlyEqual(mergedCamera.zoom, currentCamera.zoom) ||
+        !nearlyEqual(mergedCamera.near, currentCamera.near) ||
+        !nearlyEqual(mergedCamera.far, currentCamera.far);
+
+      if (!hasChanged) {
+        return;
+      }
+
+      updateCamera(nextCamera);
+    },
+    [updateCamera]
+  );
 
   /**
    * Handle mouse down - start orbit or pan
@@ -70,6 +109,8 @@ export function useCameraControls(): UseCameraControlsReturn {
       return;
     }
 
+    e.preventDefault();
+
     const deltaX = e.clientX - lastMousePos.current.x;
     const deltaY = e.clientY - lastMousePos.current.y;
     lastMousePos.current = { x: e.clientX, y: e.clientY };
@@ -81,32 +122,30 @@ export function useCameraControls(): UseCameraControlsReturn {
     if (controlModeRef.current === 'orbit') {
       // Orbit around target
       const result = calculateOrbit(
-        camera.position,
-        camera.target,
+        cameraRef.current.position,
+        cameraRef.current.target,
         -deltaX * orbitSensitivity,
         -deltaY * orbitSensitivity
       );
-      
-      updateCamera({
-        position: result.position,
-      });
+
+      publishCamera({ position: result.position });
     } else if (controlModeRef.current === 'pan') {
       // Pan camera and target together
-      const distance = calculateDistance(camera.position, camera.target);
+      const distance = calculateDistance(cameraRef.current.position, cameraRef.current.target);
       const result = calculatePan(
-        camera.position,
-        camera.target,
+        cameraRef.current.position,
+        cameraRef.current.target,
         deltaX * panSensitivity,
         deltaY * panSensitivity,
         distance
       );
-      
-      updateCamera({
+
+      publishCamera({
         position: result.position,
         target: result.target,
       });
     }
-  }, [camera, updateCamera]);
+  }, [publishCamera]);
 
   /**
    * Handle mouse up - end interaction
@@ -122,19 +161,17 @@ export function useCameraControls(): UseCameraControlsReturn {
   const onWheel = useCallback((e: WheelLikeEvent) => {
     // Normalize wheel delta (different browsers use different scales)
     const delta = e.deltaY > 0 ? 1 : -1;
-    
+
     const result = calculateZoom(
-      camera.position,
-      camera.target,
+      cameraRef.current.position,
+      cameraRef.current.target,
       delta,
       0.5,  // Min distance
       50    // Max distance
     );
-    
-    updateCamera({
-      position: result.position,
-    });
-  }, [camera, updateCamera]);
+
+    publishCamera({ position: result.position });
+  }, [publishCamera]);
 
   /**
    * Reset camera to default position

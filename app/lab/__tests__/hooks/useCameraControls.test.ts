@@ -14,6 +14,11 @@ describe('useCameraControls', () => {
   let mockUpdateCamera: jest.Mock;
   let mockResetCamera: jest.Mock;
   let mockCamera: CameraState;
+  let mockStore: {
+    camera: CameraState;
+    updateCamera: jest.Mock;
+    resetCamera: jest.Mock;
+  };
 
   beforeEach(() => {
     mockUpdateCamera = jest.fn();
@@ -27,11 +32,18 @@ describe('useCameraControls', () => {
       near: 0.1,
       far: 1000,
     };
-
-    (useLabStore as unknown as jest.Mock).mockReturnValue({
+    mockStore = {
       camera: mockCamera,
       updateCamera: mockUpdateCamera,
       resetCamera: mockResetCamera,
+    };
+
+    (useLabStore as unknown as jest.Mock).mockImplementation((selector?: (state: typeof mockStore) => unknown) => {
+      if (typeof selector === 'function') {
+        return selector(mockStore);
+      }
+
+      return mockStore;
     });
   });
 
@@ -289,6 +301,31 @@ describe('useCameraControls', () => {
       // Should have updated multiple times
       expect(mockUpdateCamera).toHaveBeenCalled();
       expect(mockUpdateCamera.mock.calls.length).toBeGreaterThan(1);
+    });
+
+    it('should ignore drag updates when the camera result does not change', () => {
+      const { result } = renderHook(() => useCameraControls());
+
+      act(() => {
+        result.current.onMouseDown({
+          button: 0,
+          clientX: 100,
+          clientY: 100,
+          preventDefault: jest.fn(),
+        } as unknown as React.MouseEvent);
+      });
+
+      mockUpdateCamera.mockClear();
+
+      act(() => {
+        result.current.onMouseMove({
+          clientX: 100,
+          clientY: 100,
+          preventDefault: jest.fn(),
+        } as unknown as React.MouseEvent);
+      });
+
+      expect(mockUpdateCamera).not.toHaveBeenCalled();
     });
   });
 });

@@ -14,7 +14,9 @@ export function FrequencyPresets({ value, onChange }: FrequencyPresetsProps) {
   return (
     <FormControl fullWidth size="small">
       <Tooltip title="Quickly switch to a common RF band such as Wi-Fi, Bluetooth, or 5G." describeChild>
-        <InputLabel id="frequency-presets-label">Preset</InputLabel>
+        <InputLabel id="frequency-presets-label" shrink>
+          Preset
+        </InputLabel>
       </Tooltip>
       <Select
         labelId="frequency-presets-label"

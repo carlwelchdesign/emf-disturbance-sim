@@ -117,6 +117,30 @@ export function calculateDirectionalGain(
 }
 
 /**
+ * Estimate overlap between two field contributions.
+ */
+export function calculateFieldOverlapScore(primary: number, secondary: number, epsilon = 1e-6): number {
+  const normalizedPrimary = Math.abs(primary);
+  const normalizedSecondary = Math.abs(secondary);
+  return (normalizedPrimary * normalizedSecondary) / (normalizedPrimary + normalizedSecondary + epsilon);
+}
+
+/**
+ * Estimate cancellation from two competing field contributions.
+ */
+export function calculateCancellationScore(net: number, primary: number, secondary: number, epsilon = 1e-6): number {
+  const denominator = Math.abs(primary) + Math.abs(secondary) + epsilon;
+  return Math.max(0, 1 - Math.abs(net) / denominator);
+}
+
+/**
+ * Estimate whether a field region is contested by competing contributions.
+ */
+export function calculateContestedZoneScore(overlap: number, cancellation: number): number {
+  return Math.max(0, Math.min(1, overlap * 0.65 + cancellation * 0.35));
+}
+
+/**
  * Convert electric field strength to power density
  * Power density (W/m²) = E² / (2 * Z0)
  * where Z0 is the vacuum impedance

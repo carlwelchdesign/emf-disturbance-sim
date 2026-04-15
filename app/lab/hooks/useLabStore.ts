@@ -11,6 +11,7 @@ import { MeasurementPoint } from '../types/measurement.types';
 import { LabStoreState } from '../types/store.types';
 import { sanitizeSource } from '../lib/validation';
 import { createSourceIdGenerator } from '../lib/source-helpers';
+import { isSameCameraState } from '../lib/camera-helpers';
 import { getSourceColor } from '../lib/visualization-helpers';
 import { buildScenarioSources, getScenarioPreset } from '../modules/scenario/presets';
 
@@ -151,6 +152,7 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
         ...preset.settings,
         themeMode: state.settings.themeMode,
         showFPS: state.settings.showFPS,
+        solverProfile: state.settings.solverProfile,
       },
       measurements: [],
     }));
@@ -158,13 +160,26 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
 
   // === Camera Actions ===
   updateCamera: (params) => {
-    set((state) => ({
-      camera: { ...state.camera, ...params },
+    const currentCamera = get().camera;
+    const nextCamera = { ...currentCamera, ...params };
+
+    if (isSameCameraState(currentCamera, nextCamera)) {
+      return;
+    }
+
+    set({
+      camera: nextCamera,
       scenarioIsDirty: true,
-    }));
+    });
   },
 
   resetCamera: () => {
+    const currentCamera = get().camera;
+
+    if (isSameCameraState(currentCamera, DEFAULT_CAMERA)) {
+      return;
+    }
+
     set({ camera: DEFAULT_CAMERA, scenarioIsDirty: true });
   },
 
@@ -179,6 +194,13 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   setLOD: (lod) => {
     set((state) => ({
       settings: { ...state.settings, lod },
+      scenarioIsDirty: true,
+    }));
+  },
+
+  setSolverProfile: (solverProfile) => {
+    set((state) => ({
+      settings: { ...state.settings, solverProfile },
       scenarioIsDirty: true,
     }));
   },

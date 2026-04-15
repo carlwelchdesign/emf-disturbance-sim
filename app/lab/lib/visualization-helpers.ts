@@ -85,6 +85,27 @@ export function frequencyToDisplayColor(frequencyHz: number): string {
   return `hsl(${hue}, 90%, 60%)`;
 }
 
+/**
+ * Format a frequency value for display in the controls.
+ */
+export function formatFrequencyLabel(frequencyHz: number): string {
+  return `${(frequencyHz / 1e9).toFixed(2)} GHz`;
+}
+
+/**
+ * Format a bandwidth value for display in the controls.
+ */
+export function formatBandwidthLabel(bandwidthHz: number): string {
+  return `${(bandwidthHz / 1e6).toFixed(0)} MHz`;
+}
+
+/**
+ * Format a phase value for display in the controls.
+ */
+export function formatPhaseLabel(phaseRadians: number): string {
+  return `${((phaseRadians * 180) / Math.PI).toFixed(0)}°`;
+}
+
 export const SOURCE_COLOR_PALETTE = [
   '#3b82f6',
   '#ef4444',
@@ -121,5 +142,50 @@ export function formatFieldStrength(strength: number, showApproximate: boolean =
     return `${prefix}${strength.toFixed(2)} V/m`;
   } else {
     return `${prefix}${(strength / 1000).toFixed(2)} kV/m`;
+  }
+}
+
+/**
+ * Classify a local field reading into a broad interaction cue.
+ */
+export function classifyFieldInteraction(
+  overlapScore: number,
+  cancellationScore: number,
+  contestedScore: number
+): 'quiet' | 'constructive' | 'destructive' | 'contested' {
+  if (contestedScore > 0.72) {
+    return 'contested';
+  }
+
+  if (cancellationScore > overlapScore && cancellationScore > 0.55) {
+    return 'destructive';
+  }
+
+  if (overlapScore > 0.45) {
+    return 'constructive';
+  }
+
+  return 'quiet';
+}
+
+/**
+ * Provide a readable label for a field interaction cue.
+ */
+export function describeFieldInteraction(
+  overlapScore: number,
+  cancellationScore: number,
+  contestedScore: number
+): string {
+  const cue = classifyFieldInteraction(overlapScore, cancellationScore, contestedScore);
+
+  switch (cue) {
+    case 'constructive':
+      return 'constructive overlap';
+    case 'destructive':
+      return 'destructive cancellation';
+    case 'contested':
+      return 'contested field';
+    default:
+      return 'quiet field';
   }
 }
