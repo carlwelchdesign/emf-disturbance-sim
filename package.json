@@ -16,7 +16,6 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^9.0.0",
     "@mui/material": "^9.0.0",
-    "@next/swc-darwin-arm64": "^14.0.0",
     "@react-three/drei": "^9.88.0",
     "@react-three/fiber": "^8.14.0",
     "@types/three": "^0.183.1",
