@@ -112,6 +112,7 @@ State is centralized in `useLabStore` (Zustand) to keep controls, analytics, and
 
 - Do **not** add platform-specific SWC packages (for example `@next/swc-darwin-arm64`) to `dependencies` or `devDependencies`.
 - Next.js resolves the correct SWC binary for the deployment platform automatically during install.
+- This repo includes `.npmrc` with `include=dev` so deploy environments that set production mode during `npm install` still install build-time packages required by Next.js type-checking.
 - If deployment fails with `EBADPLATFORM` mentioning `@next/swc-darwin-arm64`, remove that package from `package.json` and redeploy.
 - `three`/`@react-three/drei` peer dependency messages can appear as warnings during install; warnings alone are not a deployment failure.
 - For detailed install warning/error triage, see the wiki section "Deployment and environment considerations."
