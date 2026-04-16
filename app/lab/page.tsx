@@ -151,7 +151,7 @@ export default function LabPage() {
         <FieldStrengthOverlay measurement={measurements[measurements.length - 1]} />
         <IconButton
           component="a"
-          href="https://github.com/carlwelchdesign"
+          href="https://github.com/carlwelchdesign/emf-disturbance-sim"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="GitHub profile"

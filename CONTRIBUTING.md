@@ -32,6 +32,7 @@ The lab uses a modular layout:
 ```bash
 npm test
 npm run type-check
+npm run lint
 ```
 
 4. Prefer accessible controls, keyboard support, and sanitized inputs.

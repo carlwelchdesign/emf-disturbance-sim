@@ -32,3 +32,4 @@
 ## Notes
 
 - Validation iteration 1: all checklist items passed.
+- Validation iteration 2 (measurability and edge-case wording refinement): all checklist items passed.

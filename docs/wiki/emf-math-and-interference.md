@@ -119,7 +119,7 @@ Code:
 
 ### Correctness and safety in Maxwell runs
 
-The Maxwell pathway includes validation and protective controls in architecture/specs:
+The Maxwell pathway includes validation and protective controls that are implemented in the solver workflow and also governed by architecture/spec constraints:
 - correctness validation workflows and run state reporting
 - memory/resource safety gates to avoid browser instability
 
@@ -151,3 +151,17 @@ Primary types and orchestration:
 2. Improve animation smoothness during rotate/pan/zoom while preserving existing workflows.
 3. Expand solver method-family support in a pluggable way (future FEM/DGTD pathways).
 4. Add persistence/export for reproducible scenarios and analysis artifacts.
+
+## 10) Deployment and environment considerations
+
+### Cross-platform Next.js dependency behavior
+
+- This project should avoid pinning platform-specific Next.js SWC binaries in `package.json` (for example `@next/swc-darwin-arm64`).
+- Why: local macOS installs may succeed with darwin-only binaries, but Linux CI/deploy targets (for example Vercel) will fail install with `EBADPLATFORM`.
+- Correct approach: keep `next` as the dependency and let Next.js resolve the correct SWC package per environment.
+
+### Interpreting install warnings vs blockers
+
+- `npm warn ERESOLVE overriding peer dependency` messages around `three` / `@react-three/drei` / `@monogrid/gainmap-js` can be noisy but are not automatically fatal.
+- Fatal install blockers are explicit `npm error` entries (for example `EBADPLATFORM`, `ERESOLVE` without override path, or missing package/version errors).
+- For deployment triage, focus first on the final `npm error` block and exit code.

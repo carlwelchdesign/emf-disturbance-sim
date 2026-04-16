@@ -13,12 +13,12 @@ As a lab user, I can rotate, pan, and zoom the 3D scene smoothly so I can inspec
 
 **Why this priority**: Core usability depends on smooth camera control. If navigation is sluggish, the feature is not usable regardless of other capabilities.
 
-**Independent Test**: Enable interactive controls on a representative scenario and verify users can continuously rotate, pan, and zoom for a sustained session without visible jank.
+**Independent Test**: In a representative scene, have users continuously rotate, pan, and zoom for 10 minutes and verify camera response starts within 0.12 seconds of input and no interaction freeze lasts longer than 0.5 seconds.
 
 **Acceptance Scenarios**:
 
-1. **Given** a loaded visualization scene, **When** the user drags to rotate the camera continuously, **Then** motion remains smooth and responsive without noticeable frame hitching.
-2. **Given** a loaded visualization scene, **When** the user pans and zooms repeatedly, **Then** camera updates track input smoothly and without delayed jumps.
+1. **Given** a loaded visualization scene, **When** the user drags to rotate the camera continuously for 2 minutes, **Then** camera movement begins within 0.12 seconds of each input change and no freeze longer than 0.5 seconds occurs.
+2. **Given** a loaded visualization scene, **When** the user alternates pan and zoom actions for 2 minutes, **Then** camera updates continue without jumps greater than 0.25 seconds and without any loss of control input.
 
 ---
 
@@ -28,12 +28,12 @@ As a lab user, I can watch ongoing field animation without stutter so I can unde
 
 **Why this priority**: Even with smooth camera controls, animation itself must be stable to support analysis and demonstrations.
 
-**Independent Test**: Start animation in the current non-Maxwell mode and verify playback remains smooth during normal operation.
+**Independent Test**: Start animation in the current non-Maxwell mode, observe for 10 minutes, and verify at least 95% of 5-second observation windows have no freeze longer than 0.5 seconds.
 
 **Acceptance Scenarios**:
 
-1. **Given** animation is running in the current active field mode, **When** the user observes playback for an extended interval, **Then** animation progression appears continuous and stable.
-2. **Given** animation is running, **When** the user performs moderate camera interactions, **Then** animation continues without severe stutter or pause spikes.
+1. **Given** animation is running in the current active field mode, **When** the user observes playback for 10 minutes, **Then** at least 95% of sampled 5-second windows show continuous motion with no freeze longer than 0.5 seconds.
+2. **Given** animation is running, **When** the user performs continuous rotate, pan, and zoom interactions for 2 minutes, **Then** animation continues and no freeze longer than 0.5 seconds occurs.
 
 ---
 
@@ -53,9 +53,9 @@ As a lab user, I can use the visualization with Maxwell field hidden so current 
 
 ### Edge Cases
 
-- What happens when users continuously pan, zoom, and rotate at high input frequency for long sessions?
-- How does the system behave when performance load temporarily spikes during interaction?
-- What happens when users quickly switch between interaction types (rotate to pan to zoom) while animation is running?
+- During a 20-minute continuous interaction session (rotate, pan, and zoom), controls remain available throughout, no interaction freeze exceeds 0.5 seconds, and recovery to normal responsiveness occurs within 2 seconds after any transient slowdown.
+- If a temporary load spike occurs, the user receives a clear in-product notice within 1 second, interaction remains available, and smoothness thresholds are restored within 2 seconds after the spike ends.
+- When users switch interaction types rapidly (rotate → pan → zoom repeatedly while animation runs), the system keeps input order intact and avoids any camera or animation freeze longer than 0.5 seconds.
 
 ## Requirements *(mandatory)*
 
@@ -64,10 +64,10 @@ As a lab user, I can use the visualization with Maxwell field hidden so current 
 - **FR-001**: During continuous rotate interaction in the active visualization mode, the system MUST deliver camera motion updates with p95 input-to-visible response time of 120 ms or less.
 - **FR-002**: During continuous pan interaction in the active visualization mode, the system MUST deliver camera motion updates with p95 input-to-visible response time of 120 ms or less.
 - **FR-003**: During continuous zoom interaction in the active visualization mode, the system MUST deliver camera motion updates with p95 input-to-visible response time of 120 ms or less.
-- **FR-004**: The system MUST maintain smooth animation playback while the current field visualization mode is active.
-- **FR-005**: The system MUST preserve smoothness during normal combined use of animation and camera interactions.
+- **FR-004**: While animation runs in the current active field mode, at least 95% of sampled 5-second windows MUST have no freeze longer than 0.5 seconds.
+- **FR-005**: During combined animation playback and active camera interaction, no freeze longer than 0.5 seconds MUST occur.
 - **FR-006**: The system MUST continue operating with Maxwell field visualization hidden for this feature scope.
-- **FR-007**: The system MUST surface a clear user-facing indication when temporary performance degradation occurs, without freezing or breaking interaction.
+- **FR-007**: The system MUST surface a clear user-facing notice of temporary performance degradation within 1 second of detection, without freezing or breaking interaction.
 - **FR-008**: The system MUST keep existing supported visualization workflows functional while delivering smooth interaction improvements.
 
 ### Key Entities *(include if feature involves data)*
@@ -86,17 +86,17 @@ As a lab user, I can use the visualization with Maxwell field hidden so current 
 - **VQ-005**: Color maps MUST be perceptually uniform and accessible.
 
 **Performance**:
-- **PF-001**: In acceptance sessions for standard interaction and playback workflows, at least 95% of sampled 5-second observation windows MUST be rated smooth with no persistent stutter.
+- **PF-001**: In acceptance sessions for standard interaction and playback workflows, at least 95% of sampled 5-second observation windows MUST contain no freeze longer than 0.5 seconds.
 - **PF-002**: For rotate, pan, and zoom interactions during normal operation, p95 input-to-visible response time MUST be 120 ms or less.
-- **PF-003**: Short transient load spikes MAY occur, but the experience MUST recover quickly without prolonged degradation.
+- **PF-003**: Short transient load spikes MAY occur, but smoothness thresholds in this specification MUST be restored within 2 seconds after the spike ends.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: In acceptance testing sessions, at least 95% of sampled interaction periods are rated smooth for rotate, pan, and zoom by test users.
-- **SC-002**: In acceptance testing sessions, at least 95% of sampled animation playback periods are rated smooth without noticeable stutter.
-- **SC-003**: At least 90% of users complete a 2-minute continuous explore task (rotate, pan, zoom while animation runs) without reporting severe lag.
+- **SC-001**: In acceptance testing, at least 95% of sampled 5-second interaction windows (rotate, pan, zoom) show no freeze longer than 0.5 seconds.
+- **SC-002**: In acceptance testing, at least 95% of sampled 5-second animation windows show no freeze longer than 0.5 seconds.
+- **SC-003**: At least 90% of users complete a 2-minute continuous explore task (rotate, pan, zoom while animation runs) with no freeze event longer than 0.5 seconds.
 - **SC-004**: Incidents of reported sluggishness in standard non-Maxwell workflows decrease by at least 75% compared with baseline observations.
 
 ## Assumptions
@@ -105,3 +105,4 @@ As a lab user, I can use the visualization with Maxwell field hidden so current 
 - Improvements target current supported desktop/laptop usage patterns first.
 - Existing interaction semantics (what rotate/pan/zoom do) remain unchanged; only smoothness and responsiveness are improved.
 - Current lab workflows outside Maxwell mode remain in scope and must continue to function after optimization.
+- "Freeze" means a visible halt in animation or camera motion where expected motion does not progress for longer than the stated threshold.
