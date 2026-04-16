@@ -20,10 +20,16 @@ describe('user journey 1', () => {
         },
       ],
       selectedSourceId: 'default-source',
+      selectionContext: {
+        mode: 'single',
+        selectedSourceIds: ['default-source'],
+        primarySourceId: 'default-source',
+      },
       camera: DEFAULT_CAMERA,
       settings: DEFAULT_VISUALIZATION,
       environment: DEFAULT_ENVIRONMENT,
       measurements: [],
+      drones: [],
     });
   });
 

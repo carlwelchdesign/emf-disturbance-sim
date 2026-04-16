@@ -98,8 +98,8 @@ export class FDTDAdapter implements IMethodFamilyAdapter {
           break;
         }
 
-        // Record snapshot according to sampling plan
-        if (n % temporalDecimation === 0) {
+        // Record snapshot according to sampling plan (skip n=0 — source hasn't propagated yet)
+        if (n > 0 && n % temporalDecimation === 0) {
           const t = n * dt;
           timeAxis.push(t);
           electricSnapshots.push({ ...stepper.getElectricSnapshot(), step: n, time: t });

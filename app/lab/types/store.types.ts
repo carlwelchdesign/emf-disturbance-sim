@@ -100,6 +100,7 @@ export interface LabStoreState {
   // === Maxwell Solver State ===
   maxwellRuns: SimulationRun[];
   maxwellActiveRunId: string | null;
+  maxwellCurrentStep: number;
   maxwellFieldOutputs: Record<string, FieldOutputSet>;
   maxwellDerivedMetrics: Record<string, DerivedMetricResult[]>;
   maxwellValidationReports: Record<string, ValidationReport>;
@@ -107,6 +108,7 @@ export interface LabStoreState {
   // === Maxwell Solver Actions ===
   submitMaxwellRun: (request: SubmitSimulationRunRequest) => SubmitSimulationRunResponse;
   setActiveMaxwellRun: (runId: string | null) => void;
+  setMaxwellCurrentStep: (step: number) => void;
   updateMaxwellRunStatus: (runId: string, status: SimulationRun['status'], reason?: string) => void;
   setMaxwellFieldOutput: (runId: string, output: FieldOutputSet) => void;
   setMaxwellDerivedMetrics: (runId: string, metrics: DerivedMetricResult[]) => void;

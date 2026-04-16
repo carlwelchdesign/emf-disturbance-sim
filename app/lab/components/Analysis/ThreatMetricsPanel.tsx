@@ -80,7 +80,7 @@ export function ThreatMetricsPanel() {
     <Box
       sx={{
         position: 'absolute',
-        top: 12,
+        bottom: 12,
         right: 12,
         width: 200,
         bgcolor: 'rgba(2, 6, 23, 0.82)',
@@ -100,5 +100,23 @@ export function ThreatMetricsPanel() {
       </Typography>
       <PanelContent metrics={metrics} />
     </Box>
+  );
+}
+
+/** Content-only export for use inside a shared grouped container */
+export function ThreatMetricsPanelContent() {
+  const metrics = useLabStore((state) => state.activeFactionMetrics);
+  const drones = useLabStore((state) => state.drones);
+  if (!metrics || drones.length === 0) return null;
+  return (
+    <>
+      <Typography
+        variant="caption"
+        sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, mb: 0.75, fontSize: '0.6rem' }}
+      >
+        LIVE FIELD METRICS
+      </Typography>
+      <PanelContent metrics={metrics} />
+    </>
   );
 }

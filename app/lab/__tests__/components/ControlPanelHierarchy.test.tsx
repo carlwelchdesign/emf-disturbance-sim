@@ -65,7 +65,6 @@ describe('ControlPanel hierarchy', () => {
       'Visualization Controls',
       'Analysis / Measurements',
       'System / View',
-      'Maxwell Solver',
     ]);
   });
 

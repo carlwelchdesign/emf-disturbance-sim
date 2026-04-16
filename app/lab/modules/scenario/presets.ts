@@ -206,6 +206,13 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
         faction: 'friendly',
         speed: 0.35,
         disruptionThreshold: 0.8,
+        emission: {
+          frequency: 2.4e9,
+          power: 0.1,
+          powerUnit: 'watts',
+          bandwidthHz: 80e6,
+          active: true,
+        },
         waypoints: [
           { position: { x: 4, y: 1.5, z: 0 } },
           { position: { x: 2.83, y: 1.5, z: 2.83 } },
@@ -255,6 +262,13 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
         faction: 'friendly',
         speed: 0.28,
         disruptionThreshold: 0.6,
+        emission: {
+          frequency: 5.8e9,
+          power: 0.025,
+          powerUnit: 'watts',
+          bandwidthHz: 20e6,
+          active: true,
+        },
         waypoints: [
           { position: { x: -5, y: 1.5, z: 0 } },
           { position: { x: -2.5, y: 1.5, z: 0 } },

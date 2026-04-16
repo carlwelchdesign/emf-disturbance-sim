@@ -212,11 +212,14 @@ function EmitterCloud({
     return Math.max(0.2, wattEquivalent * 1.45);
   }, [allSources]);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, frameDelta) => {
     // RF frequencies are far too fast to render directly, so we compress time
     // into a visual cadence while preserving the phase relationships.
     const time = animateFields ? clock.getElapsedTime() * animationSpeed * VISUAL_TIME_SCALE : 0;
-    const delta = Math.min(0.032, clock.getDelta());
+    // Use R3F-provided delta (already capped) scaled by animationSpeed for particle motion
+    const delta = Math.min(0.032, frameDelta) * animationSpeed;
+    // Separate visual time for jitter/oscillation effects (not physics-compressed)
+    const visualTime = animateFields ? clock.getElapsedTime() * animationSpeed : 0;
 
     bands.forEach((band, bandIndex) => {
       const positionAttr = band.geometry.getAttribute('position') as THREE.BufferAttribute;
@@ -278,9 +281,9 @@ function EmitterCloud({
           (0.92 + bandwidthFactor * 0.06) *
           profile.flowScale;
         const jitter = scratch.jitter.set(
-          Math.sin(time * 0.95 + particle.phaseSeed),
-          Math.cos(time * 0.8 + particle.phaseSeed * 0.9),
-          Math.sin(time * 1.05 + particle.phaseSeed * 1.3)
+          Math.sin(visualTime * 0.95 + particle.phaseSeed),
+          Math.cos(visualTime * 0.8 + particle.phaseSeed * 0.9),
+          Math.sin(visualTime * 1.05 + particle.phaseSeed * 1.3)
         ).multiplyScalar(densityPulse * 0.4);
 
         particle.radial = THREE.MathUtils.lerp(

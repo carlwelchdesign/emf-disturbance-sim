@@ -9,6 +9,18 @@ export interface Waypoint {
 /** Operational status of a drone based on hostile field exposure */
 export type DroneStatus = 'nominal' | 'degraded' | 'jammed';
 
+/** RF emissions produced by the drone's own electronics (control link, video, motors) */
+export interface DroneEmission {
+  /** Primary emission frequency in Hz (e.g. 2.4e9 for control link) */
+  frequency: number;
+  power: number;
+  powerUnit: 'watts' | 'dBm';
+  /** Spectral bandwidth in Hz */
+  bandwidthHz: number;
+  /** Whether the drone is actively emitting */
+  active: boolean;
+}
+
 /**
  * A dynamic object (drone or vehicle) that follows a looping waypoint patrol path.
  * Position is animated in the useFrame loop inside DroneMarker.
@@ -27,7 +39,7 @@ export interface DroneState {
   segmentProgress: number;
   /** Travel speed in world units per second */
   speed: number;
-  /** Last reported world-space position (updated ~2 Hz to avoid store thrashing) */
+  /** Last reported world-space position (updated ~10 Hz for smooth field source tracking) */
   position: Vector3D;
   /** Derived status from hostile field exposure */
   status: DroneStatus;
@@ -35,6 +47,8 @@ export interface DroneState {
   disruptionThreshold: number;
   /** Live faction metrics at the drone's position, or null before first frame */
   fieldAtDrone: FactionMetrics | null;
+  /** Optional self-emission config — when set the drone acts as a moving RF source */
+  emission?: DroneEmission;
 }
 
 /** Parameters for creating a new drone (id and derived fields are auto-generated) */

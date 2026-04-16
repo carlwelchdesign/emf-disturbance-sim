@@ -26,6 +26,9 @@
     "three": "^0.158.0",
     "zustand": "^4.4.0"
   },
+  "overrides": {
+    "three-mesh-bvh": "^0.6.0"
+  },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.0",
     "@testing-library/react": "^14.0.0",

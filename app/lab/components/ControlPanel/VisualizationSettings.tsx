@@ -23,9 +23,6 @@ export function VisualizationSettings() {
   const animationSpeed = useLabStore((state) => state.settings.animationSpeed);
   const solverProfile = useLabStore((state) => state.settings.solverProfile);
   const themeMode = useLabStore((state) => state.settings.themeMode);
-  const showThreatMetrics = useLabStore((state) => state.settings.showThreatMetrics);
-  const showEmitterInteractions = useLabStore((state) => state.settings.showEmitterInteractions);
-  const showFieldChart = useLabStore((state) => state.settings.showFieldChart);
   const showFlightPaths = useLabStore((state) => state.settings.showFlightPaths);
   const updateSettings = useLabStore((state) => state.updateSettings);
   const setSolverProfile = useLabStore((state) => state.setSolverProfile);
@@ -101,30 +98,6 @@ export function VisualizationSettings() {
                 />
               }
               label="Dark theme"
-            />
-          </Box>
-        </Tooltip>
-        <Tooltip title="Show threat metrics overlay with faction-separated field strengths." describeChild>
-          <Box component="span">
-            <FormControlLabel
-              control={<Switch checked={showThreatMetrics} onChange={(_, checked) => updateSettings({ showThreatMetrics: checked })} />}
-              label="Threat metrics"
-            />
-          </Box>
-        </Tooltip>
-        <Tooltip title="Show emitter interaction panel (coupling, conflict, resonance)." describeChild>
-          <Box component="span">
-            <FormControlLabel
-              control={<Switch checked={showEmitterInteractions} onChange={(_, checked) => updateSettings({ showEmitterInteractions: checked })} />}
-              label="Emitter interactions"
-            />
-          </Box>
-        </Tooltip>
-        <Tooltip title="Show field samples chart along the X axis." describeChild>
-          <Box component="span">
-            <FormControlLabel
-              control={<Switch checked={showFieldChart} onChange={(_, checked) => updateSettings({ showFieldChart: checked })} />}
-              label="Field chart"
             />
           </Box>
         </Tooltip>

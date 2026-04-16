@@ -5,9 +5,10 @@
  *
  * A11Y-001: Full keyboard navigation, tabIndex, ARIA roles and labels.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { Box, IconButton, Slider, Typography, Tooltip } from '@mui/material';
 import { useActiveFieldOutput } from '../../hooks/useMaxwellRunSelectors';
+import { useLabStore } from '../../hooks/useLabStore';
 
 export interface MaxwellFieldOverlayProps {
   className?: string;
@@ -15,15 +16,16 @@ export interface MaxwellFieldOverlayProps {
 
 export function MaxwellFieldOverlay({ className }: MaxwellFieldOverlayProps) {
   const fieldOutput = useActiveFieldOutput();
-  const [currentStep, setCurrentStep] = useState(0);
+  const currentStep = useLabStore((s) => s.maxwellCurrentStep);
+  const setCurrentStep = useLabStore((s) => s.setMaxwellCurrentStep);
 
   const timeAxis = fieldOutput?.timeAxis ?? [];
   const totalSteps = timeAxis.length;
 
-  const goFirst = useCallback(() => setCurrentStep(0), []);
-  const goPrev = useCallback(() => setCurrentStep((s) => Math.max(0, s - 1)), []);
-  const goNext = useCallback(() => setCurrentStep((s) => Math.min(totalSteps - 1, s + 1)), [totalSteps]);
-  const goLast = useCallback(() => setCurrentStep(totalSteps - 1), [totalSteps]);
+  const goFirst = useCallback(() => setCurrentStep(0), [setCurrentStep]);
+  const goPrev = useCallback(() => setCurrentStep(Math.max(0, currentStep - 1)), [setCurrentStep, currentStep]);
+  const goNext = useCallback(() => setCurrentStep(Math.min(totalSteps - 1, currentStep + 1)), [setCurrentStep, currentStep, totalSteps]);
+  const goLast = useCallback(() => setCurrentStep(totalSteps - 1), [setCurrentStep, totalSteps]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     switch (e.key) {

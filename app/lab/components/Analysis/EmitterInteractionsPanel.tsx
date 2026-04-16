@@ -126,3 +126,33 @@ export function EmitterInteractionsPanel() {
     </Box>
   );
 }
+
+/** Content-only export for use inside a shared grouped container */
+export function EmitterInteractionsPanelContent() {
+  const sources = useLabStore((state) => state.sources);
+  const pairs = useMemo(() => {
+    const friendly = sources.filter((s) => s.active && (s.faction ?? 'friendly') !== 'hostile');
+    const hostile = sources.filter((s) => s.active && s.faction === 'hostile');
+    const result: Array<{ friendly: RFSource; hostile: RFSource }> = [];
+    for (const f of friendly) {
+      for (const h of hostile) {
+        result.push({ friendly: f, hostile: h });
+      }
+    }
+    return result;
+  }, [sources]);
+  if (pairs.length === 0) return null;
+  return (
+    <>
+      <Typography
+        variant="caption"
+        sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, mb: 0.75, fontSize: '0.6rem' }}
+      >
+        EMITTER INTERACTIONS
+      </Typography>
+      {pairs.slice(0, 3).map((p, i) => (
+        <PairPanel key={i} friendly={p.friendly} hostile={p.hostile} />
+      ))}
+    </>
+  );
+}

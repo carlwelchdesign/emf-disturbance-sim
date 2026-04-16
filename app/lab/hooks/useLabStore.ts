@@ -18,47 +18,61 @@ import { buildScenarioSources, getScenarioPreset } from '../modules/scenario/pre
 import { SIDEBAR_SECTION_DEFAULT_EXPANDED } from '../lib/sidebar-layout';
 import { globalOrchestrator } from '../modules/maxwell/core/run-orchestrator';
 import { validateRunRequest } from '../modules/maxwell/core/pre-run-validator';
+import { FDTDAdapter } from '../modules/maxwell/methods/fdtd/fdtd-adapter';
+import { ValidationPipeline } from '../modules/maxwell/core/validation-pipeline';
+import { SimulationConfiguration } from '../types/maxwell.types';
 
 const sourceIdGenerator = createSourceIdGenerator('source');
 let measurementIdCounter = 1;
+
+// Bootstrap the store with the EW Drone Patrol vs Jammer preset
+const _ewPreset = getScenarioPreset('ew-drone-patrol')!;
+const _initialSources = buildScenarioSources(_ewPreset, () => sourceIdGenerator.nextId());
+const _initialDrones = _ewPreset.drones
+  ? _ewPreset.drones.map((params: CreateDroneParams, i: number) => {
+      const initialPosition = params.waypoints[0]?.position ?? { x: 0, y: 1, z: 0 };
+      return {
+        id: `drone-preset-${i}`,
+        ...params,
+        currentSegment: 0,
+        segmentProgress: 0,
+        position: { ...initialPosition },
+        status: 'nominal' as const,
+        fieldAtDrone: null,
+      };
+    })
+  : [];
 
 /**
  * Zustand store for the EMF/RF Lab
  */
 export const useLabStore = create<LabStoreState>((set, get) => ({
-  // === Initial State ===
-  sources: [
-    {
-      id: 'default-source',
-      ...DEFAULT_RF_SOURCE,
-      label: 'Wi-Fi Router',
-      deviceType: 'Wi-Fi Router',
-      color: getSourceColor(0),
-    },
-  ],
-  selectedSourceId: 'default-source',
+  // === Initial State (EW — Drone Patrol vs Jammer) ===
+  sources: _initialSources,
+  selectedSourceId: _initialSources[0]?.id ?? null,
   selectionContext: {
-    mode: 'single',
-    selectedSourceIds: ['default-source'],
-    primarySourceId: 'default-source',
+    mode: _initialSources[0] ? 'single' : 'none',
+    selectedSourceIds: _initialSources[0] ? [_initialSources[0].id] : [],
+    primarySourceId: _initialSources[0]?.id ?? null,
   },
   sectionDisclosure: { ...SIDEBAR_SECTION_DEFAULT_EXPANDED },
-  activeScenarioPresetId: null,
+  activeScenarioPresetId: 'ew-drone-patrol',
   scenarioIsDirty: false,
-  camera: DEFAULT_CAMERA,
-  settings: DEFAULT_VISUALIZATION,
-  environment: DEFAULT_ENVIRONMENT,
+  camera: { ...DEFAULT_CAMERA, ...(_ewPreset.camera ?? {}) },
+  settings: { ...DEFAULT_VISUALIZATION, ...(_ewPreset.settings ?? {}) },
+  environment: { ...DEFAULT_ENVIRONMENT, ...(_ewPreset.environment ?? {}) },
   measurements: [],
   performance: {
     currentFPS: 60,
     averageFPS: 60,
     isLowPerformance: false,
   },
-  drones: [],
+  drones: _initialDrones,
   activeFactionMetrics: null,
   // === Maxwell Solver State ===
   maxwellRuns: [],
   maxwellActiveRunId: null,
+  maxwellCurrentStep: 0,
   maxwellFieldOutputs: {},
   maxwellDerivedMetrics: {},
   maxwellValidationReports: {},
@@ -488,11 +502,110 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
       if (run) {
         set((state) => ({ maxwellRuns: [...state.maxwellRuns, run] }));
       }
+
+      // Kick off async execution — defer one tick so the UI renders "queued" first
+      const runId = response.runId;
+      setTimeout(() => {
+        // Transition to running
+        globalOrchestrator.startRun(runId);
+        set((state) => ({
+          maxwellRuns: state.maxwellRuns.map((r) =>
+            r.runId === runId ? { ...r, status: 'running', startedAt: new Date().toISOString() } : r
+          ),
+        }));
+
+        // Build a SimulationConfiguration from the request
+        const config: SimulationConfiguration = {
+          id: request.configurationId,
+          name: `Run ${runId.slice(-8)}`,
+          methodFamily: request.methodFamily,
+          domain: request.domain,
+          materials: request.materials,
+          boundaryConditions: request.boundaryConditions,
+          runControls: request.runControls,
+          scenarioClass: request.scenarioClass,
+          createdAt: new Date().toISOString(),
+        };
+
+        // Execute FDTD solver
+        const adapter = new FDTDAdapter(runId);
+        let result: ReturnType<FDTDAdapter['execute']>;
+        try {
+          result = adapter.execute(config);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          globalOrchestrator.failRun(runId, msg);
+          set((state) => ({
+            maxwellRuns: state.maxwellRuns.map((r) =>
+              r.runId === runId ? { ...r, status: 'failed', statusReason: msg } : r
+            ),
+          }));
+          return;
+        }
+
+        // Check for instability errors from the solver
+        const instabilityErr = result.errors.find((e) => e.code === 'INSTABILITY_DETECTED');
+        if (instabilityErr) {
+          globalOrchestrator.markUnstable(runId, instabilityErr.message);
+          set((state) => ({
+            maxwellRuns: state.maxwellRuns.map((r) =>
+              r.runId === runId ? { ...r, status: 'unstable', statusReason: instabilityErr.message } : r
+            ),
+            maxwellErrors: { ...state.maxwellErrors, [runId]: result.errors },
+          }));
+          return;
+        }
+
+        // Store outputs
+        set((state) => ({
+          maxwellFieldOutputs: { ...state.maxwellFieldOutputs, [runId]: result.fieldOutput },
+          maxwellDerivedMetrics: { ...state.maxwellDerivedMetrics, [runId]: result.derivedMetrics },
+        }));
+
+        // Mark completed
+        globalOrchestrator.completeRun(runId);
+        set((state) => ({
+          maxwellRuns: state.maxwellRuns.map((r) =>
+            r.runId === runId
+              ? { ...r, status: 'completed_unvalidated', endedAt: new Date().toISOString(), runtimeMs: result.runtimeMs }
+              : r
+          ),
+        }));
+
+        // Run validation if a scenario was requested
+        if (request.validationScenarioId) {
+          const pipeline = new ValidationPipeline();
+          const report = pipeline.evaluate(runId, request.validationScenarioId, result.fieldOutput, result.derivedMetrics);
+          set((state) => ({
+            maxwellValidationReports: { ...state.maxwellValidationReports, [runId]: report },
+          }));
+          if (report.aggregateStatus === 'pass') {
+            globalOrchestrator.validateRun(runId);
+            set((state) => ({
+              maxwellRuns: state.maxwellRuns.map((r) =>
+                r.runId === runId ? { ...r, status: 'validated' } : r
+              ),
+            }));
+          } else {
+            const reason = report.reviewNotes ?? 'Validation thresholds not met';
+            globalOrchestrator.markNonValidated(runId, reason);
+            set((state) => ({
+              maxwellRuns: state.maxwellRuns.map((r) =>
+                r.runId === runId ? { ...r, status: 'non_validated', statusReason: reason } : r
+              ),
+            }));
+          }
+        } else {
+          // No scenario — leave as completed_unvalidated, that's correct
+        }
+      }, 0);
     }
     return response;
   },
 
-  setActiveMaxwellRun: (runId) => set({ maxwellActiveRunId: runId }),
+  setActiveMaxwellRun: (runId) => set({ maxwellActiveRunId: runId, maxwellCurrentStep: 0 }),
+
+  setMaxwellCurrentStep: (step) => set({ maxwellCurrentStep: step }),
 
   updateMaxwellRunStatus: (runId, status, reason) => {
     set((state) => ({

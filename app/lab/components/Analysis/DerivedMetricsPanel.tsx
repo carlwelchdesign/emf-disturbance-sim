@@ -7,7 +7,7 @@
  */
 import React, { useState } from 'react';
 import {
-  Box, Typography, Paper, Stack, Chip,
+  Box, Typography, Stack, Chip,
 } from '@mui/material';
 import { useActiveMetrics, useActiveRunId } from '../../hooks/useMaxwellRunSelectors';
 import { DerivedMetricResult, SnapshotMetric } from '../../types/maxwell.types';
@@ -28,36 +28,34 @@ export function DerivedMetricsPanel({ className }: DerivedMetricsPanelProps) {
 
   if (!metrics || metrics.length === 0) {
     return (
-      <Paper
+      <Box
         role="region"
         aria-label="Derived metrics panel"
         tabIndex={0}
-        sx={{ p: 2, mb: 1 }}
         className={className}
       >
-        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-          Derived Metrics
+        <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, mb: 0.75, fontSize: '0.6rem' }}>
+          DERIVED METRICS
         </Typography>
         <Typography variant="body2" color="text.secondary" role="status" aria-label="No metrics available">
-          No derived metrics available. Complete a Maxwell simulation to see metrics.
+          No derived metrics available yet.
         </Typography>
-      </Paper>
+      </Box>
     );
   }
 
   return (
-    <Paper
+    <Box
       role="region"
       aria-label="Derived electromagnetic metrics"
       tabIndex={0}
-      sx={{ p: 2, mb: 1 }}
       className={className}
     >
-      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-        Derived Metrics
+      <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, mb: 0.75, fontSize: '0.6rem' }}>
+        DERIVED METRICS
         {runId && (
-          <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-            (Run: {runId})
+          <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1, fontSize: '0.55rem' }}>
+            (Run: {runId.slice(-8)})
           </Typography>
         )}
       </Typography>
@@ -138,6 +136,6 @@ export function DerivedMetricsPanel({ className }: DerivedMetricsPanelProps) {
           aria-label={metrics.length >= 2 ? 'Minimum metric requirement met' : 'Fewer than 2 metrics available'}
         />
       </Box>
-    </Paper>
+    </Box>
   );
 }

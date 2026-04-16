@@ -9,12 +9,16 @@ import { FieldVisualization } from './components/Canvas3D/FieldVisualization';
 import { DroneMarker } from './components/Canvas3D/DroneMarker';
 import { FlightPath } from './components/Canvas3D/FlightPath';
 import { ContestZoneMarker } from './components/Canvas3D/ContestZoneMarker';
+import { MaxwellFieldOverlay } from './components/Canvas3D/MaxwellFieldOverlay';
+import { MaxwellFieldVolume } from './components/Canvas3D/MaxwellFieldVolume';
 import { ControlPanel } from './components/ControlPanel/ControlPanel';
-import { AccuracyDisclaimer } from './components/Analysis/AccuracyDisclaimer';
 import { FieldStrengthOverlay } from './components/Analysis/FieldStrengthOverlay';
-import { ThreatMetricsPanel } from './components/Analysis/ThreatMetricsPanel';
-import { EmitterInteractionsPanel } from './components/Analysis/EmitterInteractionsPanel';
+import { ThreatMetricsPanelContent } from './components/Analysis/ThreatMetricsPanel';
+import { EmitterInteractionsPanelContent } from './components/Analysis/EmitterInteractionsPanel';
 import { FieldSamplesChart } from './components/Analysis/FieldSamplesChart';
+import { DerivedMetricsPanel } from './components/Analysis/DerivedMetricsPanel';
+import { MaxwellRunContextPanel } from './components/Analysis/MaxwellRunContextPanel';
+import { MaxwellRunControlsContent } from './components/ControlPanel/MaxwellRunControls';
 import { FPSCounter } from './components/shared/FPSCounter';
 import { PerformanceWarning } from './components/shared/PerformanceWarning';
 import { WebGLErrorBoundary } from './components/shared/WebGLErrorBoundary';
@@ -33,7 +37,27 @@ export default function LabPage() {
   const camera = useLabStore((state) => state.camera);
   const measurements = useLabStore((state) => state.measurements);
   const drones = useLabStore((state) => state.drones);
-  const activeSources = useMemo(() => sources.filter((source) => source.active), [sources]);
+  const hasActiveMaxwellRun = useLabStore((s) => !!s.maxwellActiveRunId);
+  const activeSources = useMemo(() => {
+    const staticSources = sources.filter((source) => source.active);
+    const droneEmissionSources = drones
+      .filter((d) => d.emission?.active)
+      .map((d) => ({
+        id: `drone-emission-${d.id}`,
+        position: d.position,
+        frequency: d.emission!.frequency,
+        power: d.emission!.power,
+        powerUnit: d.emission!.powerUnit,
+        bandwidthHz: d.emission!.bandwidthHz,
+        phase: 0,
+        antennaType: 'omnidirectional' as const,
+        active: true,
+        faction: d.faction,
+        label: `${d.label} (EMF)`,
+        gain: 1,
+      }));
+    return [...staticSources, ...droneEmissionSources];
+  }, [sources, drones]);
 
   useFPSMonitor();
 
@@ -87,6 +111,9 @@ export default function LabPage() {
             {drones.map((drone) => (
               <DroneMarker key={drone.id} drone={drone} />
             ))}
+
+            {/* Maxwell FDTD field volume — renders E-field at current time step */}
+            {hasActiveMaxwellRun && <MaxwellFieldVolume />}
           </Canvas3D>
         </WebGLErrorBoundary>
 
@@ -118,14 +145,118 @@ export default function LabPage() {
 
         {/* Overlays */}
         <PerformanceWarning />
-        <AccuracyDisclaimer />
         <FieldStrengthOverlay measurement={measurements[measurements.length - 1]} />
         <FPSCounter />
 
-        {/* Faction / drone analysis panels */}
-        {settings.showThreatMetrics && <ThreatMetricsPanel />}
-        {settings.showEmitterInteractions && <EmitterInteractionsPanel />}
-        {settings.showFieldChart && <FieldSamplesChart />}
+        {/* Maxwell time-navigation overlay (bottom-centre of canvas) */}
+        <MaxwellFieldOverlay />
+
+        {/* Maxwell overlay — always visible (launch controls + results) */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            width: 260,
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0,
+          }}
+          role="complementary"
+          aria-label="Maxwell simulation controls and results"
+        >
+          {/* Launch controls: run queue + configure form */}
+          <Box
+            sx={{
+              bgcolor: 'rgba(2, 6, 23, 0.88)',
+              border: '1px solid rgba(148,163,184,0.18)',
+              borderRadius: hasActiveMaxwellRun ? '6px 6px 0 0' : 1.5,
+              borderBottom: hasActiveMaxwellRun ? 'none' : undefined,
+              p: 1.25,
+              backdropFilter: 'blur(6px)',
+            }}
+          >
+            <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(148,163,184,0.7)', letterSpacing: '0.08em', display: 'block', mb: 0.75 }}>
+              MAXWELL SOLVER
+            </Typography>
+            <MaxwellRunControlsContent />
+          </Box>
+
+          {/* Context: run selector, time-step nav, validation status */}
+          {hasActiveMaxwellRun && (
+            <Box
+              sx={{
+                bgcolor: 'rgba(2, 6, 23, 0.88)',
+                border: '1px solid rgba(148,163,184,0.18)',
+                borderTop: 'none',
+                p: 1.25,
+                backdropFilter: 'blur(6px)',
+              }}
+            >
+              <MaxwellRunContextPanel />
+            </Box>
+          )}
+
+          {/* Derived metrics */}
+          {hasActiveMaxwellRun && (
+            <Box
+              sx={{
+                bgcolor: 'rgba(2, 6, 23, 0.88)',
+                border: '1px solid rgba(148,163,184,0.18)',
+                borderTop: 'none',
+                borderRadius: '0 0 6px 6px',
+                p: 1.25,
+                backdropFilter: 'blur(6px)',
+              }}
+            >
+              <DerivedMetricsPanel />
+            </Box>
+          )}
+        </Box>
+
+        {/* Live Field Metrics + Emitter Interactions — grouped bottom-right, always visible */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 12,
+            right: 12,
+            width: 200,
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0,
+            pointerEvents: 'none',
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: 'rgba(2, 6, 23, 0.82)',
+              border: '1px solid rgba(148,163,184,0.18)',
+              borderRadius: '6px 6px 0 0',
+              p: 1.25,
+              backdropFilter: 'blur(6px)',
+            }}
+          >
+            <ThreatMetricsPanelContent />
+          </Box>
+          <Box
+            sx={{
+              bgcolor: 'rgba(2, 6, 23, 0.82)',
+              border: '1px solid rgba(148,163,184,0.18)',
+              borderTop: 'none',
+              borderRadius: '0 0 6px 6px',
+              p: 1.25,
+              backdropFilter: 'blur(6px)',
+              maxHeight: 280,
+              overflow: 'hidden',
+            }}
+          >
+            <EmitterInteractionsPanelContent />
+          </Box>
+        </Box>
+
+        <FieldSamplesChart />
       </Box>
 
       {/* Control Panel */}
@@ -133,3 +264,4 @@ export default function LabPage() {
     </Box>
   );
 }
+

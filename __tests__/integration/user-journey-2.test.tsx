@@ -8,6 +8,8 @@ jest.mock('../../app/lab/hooks/useFPSMonitor', () => ({ useFPSMonitor: () => {} 
 
 describe('user journey 2', () => {
   beforeEach(() => {
+    // Reset the source ID counter by clearing first
+    useLabStore.getState().clearAllSources();
     useLabStore.setState({
       ...useLabStore.getState(),
       sources: [
@@ -20,10 +22,16 @@ describe('user journey 2', () => {
         },
       ],
       selectedSourceId: 'source-1',
+      selectionContext: {
+        mode: 'single',
+        selectedSourceIds: ['source-1'],
+        primarySourceId: 'source-1',
+      },
       camera: DEFAULT_CAMERA,
       settings: DEFAULT_VISUALIZATION,
       environment: DEFAULT_ENVIRONMENT,
       measurements: [],
+      drones: [],
     });
   });
 

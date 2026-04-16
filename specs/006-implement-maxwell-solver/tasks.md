@@ -66,6 +66,7 @@
 - [X] T020 [US1] Integrate solver engine with existing simulation engine entrypoint in app/lab/modules/simulation/simulation-engine.ts
 - [X] T021 [US1] Add run-submission and run-monitoring actions/selectors to Zustand store in app/lab/hooks/useLabStore.ts
 - [X] T022 [US1] Add baseline FDTD validation scenario definitions (define and implement at least 12 named reference scenarios to satisfy SC-001 ≥12 threshold) in app/lab/modules/maxwell/validation/scenarios.ts
+- [ ] T022b [US1] Implement domain/material/boundary-condition setup form component (user inputs: spatial extent, grid resolution, time-step policy, material properties per region, BC type per surface) in app/lab/components/ControlPanel/SimulationSetupForm.tsx; wire to T021 run-submission actions; T037 (SimulationSetupValidation.tsx) handles validation feedback within this form
 
 **Checkpoint**: US1 is independently runnable and produces validated/non-validated results with E/B outputs.
 
@@ -132,6 +133,7 @@
 - [X] T045 [US2] Add keyboard-only acceptance criteria mapping for A11Y-001 in /Users/carl.welch/Documents/Github Projects/emf-visualizer/specs/006-implement-maxwell-solver/checklists/requirements.md
 - [X] T046 [P] [US2] Add visualization integrity threshold assertions for VQ-001/VQ-002 in __tests__/integration/maxwell/visual-integrity-thresholds.test.tsx
 - [X] T047 [P] [US2] Add interaction latency pass/fail verification for PF-002 in __tests__/performance/maxwell-interaction-latency.test.ts
+- [ ] T047b [P] Add simulation runtime pass/fail assertion for PF-001 (baseline scenario class MUST complete within 5 minutes; test records wall-clock ms, asserts ≤300000 ms, logs result as pass/fail) in __tests__/performance/maxwell-simulation-runtime.test.ts
 - [X] T048 [US2] Add explicit PF-002 and visualization pass/fail matrix to /Users/carl.welch/Documents/Github Projects/emf-visualizer/specs/006-implement-maxwell-solver/quickstart.md
 - [X] T049 [US3] Implement additional method-family extension spike using existing orchestrator contracts in app/lab/modules/maxwell/spikes/method-extension-spike.ts
 - [X] T050 [US3] Document SC-006 extension-spike evidence and acceptance results in /Users/carl.welch/Documents/Github Projects/emf-visualizer/specs/006-implement-maxwell-solver/research.md

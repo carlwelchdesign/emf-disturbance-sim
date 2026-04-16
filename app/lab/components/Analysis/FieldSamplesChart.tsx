@@ -85,7 +85,7 @@ export function FieldSamplesChart() {
     <Box
       sx={{
         position: 'absolute',
-        bottom: 12,
+        top: 12,
         left: '50%',
         transform: 'translateX(-50%)',
         bgcolor: 'rgba(2, 6, 23, 0.82)',

@@ -7,7 +7,7 @@
  */
 import React, { useState, useCallback } from 'react';
 import {
-  Box, Typography, Chip, Stack, Paper, Select, MenuItem, FormControl, InputLabel, Divider, Tooltip, IconButton, Slider,
+  Box, Typography, Chip, Stack, Select, MenuItem, FormControl, InputLabel, Divider, Tooltip, IconButton, Slider,
 } from '@mui/material';
 import { useActiveFieldOutput, useActiveMetrics, useActiveValidationReport, useActiveRunId } from '../../hooks/useMaxwellRunSelectors';
 import { useLabStore } from '../../hooks/useLabStore';
@@ -28,18 +28,29 @@ export function MaxwellRunContextPanel({ className }: MaxwellRunContextPanelProp
   const activeRunId = useActiveRunId();
   const maxwellRuns = useLabStore((s) => s.maxwellRuns);
   const setActiveMaxwellRun = useLabStore((s) => s.setActiveMaxwellRun);
+  const currentStep = useLabStore((s) => s.maxwellCurrentStep);
+  const setCurrentStep = useLabStore((s) => s.setMaxwellCurrentStep);
 
-  const [currentStep, setCurrentStep] = useState(0);
   const [selectedMetric, setSelectedMetric] = useState<string>('');
 
   const timeAxis = fieldOutput?.timeAxis ?? [];
   const totalSteps = timeAxis.length;
   const currentTime = timeAxis[currentStep] ?? 0;
 
-  const goFirst = useCallback(() => setCurrentStep(0), []);
-  const goPrev = useCallback(() => setCurrentStep((s) => Math.max(0, s - 1)), []);
-  const goNext = useCallback(() => setCurrentStep((s) => Math.min(totalSteps - 1, s + 1)), [totalSteps]);
-  const goLast = useCallback(() => setCurrentStep(totalSteps - 1), [totalSteps]);
+  /** Format seconds into a human-readable ps / ns label */
+  const formatTime = (t: number): string => {
+    if (t === 0) return '0 ps';
+    const ns = t * 1e9;
+    if (ns >= 1) return `${ns.toFixed(2)} ns`;
+    const ps = t * 1e12;
+    if (ps >= 1) return `${ps.toFixed(1)} ps`;
+    return `${(t * 1e15).toFixed(1)} fs`;
+  };
+
+  const goFirst = useCallback(() => setCurrentStep(0), [setCurrentStep]);
+  const goPrev = useCallback(() => setCurrentStep(Math.max(0, currentStep - 1)), [setCurrentStep, currentStep]);
+  const goNext = useCallback(() => setCurrentStep(Math.min(totalSteps - 1, currentStep + 1)), [setCurrentStep, currentStep, totalSteps]);
+  const goLast = useCallback(() => setCurrentStep(totalSteps - 1), [setCurrentStep, totalSteps]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     switch (e.key) {
@@ -53,16 +64,16 @@ export function MaxwellRunContextPanel({ className }: MaxwellRunContextPanelProp
   const validationStatus = fieldOutput?.validationStatus;
 
   return (
-    <Paper
+    <Box
       role="region"
       aria-label="Maxwell solver run context"
       className={className}
       tabIndex={0}
-      sx={{ p: 2, mb: 1 }}
+      sx={{ outline: 'none' }}
       onKeyDown={handleKeyDown}
     >
-      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-        Maxwell Run Context
+      <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, mb: 0.75, fontSize: '0.6rem' }}>
+        MAXWELL RUN CONTEXT
       </Typography>
 
       {/* Run selector */}
@@ -179,9 +190,9 @@ export function MaxwellRunContextPanel({ className }: MaxwellRunContextPanelProp
             color="text.secondary"
             aria-live="polite"
             aria-atomic="true"
-            aria-label={`Current time: ${currentTime.toExponential(2)} seconds, step ${currentStep + 1} of ${totalSteps}`}
+            aria-label={`Current time: ${formatTime(currentTime)}, step ${currentStep + 1} of ${totalSteps}`}
           >
-            t = {currentTime.toExponential(2)} s · Step {currentStep + 1}/{totalSteps}
+            t = {formatTime(currentTime)} · Step {currentStep + 1}/{totalSteps}
           </Typography>
         </Box>
       )}
@@ -243,6 +254,6 @@ export function MaxwellRunContextPanel({ className }: MaxwellRunContextPanelProp
           No active Maxwell run. Submit a simulation run to see results here.
         </Typography>
       )}
-    </Paper>
+    </Box>
   );
 }

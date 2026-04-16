@@ -100,7 +100,7 @@ As a simulation user, I need clear validation and error feedback for unstable or
 **Performance**:
 - **PF-001**: For the baseline supported scenario class, users MUST receive simulation completion outcomes within 5 minutes for standard runs.
 - **PF-002**: For interactive analysis, 95% of viewport interactions on completed result sets MUST respond within 1 second.
-- **PF-003**: The system MUST support at least 10 concurrently queued simulation runs while preserving per-run status visibility and deterministic completion/error reporting.
+- **PF-003**: The system MUST support at least 10 simultaneously queued (not parallel) simulation runs — i.e., 10 runs can occupy the queue at the same time and are processed sequentially by a single browser-side worker — while preserving per-run status visibility and deterministic completion/error reporting. True parallel execution of solver loops is out of scope for V1.
 
 **Browser Safety & Resource Constraints**:
 - **BS-001**: The system MUST enforce a maximum estimated client-side memory budget per simulation run (initial target: 512 MB per run result loaded in browser) and block pre-run submission if the estimate exceeds the budget, with a user-facing explanation.

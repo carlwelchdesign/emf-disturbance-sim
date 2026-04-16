@@ -68,9 +68,11 @@ export class FDTDStepper {
     this.Hy = new Float64Array(n);
     this.Hz = new Float64Array(n);
     this.CA = new Float64Array(n).fill(1.0);
-    this.CB = new Float64Array(n).fill(dt / (EPSILON_0 * dx));
+    // CB = dt/ε₀ — the curl already divides by dx/dy/dz, so no extra spatial factor
+    this.CB = new Float64Array(n).fill(dt / EPSILON_0);
     this.DA = new Float64Array(n).fill(1.0);
-    this.DB = new Float64Array(n).fill(dt / (MU_0 * dx));
+    // DB = dt/μ₀ — same reasoning as CB
+    this.DB = new Float64Array(n).fill(dt / MU_0);
   }
 
   /** Initialize material update coefficients from relative ε_r, μ_r, σ */

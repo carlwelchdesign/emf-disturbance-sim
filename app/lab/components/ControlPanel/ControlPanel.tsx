@@ -15,7 +15,6 @@ import { FPSMonitor } from '../shared/FPSMonitor';
 import { useLabStore } from '../../hooks/useLabStore';
 import { useState } from 'react';
 import { SectionPanel } from './SectionPanel';
-import { MaxwellRunControls } from './MaxwellRunControls';
 import { SIDEBAR_SECTION_TITLES } from '../../lib/sidebar-layout';
 
 /**
@@ -189,7 +188,6 @@ export function ControlPanel() {
           </Box>
         </SectionPanel>
 
-        <MaxwellRunControls />
       </Paper>
 
       {/* Clear All Confirmation Dialog */}
