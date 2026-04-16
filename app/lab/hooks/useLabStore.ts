@@ -49,11 +49,11 @@ const DEFAULT_TELEMETRY_STATE: SmoothnessTelemetryState = {
   latestEvaluation: null,
 };
 
-// Bootstrap the store with the EW Drone Patrol vs Jammer preset
-const _ewPreset = getScenarioPreset('ew-drone-patrol')!;
-const _initialSources = buildScenarioSources(_ewPreset, () => sourceIdGenerator.nextId());
-const _initialDrones = _ewPreset.drones
-  ? _ewPreset.drones.map((params: CreateDroneParams, i: number) => {
+// Bootstrap the store with the EW Multi-Band RF Environment preset
+const _defaultPreset = getScenarioPreset('engineering-multiband')!;
+const _initialSources = buildScenarioSources(_defaultPreset, () => sourceIdGenerator.nextId());
+const _initialDrones = _defaultPreset.drones
+  ? _defaultPreset.drones.map((params: CreateDroneParams, i: number) => {
       const initialPosition = params.waypoints[0]?.position ?? { x: 0, y: 1, z: 0 };
       return {
         id: `drone-preset-${i}`,
@@ -71,7 +71,7 @@ const _initialDrones = _ewPreset.drones
  * Zustand store for the EMF/RF Lab
  */
 export const useLabStore = create<LabStoreState>((set, get) => ({
-  // === Initial State (EW — Drone Patrol vs Jammer) ===
+  // === Initial State (EW — Multi-Band RF Environment) ===
   sources: _initialSources,
   selectedSourceId: _initialSources[0]?.id ?? null,
   selectionContext: {
@@ -80,11 +80,11 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     primarySourceId: _initialSources[0]?.id ?? null,
   },
   sectionDisclosure: { ...SIDEBAR_SECTION_DEFAULT_EXPANDED },
-  activeScenarioPresetId: 'ew-drone-patrol',
+  activeScenarioPresetId: 'engineering-multiband',
   scenarioIsDirty: false,
-  camera: { ...DEFAULT_CAMERA, ...(_ewPreset.camera ?? {}) },
-  settings: { ...DEFAULT_VISUALIZATION, ...(_ewPreset.settings ?? {}), lod: 'low' },
-  environment: { ...DEFAULT_ENVIRONMENT, ...(_ewPreset.environment ?? {}) },
+  camera: { ...DEFAULT_CAMERA, ...(_defaultPreset.camera ?? {}) },
+  settings: { ...DEFAULT_VISUALIZATION, ...(_defaultPreset.settings ?? {}), lod: 'low' },
+  environment: { ...DEFAULT_ENVIRONMENT, ...(_defaultPreset.environment ?? {}) },
   measurements: [],
   performance: {
     currentFPS: 60,

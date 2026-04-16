@@ -2,6 +2,7 @@
 
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useLabStore } from '../../hooks/useLabStore';
 
@@ -71,6 +72,30 @@ export function ContestZoneMarker() {
             side={THREE.BackSide}
             depthWrite={false}
           />
+          <Html
+            position={[0, zone.radius + 0.35, 0]}
+            center
+            sprite
+            style={{ pointerEvents: 'none' }}
+          >
+            <div
+              style={{
+                padding: '2px 6px',
+                borderRadius: 4,
+                border: '1px solid rgba(170, 68, 255, 0.9)',
+                background: 'rgba(2, 6, 23, 0.84)',
+                color: '#D8B4FE',
+                fontSize: '10px',
+                fontFamily: 'monospace',
+                letterSpacing: '0.04em',
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                textTransform: 'uppercase',
+              }}
+            >
+              CONTEST ZONE {i + 1}
+            </div>
+          </Html>
         </mesh>
       ))}
     </>

@@ -23,7 +23,6 @@ export function VisualizationSettings() {
   const animationSpeed = useLabStore((state) => state.settings.animationSpeed);
   const solverProfile = useLabStore((state) => state.settings.solverProfile);
   const interferenceProfile = useLabStore((state) => state.settings.interferenceProfile);
-  const themeMode = useLabStore((state) => state.settings.themeMode);
   const showFlightPaths = useLabStore((state) => state.settings.showFlightPaths);
   const performanceSignal = useLabStore((state) => state.settings.performanceSignal);
   const updateSettings = useLabStore((state) => state.updateSettings);
@@ -104,22 +103,6 @@ export function VisualizationSettings() {
             <MenuItem value="scientific">Scientific</MenuItem>
           </Select>
         </FormControl>
-        <Tooltip title="Switch between the lab's dark scientific theme and a brighter presentation mode." describeChild>
-          <Box component="span">
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={themeMode === 'dark'}
-                  onChange={(_, checked) => {
-                    const nextThemeMode = checked ? 'dark' : 'light';
-                    updateSettings({ themeMode: nextThemeMode });
-                  }}
-                />
-              }
-              label="Dark theme"
-            />
-          </Box>
-        </Tooltip>
         <Tooltip title="Show drone patrol flight paths in the 3D scene." describeChild>
           <Box component="span">
             <FormControlLabel

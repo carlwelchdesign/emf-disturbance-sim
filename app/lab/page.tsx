@@ -3,6 +3,7 @@
 import { Box, Chip, IconButton, Paper, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import { Canvas3D } from './components/Canvas3D/Canvas3D';
 import { EnvironmentBoundary } from './components/Canvas3D/EnvironmentBoundary';
 import { SourceMarker } from './components/Canvas3D/SourceMarker';
@@ -20,7 +21,6 @@ import { FieldSamplesChart } from './components/Analysis/FieldSamplesChart';
 import { DerivedMetricsPanel } from './components/Analysis/DerivedMetricsPanel';
 import { MaxwellRunContextPanel } from './components/Analysis/MaxwellRunContextPanel';
 import { MaxwellRunControlsContent } from './components/ControlPanel/MaxwellRunControls';
-import { FPSCounter } from './components/shared/FPSCounter';
 import { PerformanceWarning } from './components/shared/PerformanceWarning';
 import { WebGLErrorBoundary } from './components/shared/WebGLErrorBoundary';
 import { useFPSMonitor } from './hooks/useFPSMonitor';
@@ -149,7 +149,33 @@ export default function LabPage() {
         {/* Overlays */}
         <PerformanceWarning />
         <FieldStrengthOverlay measurement={measurements[measurements.length - 1]} />
-        <FPSCounter />
+        <IconButton
+          component="a"
+          href="https://github.com/carlwelchdesign"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub profile"
+          sx={{
+            position: 'absolute',
+            bottom: 12,
+            left: 12,
+            zIndex: 12,
+            bgcolor: 'rgba(2, 6, 23, 0.72)',
+            color: 'rgba(226, 232, 240, 0.95)',
+            border: '1px solid rgba(148,163,184,0.24)',
+            borderRadius: 1.5,
+            gap: 0.5,
+            px: 1,
+            '&:hover': {
+              bgcolor: 'rgba(2, 6, 23, 0.88)',
+            },
+          }}
+        >
+          <GitHubIcon fontSize="small" />
+          <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'inherit' }}>
+            carlwelchdesign
+          </Typography>
+        </IconButton>
 
         {/* Maxwell field overlay disabled */}
 
@@ -236,7 +262,8 @@ export default function LabPage() {
         <Box
           sx={{
             position: 'absolute',
-            top: 12,
+            top: 0,
+            bottom: 0,
             right: 12,
             width: 200,
             zIndex: 10,
@@ -244,6 +271,7 @@ export default function LabPage() {
             flexDirection: 'column',
             gap: 0,
             pointerEvents: 'none',
+            py: 1.5,
           }}
         >
           <Box
@@ -265,7 +293,8 @@ export default function LabPage() {
               borderRadius: '0 0 6px 6px',
               p: 1.25,
               backdropFilter: 'blur(6px)',
-              maxHeight: '42vh',
+              flex: 1,
+              minHeight: 0,
               overflowY: 'auto',
               overflowX: 'hidden',
             }}

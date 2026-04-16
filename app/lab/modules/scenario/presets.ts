@@ -237,7 +237,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
   },
   {
     id: 'engineering-multiband',
-    name: 'Engineering — Multi-Band RF Environment',
+    name: 'EW — Multi-Band RF Environment',
     description:
       'A drone sweeps through a cluttered spectrum: a friendly Wi-Fi AP competes with LTE and Bluetooth interference sources.',
     sources: [

@@ -137,6 +137,26 @@ function EmitterCloud({
     []
   );
   const frameGateRef = useMemo(() => ({ frame: 0 }), []);
+  const particleSprite = useMemo(() => {
+    const size = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return null;
+    }
+    ctx.clearRect(0, 0, size, size);
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size * 0.45, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
 
   const bands = useMemo(() => {
     const lodFactor = lod === 'high' ? 1 : lod === 'medium' ? 0.78 : 0.58;
@@ -203,6 +223,12 @@ function EmitterCloud({
       bands.forEach((band) => band.geometry.dispose());
     };
   }, [bands]);
+
+  useEffect(() => {
+    return () => {
+      particleSprite?.dispose();
+    };
+  }, [particleSprite]);
 
   const maxStrength = useMemo(() => {
     const wattEquivalent = allSources.reduce((sum, item) => {
@@ -364,7 +390,10 @@ function EmitterCloud({
             size={band.config.size}
             sizeAttenuation
             transparent
-            opacity={band.config.baseOpacity}
+            opacity={Math.min(1, band.config.baseOpacity * 1.35)}
+            map={particleSprite ?? undefined}
+            alphaMap={particleSprite ?? undefined}
+            alphaTest={0.3}
             vertexColors
             depthWrite={false}
             blending={THREE.AdditiveBlending}

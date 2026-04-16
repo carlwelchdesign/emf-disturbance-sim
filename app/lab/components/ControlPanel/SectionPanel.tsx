@@ -1,6 +1,6 @@
 'use client';
 
-import { PropsWithChildren, KeyboardEvent } from 'react';
+import { PropsWithChildren, KeyboardEvent, ReactNode } from 'react';
 import { Box, Collapse, IconButton, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { SidebarSectionId } from '../../types/store.types';
@@ -12,6 +12,7 @@ export interface SectionPanelProps extends PropsWithChildren {
   expanded?: boolean;
   onToggleExpanded?: () => void;
   ariaDescription?: string;
+  headerActions?: ReactNode;
 }
 
 export function SectionPanel({
@@ -20,6 +21,7 @@ export function SectionPanel({
   expanded = true,
   onToggleExpanded,
   ariaDescription,
+  headerActions,
   children,
 }: SectionPanelProps) {
   const isCollapsible = Boolean(onToggleExpanded);
@@ -69,19 +71,22 @@ export function SectionPanel({
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {title}
         </Typography>
-        {isCollapsible && (
-          <IconButton
-            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${title}`}
-            size="small"
-            onClick={onToggleExpanded}
-            sx={{
-              transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
-              transition: 'transform 150ms ease',
-            }}
-          >
-            <ExpandMoreIcon fontSize="small" />
-          </IconButton>
-        )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          {headerActions}
+          {isCollapsible && (
+            <IconButton
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${title}`}
+              size="small"
+              onClick={onToggleExpanded}
+              sx={{
+                transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                transition: 'transform 150ms ease',
+              }}
+            >
+              <ExpandMoreIcon fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
       </Box>
 
       {isCollapsible ? <Collapse in={expanded}>{children}</Collapse> : children}

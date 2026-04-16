@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { RFSource } from '../../types/source.types';
 import { frequencyToDisplayColor } from '../../lib/visualization-helpers';
@@ -25,6 +25,9 @@ export function SourceMarker({ source, isSelected, onClick }: SourceMarkerProps)
     ? Math.min(Math.max((source.power + 30) / 80, 0), 1)
     : Math.min(Math.max(Math.log10(Math.max(source.power, 0.001) * 1000) / 3, 0), 1);
   const scale = isSelected ? 1.6 : 1.05 + powerScale * 0.35;
+  const isHostile = source.faction === 'hostile';
+  const sourceLabel = source.label || source.deviceType || source.id;
+  const affiliationLabel = isHostile ? 'HOSTILE' : 'NON-HOSTILE';
 
   const { scene } = useGLTF(MODEL_PATH);
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
@@ -70,9 +73,32 @@ export function SourceMarker({ source, isSelected, onClick }: SourceMarkerProps)
     <group
       position={[source.position.x, 0, source.position.z]}
       onClick={onClick}
-      scale={TOWER_SCALE * scale}
     >
-      <primitive object={clonedScene} />
+      <group scale={TOWER_SCALE * scale}>
+        <primitive object={clonedScene} />
+      </group>
+      <Html position={[0, 2.4, 0]} center sprite style={{ pointerEvents: 'none' }}>
+        <div
+          style={{
+            padding: '2px 6px',
+            borderRadius: 4,
+            border: `1px solid ${isHostile ? 'rgba(255, 51, 32, 0.9)' : 'rgba(0, 170, 255, 0.85)'}`,
+            background: 'rgba(2, 6, 23, 0.84)',
+            color: isHostile ? '#FF3320' : '#E2E8F0',
+            fontSize: '10px',
+            fontFamily: 'monospace',
+            letterSpacing: '0.04em',
+            fontWeight: 700,
+            whiteSpace: 'nowrap',
+            textTransform: 'uppercase',
+            boxShadow: isSelected
+              ? `0 0 0 1px ${isHostile ? 'rgba(255, 51, 32, 0.8)' : 'rgba(0, 170, 255, 0.65)'}`
+              : 'none',
+          }}
+        >
+          {sourceLabel} - {affiliationLabel}
+        </div>
+      </Html>
     </group>
   );
 }

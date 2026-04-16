@@ -3,6 +3,7 @@
 import { Box, Typography } from '@mui/material';
 import { useLabStore } from '../../hooks/useLabStore';
 import { FactionMetrics } from '../../types/field.types';
+import { DroneState } from '../../types/drone.types';
 import { RFSource } from '../../types/source.types';
 import { dbmToWatts } from '../../lib/field-math';
 
@@ -40,6 +41,10 @@ function pct(v: number) {
 
 function sourcePowerWatts(source: RFSource) {
   return source.powerUnit === 'dBm' ? dbmToWatts(source.power) : Math.max(0, source.power);
+}
+
+function getPrimaryDrone(drones: DroneState[]) {
+  return drones.find((drone) => drone.faction === 'friendly') ?? drones[0];
 }
 
 function computePresetProbabilities(sources: RFSource[]) {
@@ -82,16 +87,57 @@ function ThreatBar({ value }: { value: number }) {
 function PanelContent({
   metrics,
   sources,
+  drones,
 }: {
   metrics: FactionMetrics | null;
   sources: RFSource[];
+  drones: DroneState[];
 }) {
   const probabilities = computePresetProbabilities(sources);
   const hostileProbability = metrics ? metrics.threatDominance : probabilities.hostileProbability;
   const friendlyProbability = metrics ? 1 - metrics.threatDominance : probabilities.friendlyProbability;
+  const primaryDrone = getPrimaryDrone(drones);
+  const hostileAtDrone = primaryDrone?.fieldAtDrone?.eFieldHostile ?? metrics?.eFieldHostile ?? 0;
+  const disruptionThreshold = primaryDrone?.disruptionThreshold ?? 0;
+  const marginToDisruption = disruptionThreshold > 0 ? disruptionThreshold - hostileAtDrone : null;
 
   return (
     <>
+      {primaryDrone ? (
+        <>
+          <MetricRow label="Drone" value={primaryDrone.label} />
+          <MetricRow
+            label="Status"
+            value={primaryDrone.status.toUpperCase()}
+            color={
+              primaryDrone.status === 'jammed'
+                ? '#FF3320'
+                : primaryDrone.status === 'degraded'
+                ? '#FFAA00'
+                : '#00FF88'
+            }
+          />
+          <MetricRow
+            label="Drone XYZ"
+            value={`${fmt(primaryDrone.position.x, 1)}, ${fmt(primaryDrone.position.y, 1)}, ${fmt(primaryDrone.position.z, 1)}`}
+          />
+          <MetricRow label="E_hostile@drone" value={`${fmt(hostileAtDrone)} V/m`} color="#FF3320" />
+          {marginToDisruption !== null && (
+            <MetricRow
+              label="Disruption margin"
+              value={`${fmt(marginToDisruption)} V/m`}
+              color={marginToDisruption <= 0 ? '#FF3320' : marginToDisruption < disruptionThreshold * 0.25 ? '#FFAA00' : '#00FF88'}
+            />
+          )}
+        </>
+      ) : (
+        <Typography
+          variant="caption"
+          sx={{ color: 'rgba(148,163,184,0.9)', fontFamily: 'monospace', fontSize: '0.65rem', display: 'block', mb: 0.4 }}
+        >
+          No active drone telemetry yet.
+        </Typography>
+      )}
       {metrics ? (
         <>
           <MetricRow label="E_friendly" value={`${fmt(metrics.eFieldFriendly)} V/m`} color="#00AAFF" />
@@ -127,6 +173,8 @@ function PanelContent({
 export function ThreatMetricsPanel() {
   const metrics = useLabStore((state) => state.activeFactionMetrics);
   const sources = useLabStore((state) => state.sources);
+  const drones = useLabStore((state) => state.drones);
+  const fps = useLabStore((state) => state.performance.currentFPS);
 
   return (
     <Box
@@ -144,13 +192,21 @@ export function ThreatMetricsPanel() {
         pointerEvents: 'none',
       }}
     >
-      <Typography
-        variant="caption"
-        sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, mb: 0.75, fontSize: '0.6rem' }}
-      >
-        LIVE FIELD METRICS
-      </Typography>
-      <PanelContent metrics={metrics} sources={sources} />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
+        <Typography
+          variant="caption"
+          sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, fontSize: '0.6rem' }}
+        >
+          LIVE FIELD METRICS
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{ fontFamily: 'monospace', fontWeight: 600, color: 'rgba(226,232,240,0.8)', fontSize: '0.6rem' }}
+        >
+          FPS {fps.toFixed(0)}
+        </Typography>
+      </Box>
+      <PanelContent metrics={metrics} sources={sources} drones={drones} />
     </Box>
   );
 }
@@ -159,15 +215,25 @@ export function ThreatMetricsPanel() {
 export function ThreatMetricsPanelContent() {
   const metrics = useLabStore((state) => state.activeFactionMetrics);
   const sources = useLabStore((state) => state.sources);
+  const drones = useLabStore((state) => state.drones);
+  const fps = useLabStore((state) => state.performance.currentFPS);
   return (
     <>
-      <Typography
-        variant="caption"
-        sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, mb: 0.75, fontSize: '0.6rem' }}
-      >
-        LIVE FIELD METRICS
-      </Typography>
-      <PanelContent metrics={metrics} sources={sources} />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
+        <Typography
+          variant="caption"
+          sx={{ display: 'block', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(226,232,240,0.6)', letterSpacing: 1, fontSize: '0.6rem' }}
+        >
+          LIVE FIELD METRICS
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{ fontFamily: 'monospace', fontWeight: 600, color: 'rgba(226,232,240,0.8)', fontSize: '0.6rem' }}
+        >
+          FPS {fps.toFixed(0)}
+        </Typography>
+      </Box>
+      <PanelContent metrics={metrics} sources={sources} drones={drones} />
     </>
   );
 }

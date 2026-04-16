@@ -65,57 +65,11 @@ export function ControlPanel() {
         <SectionPanel
           sectionId="simulation-setup"
           title={SIDEBAR_SECTION_TITLES['simulation-setup']}
-          ariaDescription="Simulation setup section for presets and source inventory actions"
+          ariaDescription="Simulation setup section for presets"
           expanded={sectionDisclosure['simulation-setup']}
           onToggleExpanded={() => toggleSectionExpanded('simulation-setup')}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-              <Tooltip title="Create another RF source using the current default settings." describeChild>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddSource}
-                  aria-label="Add source to simulation setup"
-                  fullWidth
-                  sx={{
-                    textTransform: 'none',
-                    minHeight: 18,
-                    py: 0.25,
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  Add Source
-                </Button>
-              </Tooltip>
-              <Tooltip title="Remove every source from the scene after confirmation." describeChild>
-                <span>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<DeleteIcon />}
-                    onClick={() => setClearDialogOpen(true)}
-                    aria-label="Clear all sources from simulation"
-                    disabled={sourcesCount === 0}
-                    sx={{
-                      textTransform: 'none',
-                      minHeight: 18,
-                      py: 0.25,
-                      minWidth: 36,
-                      px: 0.75,
-                      fontSize: '0.75rem',
-                      '& .MuiButton-startIcon': {
-                        margin: 0,
-                      },
-                    }}
-                  >
-                    {' '}
-                  </Button>
-                </span>
-              </Tooltip>
-            </Box>
-            <ScenarioPresets />
-          </Box>
+          <ScenarioPresets />
         </SectionPanel>
 
         <SectionPanel
@@ -124,6 +78,52 @@ export function ControlPanel() {
           ariaDescription="Active entities section for source inventory and selection"
           expanded={sectionDisclosure['active-entities']}
           onToggleExpanded={() => toggleSectionExpanded('active-entities')}
+          headerActions={
+            <>
+              <Tooltip title="Create another RF source using the current default settings." describeChild>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddSource}
+                  aria-label="Add source to active entities"
+                  sx={{
+                    textTransform: 'none',
+                    minHeight: 18,
+                    py: 0.25,
+                    px: 0.75,
+                    minWidth: 36,
+                    fontSize: '0.75rem',
+                    '& .MuiButton-startIcon': {
+                      marginRight: 0,
+                    },
+                  }}
+                />
+              </Tooltip>
+              <Tooltip title="Remove every source from the scene after confirmation." describeChild>
+                <span>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => setClearDialogOpen(true)}
+                    aria-label="Clear all sources from active entities"
+                    disabled={sourcesCount === 0}
+                  sx={{
+                    textTransform: 'none',
+                    minHeight: 18,
+                    py: 0.25,
+                      minWidth: 36,
+                      px: 0.75,
+                      fontSize: '0.75rem',
+                    '& .MuiButton-startIcon': {
+                      margin: 0,
+                    },
+                  }}
+                />
+              </span>
+            </Tooltip>
+            </>
+          }
         >
           {sourcesCount === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

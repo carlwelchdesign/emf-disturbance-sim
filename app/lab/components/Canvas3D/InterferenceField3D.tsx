@@ -250,7 +250,7 @@ export function InterferenceField3D({ sources, lod, colorScheme }: InterferenceF
           depthWrite={false}
           depthTest={false}
           transparent
-          opacity={1}
+          opacity={0}
           blending={THREE.AdditiveBlending}
         />
       </points>
