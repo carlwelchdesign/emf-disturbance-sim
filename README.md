@@ -120,7 +120,7 @@ State is centralized in `useLabStore` (Zustand) to keep controls, analytics, and
 
 For the deeper engineering reference (math, interference semantics, and how equations map to this codebase), see:
 
-- [`docs/wiki/emf-math-and-interference.md`](docs/wiki/emf-math-and-interference.md)
+- [https://github.com/carlwelchdesign/emf-disturbance-sim/wiki](https://github.com/carlwelchdesign/emf-disturbance-sim/wiki)
 
 This is in-repo documentation. GitHub's hosted Wiki at `.../wiki` is a separate repository (`.wiki.git`) and must be published separately.
 
