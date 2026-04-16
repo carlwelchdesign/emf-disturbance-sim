@@ -13,6 +13,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-15
 - N/A (in-memory client state via Zustand) (004-create-feature-branch)
 - TypeScript 5.x on Next.js 14 / React 18 + Next.js, React, Zustand, Three.js, React Three Fiber, MUI, Jest + Testing Library (006-add-maxwell-solver)
 - In-memory runtime state plus file-based/spec documentation artifacts under `/specs/006-implement-maxwell-solver/` (006-add-maxwell-solver)
+- TypeScript 5.x on Next.js 14 / React 18 + Next.js, React, MUI, Zustand, Three.js, @react-three/fiber, @react-three/drei (007-improve-interference-point-cloud)
+- In-memory client-side state (Zustand); feature artifacts in `/specs/007-improve-interference-point-cloud/` (007-improve-interference-point-cloud)
 
 - TypeScript 5.3, React 18.2, Next.js 14.0 (App Router) + @react-three/fiber 8.14, @react-three/drei 9.88, three r158, zustand 4.4 (002-disturbance-lab)
 
@@ -33,9 +35,9 @@ npm test && npm run lint
 TypeScript 5.3, React 18.2, Next.js 14.0 (App Router): Follow standard conventions
 
 ## Recent Changes
+- 007-improve-interference-point-cloud: Added TypeScript 5.x on Next.js 14 / React 18 + Next.js, React, MUI, Zustand, Three.js, @react-three/fiber, @react-three/drei
 - 006-add-maxwell-solver: Added TypeScript 5.x on Next.js 14 / React 18 + Next.js, React, Zustand, Three.js, React Three Fiber, MUI, Jest + Testing Library
 - 006-add-maxwell-solver: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 005-operator-sidebar-redesign: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 
 <!-- MANUAL ADDITIONS START -->
