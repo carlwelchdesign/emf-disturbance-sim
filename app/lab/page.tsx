@@ -4,13 +4,13 @@ import { Box, Paper, Typography } from '@mui/material';
 import { Canvas3D } from './components/Canvas3D/Canvas3D';
 import { SourceMarker } from './components/Canvas3D/SourceMarker';
 import { MeasurementPoint as MeasurementPointMarker } from './components/Canvas3D/MeasurementPoint';
-import { EnvironmentBoundary } from './components/Canvas3D/EnvironmentBoundary';
 import { FieldVisualization } from './components/Canvas3D/FieldVisualization';
 import { DroneMarker } from './components/Canvas3D/DroneMarker';
 import { FlightPath } from './components/Canvas3D/FlightPath';
 import { ContestZoneMarker } from './components/Canvas3D/ContestZoneMarker';
 import { MaxwellFieldOverlay } from './components/Canvas3D/MaxwellFieldOverlay';
 import { MaxwellFieldVolume } from './components/Canvas3D/MaxwellFieldVolume';
+import { InterferenceField3D } from './components/Canvas3D/InterferenceField3D';
 import { ControlPanel } from './components/ControlPanel/ControlPanel';
 import { FieldStrengthOverlay } from './components/Analysis/FieldStrengthOverlay';
 import { ThreatMetricsPanelContent } from './components/Analysis/ThreatMetricsPanel';
@@ -75,9 +75,6 @@ export default function LabPage() {
       <Box sx={{ flex: 1, position: 'relative' }}>
         <WebGLErrorBoundary>
           <Canvas3D camera={camera}>
-            {/* Grid / environment boundary */}
-            <EnvironmentBoundary />
-
             {/* Source markers */}
             {sources.map((source) => (
               <SourceMarker
@@ -95,6 +92,15 @@ export default function LabPage() {
 
             {/* Field visualization */}
             <FieldVisualization
+              sources={activeSources}
+              lod={settings.lod}
+              colorScheme={settings.colorScheme}
+            />
+
+            {/* Live 3-D interference field — colours every lattice point by net
+                E-field strength (superposition of all active sources + phase).
+                Updates every few frames; no solver run required. */}
+            <InterferenceField3D
               sources={activeSources}
               lod={settings.lod}
               colorScheme={settings.colorScheme}
@@ -264,4 +270,3 @@ export default function LabPage() {
     </Box>
   );
 }
-

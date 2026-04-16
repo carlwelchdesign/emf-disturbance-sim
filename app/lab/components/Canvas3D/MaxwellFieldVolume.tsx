@@ -13,22 +13,6 @@ import { useFrame } from '@react-three/fiber';
 import { useLabStore } from '../../hooks/useLabStore';
 import { useActiveFieldOutput } from '../../hooks/useMaxwellRunSelectors';
 
-/** Create a soft circular disc texture for round points */
-function makeCircleTexture(): THREE.CanvasTexture {
-  const size = 64;
-  const canvas = document.createElement('canvas');
-  canvas.width = size; canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-  const r = size / 2;
-  const gradient = ctx.createRadialGradient(r, r, 0, r, r, r);
-  gradient.addColorStop(0, 'rgba(255,255,255,1)');
-  gradient.addColorStop(0.5, 'rgba(255,255,255,0.8)');
-  gradient.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-  return new THREE.CanvasTexture(canvas);
-}
-
 /** Blue(low) → cyan → green → yellow → red(high) */
 function eMagToColor(norm: number, out: THREE.Color): THREE.Color {
   out.setHSL(0.66 * (1 - norm), 1.0, 0.3 + norm * 0.45);
@@ -43,22 +27,15 @@ function logNorm(mag: number, maxMag: number): number {
   return Math.max(0, 1 + logRatio / LOG_RANGE);
 }
 
-/** Scale the FDTD domain to fill roughly 8 scene-units (a third of the 20-unit room) */
-const DISPLAY_SIZE = 8.0;
 /** Hide cells below this log-normalised value (cuts instrument noise) */
 const NOISE_FLOOR_LOG = 0.05;
 
 export function MaxwellFieldVolume() {
   const fieldOutput = useActiveFieldOutput();
   const currentStep = useLabStore((s) => s.maxwellCurrentStep);
+  const environmentBounds = useLabStore((s) => s.environment.bounds);
   const currentStepRef = useRef<number>(currentStep);
   const prevStep = useRef<number>(-1);
-
-  // Soft circular sprite texture (created once, browser-side only)
-  const circleTexture = useMemo(() => {
-    if (typeof document === 'undefined') return null;
-    return makeCircleTexture();
-  }, []);
 
   // Geometry layout — positions + colour buffer — rebuilt when fieldOutput changes
   const { geometry, boxSize } = useMemo(() => {
@@ -66,26 +43,20 @@ export function MaxwellFieldVolume() {
       return { geometry: null, boxSize: new THREE.Vector3(1, 1, 1) };
     }
 
-    const { nx, ny, nz, dx, dy, dz } = fieldOutput.samplingMetadata.grid;
+    const { nx, ny, nz } = fieldOutput.samplingMetadata.grid;
     const total = nx * ny * nz;
 
-    const domainX = nx * dx;
-    const domainY = ny * dy;
-    const domainZ = nz * dz;
-    const maxDomain = Math.max(domainX, domainY, domainZ, 1e-9);
-    const scale = DISPLAY_SIZE / maxDomain;
-
     const pos = new Float32Array(total * 3);
-    const ox = -(domainX * scale) / 2;
-    const oy = -(domainY * scale) / 2;
-    const oz = -(domainZ * scale) / 2;
+    const roomX = environmentBounds.max.x - environmentBounds.min.x;
+    const roomY = environmentBounds.max.y - environmentBounds.min.y;
+    const roomZ = environmentBounds.max.z - environmentBounds.min.z;
     let i3 = 0;
     for (let iz = 0; iz < nz; iz++) {
       for (let iy = 0; iy < ny; iy++) {
         for (let ix = 0; ix < nx; ix++) {
-          pos[i3++] = ox + ix * dx * scale;
-          pos[i3++] = oy + iy * dy * scale;
-          pos[i3++] = oz + iz * dz * scale;
+          pos[i3++] = environmentBounds.min.x + (ix / Math.max(1, nx - 1)) * roomX;
+          pos[i3++] = environmentBounds.min.y + (iy / Math.max(1, ny - 1)) * roomY;
+          pos[i3++] = environmentBounds.min.z + (iz / Math.max(1, nz - 1)) * roomZ;
         }
       }
     }
@@ -96,9 +67,9 @@ export function MaxwellFieldVolume() {
 
     return {
       geometry: geo,
-      boxSize: new THREE.Vector3(domainX * scale, domainY * scale, domainZ * scale),
+      boxSize: new THREE.Vector3(roomX, roomY, roomZ),
     };
-  }, [fieldOutput]);
+  }, [fieldOutput, environmentBounds]);
 
   const geometryRef = useRef<THREE.BufferGeometry | null>(null);
   const fieldOutputRef = useRef(fieldOutput);
@@ -111,7 +82,7 @@ export function MaxwellFieldVolume() {
   }, [geometry, fieldOutput]);
   useEffect(() => { currentStepRef.current = currentStep; }, [currentStep]);
 
-  // Paint colours on every step change (all refs — avoids stale closure)
+  // Static point cloud colors update only on time-step change.
   useFrame(() => {
     const geo = geometryRef.current;
     const fo = fieldOutputRef.current;
@@ -147,13 +118,13 @@ export function MaxwellFieldVolume() {
         colors[j] = colors[j + 1] = colors[j + 2] = 0;
       } else {
         eMagToColor(norm, scratch);
-        colors[j]     = scratch.r * norm * 0.6;
-        colors[j + 1] = scratch.g * norm * 0.6;
-        colors[j + 2] = scratch.b * norm * 0.6;
+        colors[j]     = scratch.r * norm * 0.55;
+        colors[j + 1] = scratch.g * norm * 0.55;
+        colors[j + 2] = scratch.b * norm * 0.55;
       }
     }
     colorAttr.needsUpdate = true;
-  });
+  }, 1);
 
   if (!geometry || !fieldOutput) return null;
 
@@ -165,22 +136,17 @@ export function MaxwellFieldVolume() {
         <lineBasicMaterial color="#4488ff" transparent opacity={0.35} depthWrite={false} />
       </lineSegments>
 
-      {/* E-field point cloud — circular soft-disc sprites */}
+      {/* E-field point cloud — crisp points, no sprite glow */}
       <points geometry={geometry}>
         <pointsMaterial
-          size={0.22}
+          size={0.006}
           sizeAttenuation
-          transparent
-          opacity={0.55}
           vertexColors
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          map={circleTexture ?? undefined}
-          alphaMap={circleTexture ?? undefined}
-          alphaTest={0.01}
+          depthWrite
+          blending={THREE.NormalBlending}
+          transparent={false}
         />
       </points>
     </group>
   );
 }
-

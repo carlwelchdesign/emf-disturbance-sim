@@ -7,9 +7,7 @@ import { LODLevel } from '../../types/visualization.types';
 export function EnvironmentControls() {
   const showGrid = useLabStore((state) => state.settings.showGrid);
   const lod = useLabStore((state) => state.settings.lod);
-  const showBoundary = useLabStore((state) => state.environment.showBoundary);
   const updateSettings = useLabStore((state) => state.updateSettings);
-  const updateEnvironment = useLabStore((state) => state.updateEnvironment);
   const setLOD = useLabStore((state) => state.setLOD);
 
   return (
@@ -20,14 +18,6 @@ export function EnvironmentControls() {
             <FormControlLabel
               control={<Switch checked={showGrid} onChange={(_, checked) => updateSettings({ showGrid: checked })} />}
               label="Show Grid"
-            />
-          </Box>
-        </Tooltip>
-        <Tooltip title="Show or hide the simulation boundary box around the scene." describeChild>
-          <Box component="span">
-            <FormControlLabel
-              control={<Switch checked={showBoundary} onChange={(_, checked) => updateEnvironment({ showBoundary: checked })} />}
-              label="Show Boundary"
             />
           </Box>
         </Tooltip>
