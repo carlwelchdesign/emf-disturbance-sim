@@ -20,6 +20,8 @@ import {
 import { useLabStore } from '../../hooks/useLabStore';
 import { SCENARIO_PRESETS, ScenarioPresetId } from '../../modules/scenario/presets';
 
+const REPLACE_SCENE_DIALOG_Z_INDEX = 20000010;
+
 export function ScenarioPresets() {
   const activeScenarioPresetId = useLabStore((state) => state.activeScenarioPresetId);
   const scenarioIsDirty = useLabStore((state) => state.scenarioIsDirty);
@@ -82,7 +84,11 @@ export function ScenarioPresets() {
         </Stack>
       </Box>
 
-      <Dialog open={Boolean(pendingPresetId)} onClose={() => setPendingPresetId(null)}>
+      <Dialog
+        open={Boolean(pendingPresetId)}
+        onClose={() => setPendingPresetId(null)}
+        sx={{ zIndex: REPLACE_SCENE_DIALOG_Z_INDEX }}
+      >
         <DialogTitle>Replace current scene?</DialogTitle>
         <DialogContent>
           <DialogContentText>
