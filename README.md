@@ -2,6 +2,8 @@
 
 Interactive EMF/RF disturbance lab built with Next.js 14, React Three Fiber, MUI, and Zustand.
 
+Licensed under the GNU General Public License v3.0 only. See [LICENSE](LICENSE).
+
 <img width="1728" height="962" alt="image" src="https://github.com/user-attachments/assets/7d1741de-f209-48ad-9dd1-1509dac16715" />
 
 ## Quickstart
