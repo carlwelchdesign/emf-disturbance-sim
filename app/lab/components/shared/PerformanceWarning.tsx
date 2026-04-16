@@ -16,13 +16,14 @@ import { SOURCE_LIMITS } from '../../types/source.types';
 export function PerformanceWarning() {
   const sourceCount = useLabStore((state) => state.sources.length);
   const performance = useLabStore((state) => state.performance);
+  const performanceSignal = useLabStore((state) => state.settings.performanceSignal);
 
   const recommendedLimit = Math.max(1, Math.floor(SOURCE_LIMITS.maxSources.v1 * 0.8));
   const isNearLimit = sourceCount >= recommendedLimit;
   const isAtLimit = sourceCount >= SOURCE_LIMITS.maxSources.v1;
   const isLowPerformance = performance.isLowPerformance;
 
-  const showWarning = isNearLimit || isAtLimit || isLowPerformance;
+  const showWarning = isNearLimit || isAtLimit || isLowPerformance || performanceSignal.active;
 
   if (!showWarning) {
     return null;
@@ -34,7 +35,7 @@ export function PerformanceWarning() {
         severity={isAtLimit || isLowPerformance ? 'error' : 'warning'}
         sx={{
           position: 'absolute',
-          top: 16,
+          bottom: 16,
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 1000,
@@ -45,6 +46,8 @@ export function PerformanceWarning() {
         <AlertTitle>
           {isAtLimit
             ? 'Maximum Sources Reached'
+            : performanceSignal.active
+            ? 'Transient Degraded Mode'
             : isLowPerformance
             ? 'Performance Warning'
             : 'Approaching Source Limit'}
@@ -57,6 +60,11 @@ export function PerformanceWarning() {
         {!isAtLimit && isLowPerformance && (
           <>
             Frame rate below 30 FPS ({performance.currentFPS.toFixed(0)} FPS). Consider reducing source count or lowering visualization quality.
+          </>
+        )}
+        {!isAtLimit && performanceSignal.active && (
+          <>
+            {performanceSignal.message}
           </>
         )}
         {!isAtLimit && !isLowPerformance && isNearLimit && (

@@ -63,6 +63,8 @@ jest.mock('../../../app/lab/hooks/useMaxwellRunSelectors', () => ({
   useActiveValidationReport: jest.fn(() => undefined),
   useMaxwellRuns: jest.fn(() => []),
   useActiveRunId: jest.fn(() => 'test-run'),
+  useActiveInterferenceInterpretationSnapshot: jest.fn(() => undefined),
+  useActiveInterferenceRenderState: jest.fn(() => undefined),
 }));
 
 jest.mock('../../../app/lab/hooks/useLabStore', () => ({

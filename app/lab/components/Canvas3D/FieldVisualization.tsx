@@ -136,6 +136,7 @@ function EmitterCloud({
     }),
     []
   );
+  const frameGateRef = useMemo(() => ({ frame: 0 }), []);
 
   const bands = useMemo(() => {
     const lodFactor = lod === 'high' ? 1 : lod === 'medium' ? 0.78 : 0.58;
@@ -213,6 +214,10 @@ function EmitterCloud({
   }, [allSources]);
 
   useFrame(({ clock }, frameDelta) => {
+    frameGateRef.frame += 1;
+    if (lod === 'low' && frameGateRef.frame % 2 !== 0) {
+      return;
+    }
     // RF frequencies are far too fast to render directly, so we compress time
     // into a visual cadence while preserving the phase relationships.
     const time = animateFields ? clock.getElapsedTime() * animationSpeed * VISUAL_TIME_SCALE : 0;

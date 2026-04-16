@@ -30,9 +30,7 @@ describe('user journey 3', () => {
   it('updates visualization settings and restores the default camera view', () => {
     render(<LabPage />);
 
-    fireEvent.click(screen.getByLabelText(/Show FPS/i));
     fireEvent.click(screen.getByLabelText(/Show Grid/i));
-    fireEvent.click(screen.getByLabelText(/Show Boundary/i));
 
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /Color Scheme/i }));
     fireEvent.click(screen.getByRole('option', { name: /Rainbow/i }));
@@ -49,11 +47,45 @@ describe('user journey 3', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Reset View/i }));
 
-    expect(useLabStore.getState().settings.showFPS).toBe(true);
     expect(useLabStore.getState().settings.showGrid).toBe(false);
     expect(useLabStore.getState().settings.colorScheme).toBe('rainbow');
     expect(useLabStore.getState().settings.lod).toBe('low');
-    expect(useLabStore.getState().environment.showBoundary).toBe(false);
     expect(useLabStore.getState().camera).toEqual(DEFAULT_CAMERA);
+  });
+
+  it('keeps Maxwell hidden messaging visible and degraded messaging recoverable', () => {
+    render(<LabPage />);
+    expect(screen.getByLabelText(/maxwell hidden scope message/i)).toBeInTheDocument();
+
+    act(() => {
+      useLabStore.getState().setPerformanceDegradation({
+        active: true,
+        triggerCategory: 'input-overload',
+        startedAt: Date.now(),
+        userMessage: 'High input load detected — smoothing interaction response.',
+        recoveryState: 'recovering',
+      });
+    });
+    expect(screen.getByLabelText(/performance degraded message/i)).toBeInTheDocument();
+
+    act(() => {
+      useLabStore.getState().setPerformanceDegradation({
+        active: false,
+        triggerCategory: 'input-overload',
+        userMessage: 'Performance stable',
+        recoveryState: 'restored',
+      });
+    });
+    expect(screen.queryByLabelText(/performance degraded message/i)).not.toBeInTheDocument();
+  });
+
+  it('allows hiding and reopening the control panel', () => {
+    render(<LabPage />);
+
+    fireEvent.click(screen.getByLabelText(/hide control panel/i));
+    expect(screen.queryByText(/Simulation Setup/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText(/show control panel/i));
+    expect(screen.getByText(/Simulation Setup/i)).toBeInTheDocument();
   });
 });

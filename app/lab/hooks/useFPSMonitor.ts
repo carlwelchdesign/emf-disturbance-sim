@@ -2,52 +2,57 @@
 
 import { useEffect, useRef } from 'react';
 import { useLabStore } from './useLabStore';
+import { SMOOTHNESS_THRESHOLDS } from '../lib/visualization-helpers';
 
 export function useFPSMonitor() {
   const updatePerformance = useLabStore((state) => state.updatePerformance);
-  const setLOD = useLabStore((state) => state.setLOD);
-  const currentLOD = useLabStore((state) => state.settings.lod);
+  const recordAnimationFrameSample = useLabStore((state) => state.recordAnimationFrameSample);
+  const setPerformanceDegradation = useLabStore((state) => state.setPerformanceDegradation);
+  const evaluateSmoothnessWindow = useLabStore((state) => state.evaluateSmoothnessWindow);
+  const animateFields = useLabStore((state) => state.settings.animateFields);
   const frameCount = useRef(0);
   const lastTime = useRef(performance.now());
-  const recoveryStreak = useRef(0);
-  const lowStreak = useRef(0);
+  const lastFrameTime = useRef(performance.now());
 
   useEffect(() => {
     let animationFrame = 0;
 
     const tick = (time: number) => {
       frameCount.current += 1;
+      const frameDurationMs = Math.max(0.0001, time - lastFrameTime.current);
+      lastFrameTime.current = time;
+      recordAnimationFrameSample({
+        timestamp: Date.now(),
+        frameDurationMs,
+        animationActive: animateFields,
+        interactionType: 'none',
+        sceneMode: 'non-maxwell',
+        maxwellVisible: false,
+      });
       const elapsed = time - lastTime.current;
 
       if (elapsed >= 1000) {
         const fps = (frameCount.current * 1000) / elapsed;
         updatePerformance(fps);
-        const nextLod = fps < 30 ? 'low' : fps < 45 ? 'medium' : 'high';
 
-        if (nextLod === 'low') {
-          lowStreak.current += 1;
-          recoveryStreak.current = 0;
-        } else if (nextLod === 'high') {
-          recoveryStreak.current += 1;
-          lowStreak.current = 0;
+        if (fps < 24) {
+          setPerformanceDegradation({
+            active: true,
+            triggerCategory: 'frame-overload',
+            startedAt: Date.now(),
+            userMessage: 'Performance degraded temporarily — reducing detail for smoother animation.',
+            recoveryState: 'recovering',
+          });
         } else {
-          lowStreak.current = 0;
-          recoveryStreak.current = 0;
-        }
-
-        const stableLod =
-          nextLod === 'low'
-            ? 'low'
-            : nextLod === 'medium'
-            ? 'medium'
-            : recoveryStreak.current >= 2
-            ? 'high'
-            : currentLOD === 'low'
-            ? 'medium'
-            : 'high';
-
-        if (stableLod !== currentLOD) {
-          setLOD(stableLod);
+          const latest = evaluateSmoothnessWindow(SMOOTHNESS_THRESHOLDS.sampleWindowMs);
+          if (latest?.meetsThreshold) {
+            setPerformanceDegradation({
+              active: false,
+              triggerCategory: 'frame-overload',
+              userMessage: 'Performance stable',
+              recoveryState: 'restored',
+            });
+          }
         }
 
         frameCount.current = 0;
@@ -60,5 +65,11 @@ export function useFPSMonitor() {
     animationFrame = requestAnimationFrame(tick);
 
     return () => cancelAnimationFrame(animationFrame);
-  }, [currentLOD, updatePerformance, setLOD]);
+  }, [
+    animateFields,
+    evaluateSmoothnessWindow,
+    recordAnimationFrameSample,
+    setPerformanceDegradation,
+    updatePerformance,
+  ]);
 }

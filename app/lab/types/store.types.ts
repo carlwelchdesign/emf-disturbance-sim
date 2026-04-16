@@ -14,6 +14,8 @@ import {
   FieldOutputSet,
   DerivedMetricResult,
   ValidationReport,
+  PointCloudRenderState,
+  InterferenceInterpretationSnapshot,
 } from './maxwell.types';
 
 export type SelectionMode = 'none' | 'single' | 'multi';
@@ -39,6 +41,49 @@ export interface PerformanceMetrics {
   isLowPerformance: boolean;
 }
 
+export type InteractionType = 'rotate' | 'pan' | 'zoom' | 'none';
+
+export interface AnimationFrameSample {
+  timestamp: number;
+  frameDurationMs: number;
+  animationActive: boolean;
+  interactionType: InteractionType;
+  sceneMode: 'non-maxwell';
+  maxwellVisible: false;
+}
+
+export interface InputResponseSample {
+  eventId: string;
+  timestamp: number;
+  interactionType: Exclude<InteractionType, 'none'>;
+  responseLatencyMs: number;
+  jankFlag: boolean;
+}
+
+export interface PerformanceDegradationSignal {
+  active: boolean;
+  triggerCategory: 'frame-overload' | 'input-overload' | 'resource-pressure';
+  startedAt?: number;
+  userMessage: string;
+  recoveryState: 'n/a' | 'recovering' | 'restored';
+}
+
+export interface SmoothnessWindowEvaluation {
+  windowStart: number;
+  windowEnd: number;
+  interactionSmoothPercent: number;
+  animationSmoothPercent: number;
+  severeLagIncidents: number;
+  meetsThreshold: boolean;
+}
+
+export interface SmoothnessTelemetryState {
+  frameSamples: AnimationFrameSample[];
+  inputSamples: InputResponseSample[];
+  degradationSignal: PerformanceDegradationSignal;
+  latestEvaluation: SmoothnessWindowEvaluation | null;
+}
+
 export interface LabStoreState {
   sources: RFSource[];
   selectedSourceId: string | null;
@@ -54,6 +99,7 @@ export interface LabStoreState {
   drones: DroneState[];
   /** Faction metrics at the most-recently-active drone's position (null if no drones) */
   activeFactionMetrics: FactionMetrics | null;
+  telemetry: SmoothnessTelemetryState;
   // === Source Actions ===
   addSource: (params?: Partial<CreateSourceParams>) => string;
   removeSource: (id: string) => void;
@@ -82,6 +128,11 @@ export interface LabStoreState {
   clearMeasurements: () => void;
   // === Performance Actions ===
   updatePerformance: (fps: number) => void;
+  recordAnimationFrameSample: (sample: AnimationFrameSample) => void;
+  recordInputResponseSample: (sample: InputResponseSample) => void;
+  setPerformanceDegradation: (signal: PerformanceDegradationSignal) => void;
+  evaluateSmoothnessWindow: (windowMs?: number) => SmoothnessWindowEvaluation | null;
+  clearTelemetry: () => void;
   // === Drone Actions ===
   addDrone: (params: CreateDroneParams) => string;
   removeDrone: (id: string) => void;
@@ -105,6 +156,8 @@ export interface LabStoreState {
   maxwellDerivedMetrics: Record<string, DerivedMetricResult[]>;
   maxwellValidationReports: Record<string, ValidationReport>;
   maxwellErrors: Record<string, RunErrorRecord[]>;
+  maxwellInterferenceRenderStates: Record<string, PointCloudRenderState>;
+  maxwellInterpretationSnapshots: Record<string, InterferenceInterpretationSnapshot>;
   // === Maxwell Solver Actions ===
   submitMaxwellRun: (request: SubmitSimulationRunRequest) => SubmitSimulationRunResponse;
   setActiveMaxwellRun: (runId: string | null) => void;
@@ -114,9 +167,13 @@ export interface LabStoreState {
   setMaxwellDerivedMetrics: (runId: string, metrics: DerivedMetricResult[]) => void;
   setMaxwellValidationReport: (runId: string, report: ValidationReport) => void;
   setMaxwellErrors: (runId: string, errors: RunErrorRecord[]) => void;
+  setMaxwellInterferenceRenderState: (runId: string, state: PointCloudRenderState) => void;
+  setMaxwellInterpretationSnapshot: (runId: string, snapshot: InterferenceInterpretationSnapshot) => void;
   getMaxwellRun: (runId: string) => SimulationRun | undefined;
   getActiveMaxwellFieldOutput: () => FieldOutputSet | undefined;
   getActiveMaxwellMetrics: () => DerivedMetricResult[] | undefined;
   getActiveMaxwellValidationReport: () => ValidationReport | undefined;
+  getActiveMaxwellInterferenceRenderState: () => PointCloudRenderState | undefined;
+  getActiveMaxwellInterpretationSnapshot: () => InterferenceInterpretationSnapshot | undefined;
   clearMaxwellRun: (runId: string) => void;
 }

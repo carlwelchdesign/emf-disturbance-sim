@@ -6,6 +6,7 @@ import { PerformanceTelemetry } from '../../../types/maxwell.types';
 
 export class PerformanceTelemetryCapture {
   private records: Map<string, PerformanceTelemetry> = new Map();
+  private pendingEmitterChangeTs: Map<string, number> = new Map();
 
   /** Start tracking a run */
   initRun(runId: string): void {
@@ -35,6 +36,43 @@ export class PerformanceTelemetryCapture {
   recordInteraction(runId: string, latencyMs: number): void {
     const rec = this.records.get(runId);
     if (rec) rec.interactionLatencies.push(latencyMs);
+  }
+
+  /** Mark an emitter-change event, to be paired with subsequent render completion */
+  recordEmitterChangeEvent(runId: string): void {
+    this.pendingEmitterChangeTs.set(runId, Date.now());
+    const rec = this.records.get(runId);
+    if (rec) {
+      rec.edgeStateEvents = rec.edgeStateEvents ?? [];
+      rec.edgeStateEvents.push({ event: 'emitter_change', timestamp: Date.now() });
+    }
+  }
+
+  /** Mark render completion and pair it to emitter-change latency if available */
+  recordRenderCompleteEvent(runId: string): void {
+    const now = Date.now();
+    const rec = this.records.get(runId);
+    if (!rec) return;
+    rec.edgeStateEvents = rec.edgeStateEvents ?? [];
+    rec.edgeStateEvents.push({ event: 'render_complete', timestamp: now });
+    const pending = this.pendingEmitterChangeTs.get(runId);
+    if (pending !== undefined) {
+      rec.emitterChangeLatencies = rec.emitterChangeLatencies ?? [];
+      rec.emitterChangeLatencies.push(Math.max(0, now - pending));
+      this.pendingEmitterChangeTs.delete(runId);
+    }
+  }
+
+  emitEdgeState(runId: string, event: string, detail?: string): void {
+    const rec = this.records.get(runId);
+    if (!rec) return;
+    rec.edgeStateEvents = rec.edgeStateEvents ?? [];
+    rec.edgeStateEvents.push({ event, timestamp: Date.now(), detail });
+  }
+
+  getEmitterChangeLatencies(runId: string): number[] {
+    const rec = this.records.get(runId);
+    return rec?.emitterChangeLatencies ?? [];
   }
 
   /** Get telemetry record for a run */

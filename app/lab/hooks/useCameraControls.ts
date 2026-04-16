@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, MouseEvent as ReactMouseEvent } from 'r
 import { useLabStore } from './useLabStore';
 import { calculateOrbit, calculatePan, calculateZoom, calculateDistance } from '../lib/camera-helpers';
 import { CameraState } from '../types/camera.types';
+import { SMOOTHNESS_THRESHOLDS } from '../lib/visualization-helpers';
 
 /**
  * Mouse button constants
@@ -42,12 +43,17 @@ export function useCameraControls(): UseCameraControlsReturn {
   const camera = useLabStore((state) => state.camera);
   const updateCamera = useLabStore((state) => state.updateCamera);
   const storeResetCamera = useLabStore((state) => state.resetCamera);
+  const recordInputResponseSample = useLabStore((state) => state.recordInputResponseSample);
+  const evaluateSmoothnessWindow = useLabStore((state) => state.evaluateSmoothnessWindow);
+  const setPerformanceDegradation = useLabStore((state) => state.setPerformanceDegradation);
 
   // Track interaction state
   const controlModeRef = useRef<ControlMode>('none');
   const lastMousePos = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const cameraRef = useRef<CameraState>(camera);
+  const eventCounterRef = useRef(0);
+  const pendingInteractionRef = useRef<{ type: 'rotate' | 'pan' | 'zoom'; timestamp: number } | null>(null);
 
   useEffect(() => {
     cameraRef.current = camera;
@@ -79,8 +85,38 @@ export function useCameraControls(): UseCameraControlsReturn {
       }
 
       updateCamera(nextCamera);
+      const interaction = pendingInteractionRef.current;
+      if (!interaction) return;
+      const latency = Math.max(0, performance.now() - interaction.timestamp);
+      const jankFlag = latency > SMOOTHNESS_THRESHOLDS.maxP95LatencyMs;
+      recordInputResponseSample({
+        eventId: `camera-${interaction.type}-${Date.now()}-${eventCounterRef.current++}`,
+        timestamp: Date.now(),
+        interactionType: interaction.type,
+        responseLatencyMs: latency,
+        jankFlag,
+      });
+
+      const evaluation = evaluateSmoothnessWindow(SMOOTHNESS_THRESHOLDS.sampleWindowMs);
+      if (evaluation && !evaluation.meetsThreshold && jankFlag) {
+        setPerformanceDegradation({
+          active: true,
+          triggerCategory: 'input-overload',
+          startedAt: Date.now(),
+          userMessage: 'High input load detected — smoothing interaction response.',
+          recoveryState: 'recovering',
+        });
+      } else if (evaluation?.meetsThreshold) {
+        setPerformanceDegradation({
+          active: false,
+          triggerCategory: 'input-overload',
+          userMessage: 'Performance stable',
+          recoveryState: 'restored',
+        });
+      }
+      pendingInteractionRef.current = null;
     },
-    [updateCamera]
+    [evaluateSmoothnessWindow, recordInputResponseSample, setPerformanceDegradation, updateCamera]
   );
 
   /**
@@ -120,6 +156,7 @@ export function useCameraControls(): UseCameraControlsReturn {
     const panSensitivity = 1.0; // Units per pixel
 
     if (controlModeRef.current === 'orbit') {
+      pendingInteractionRef.current = { type: 'rotate', timestamp: performance.now() };
       // Orbit around target
       const result = calculateOrbit(
         cameraRef.current.position,
@@ -130,6 +167,7 @@ export function useCameraControls(): UseCameraControlsReturn {
 
       publishCamera({ position: result.position });
     } else if (controlModeRef.current === 'pan') {
+      pendingInteractionRef.current = { type: 'pan', timestamp: performance.now() };
       // Pan camera and target together
       const distance = calculateDistance(cameraRef.current.position, cameraRef.current.target);
       const result = calculatePan(
@@ -159,6 +197,7 @@ export function useCameraControls(): UseCameraControlsReturn {
    * Handle wheel - zoom in/out
    */
   const onWheel = useCallback((e: WheelLikeEvent) => {
+    pendingInteractionRef.current = { type: 'zoom', timestamp: performance.now() };
     // Normalize wheel delta (different browsers use different scales)
     const delta = e.deltaY > 0 ? 1 : -1;
 

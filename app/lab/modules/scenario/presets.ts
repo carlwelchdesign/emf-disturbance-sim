@@ -49,13 +49,14 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     name: 'Clean Vacuum Propagation',
     description: 'Baseline single-source propagation with no deliberate disturbance.',
     sources: [source('Emitter A', { x: 0, y: 1.5, z: 0 })],
-    settings: {
-      ...DEFAULT_VISUALIZATION,
-      animateFields: true,
-      animationSpeed: 1,
-      showGrid: true,
-      lod: 'high',
-    },
+      settings: {
+        ...DEFAULT_VISUALIZATION,
+        animateFields: true,
+        animationSpeed: 1,
+        showGrid: true,
+        lod: 'high',
+        interferenceProfile: 'balanced',
+      },
     camera: DEFAULT_CAMERA,
     environment: DEFAULT_ENVIRONMENT,
   },
@@ -72,6 +73,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       animationSpeed: 0.9,
       showGrid: true,
       lod: 'medium',
+      interferenceProfile: 'balanced',
     },
   },
   {
@@ -85,6 +87,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       showGrid: true,
       lod: 'medium',
       colorScheme: 'monochrome',
+      interferenceProfile: 'balanced',
     },
   },
   {
@@ -100,6 +103,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       animationSpeed: 1,
       showGrid: true,
       lod: 'high',
+      interferenceProfile: 'balanced',
     },
   },
   {
@@ -117,6 +121,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       showGrid: true,
       lod: 'medium',
       colorScheme: 'rainbow',
+      interferenceProfile: 'balanced',
     },
   },
   {
@@ -134,6 +139,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       animationSpeed: 0.95,
       showGrid: true,
       lod: 'medium',
+      interferenceProfile: 'balanced',
     },
   },
   {
@@ -150,6 +156,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       animationSpeed: 0.9,
       showGrid: true,
       lod: 'medium',
+      interferenceProfile: 'balanced',
     },
   },
   {
@@ -169,6 +176,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       showGrid: true,
       lod: 'high',
       colorScheme: 'rainbow',
+      interferenceProfile: 'balanced',
     },
   },
   {
@@ -190,6 +198,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       showEmitterInteractions: true,
       showFieldChart: true,
       showFlightPaths: true,
+      interferenceProfile: 'balanced',
     },
     camera: {
       position: { x: 0, y: 10, z: 8 },
@@ -246,6 +255,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
       showEmitterInteractions: true,
       showFieldChart: true,
       showFlightPaths: true,
+      interferenceProfile: 'balanced',
     },
     camera: {
       position: { x: 0, y: 6, z: 10 },

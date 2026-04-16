@@ -55,4 +55,20 @@ describe('user journey 1', () => {
     fireEvent.click(screen.getByRole('button', { name: /Reset View/i }));
     expect(useLabStore.getState().camera).toEqual(DEFAULT_CAMERA);
   });
+
+  it('records smoothness telemetry through store actions', () => {
+    render(<LabPage />);
+    const store = useLabStore.getState();
+    const before = store.telemetry.inputSamples.length;
+    act(() => {
+      store.recordInputResponseSample({
+        eventId: `integration-${Date.now()}`,
+        timestamp: Date.now(),
+        interactionType: 'rotate',
+        responseLatencyMs: 44,
+        jankFlag: false,
+      });
+    });
+    expect(useLabStore.getState().telemetry.inputSamples.length).toBe(before + 1);
+  });
 });

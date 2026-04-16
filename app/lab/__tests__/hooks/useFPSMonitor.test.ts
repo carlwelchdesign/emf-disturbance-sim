@@ -6,11 +6,15 @@ jest.mock('../../hooks/useLabStore');
 
 describe('useFPSMonitor', () => {
   const mockUpdatePerformance = jest.fn();
-  const mockSetLOD = jest.fn();
+  const mockRecordAnimationFrameSample = jest.fn();
+  const mockSetPerformanceDegradation = jest.fn();
+  const mockEvaluateSmoothnessWindow = jest.fn(() => ({ meetsThreshold: true }));
   const storeState = {
     updatePerformance: mockUpdatePerformance,
-    setLOD: mockSetLOD,
-    settings: { lod: 'high' as const },
+    recordAnimationFrameSample: mockRecordAnimationFrameSample,
+    setPerformanceDegradation: mockSetPerformanceDegradation,
+    evaluateSmoothnessWindow: mockEvaluateSmoothnessWindow,
+    settings: { lod: 'high' as const, animateFields: true },
   };
 
   let rafCallback: FrameRequestCallback | null = null;
@@ -18,7 +22,9 @@ describe('useFPSMonitor', () => {
   beforeEach(() => {
     rafCallback = null;
     mockUpdatePerformance.mockClear();
-    mockSetLOD.mockClear();
+    mockRecordAnimationFrameSample.mockClear();
+    mockSetPerformanceDegradation.mockClear();
+    mockEvaluateSmoothnessWindow.mockClear();
 
     (useLabStore as unknown as jest.Mock).mockImplementation((selector?: (state: typeof storeState) => unknown) => {
       if (typeof selector === 'function') {
@@ -43,7 +49,7 @@ describe('useFPSMonitor', () => {
     expect(() => renderHook(() => useFPSMonitor())).not.toThrow();
   });
 
-  it('reduces quality after sustained low fps', () => {
+  it('tracks fps without auto-changing lod', () => {
     renderHook(() => useFPSMonitor());
 
     act(() => {
@@ -51,7 +57,6 @@ describe('useFPSMonitor', () => {
     });
 
     expect(mockUpdatePerformance).toHaveBeenCalledWith(expect.any(Number));
-    expect(mockSetLOD).toHaveBeenCalledWith('low');
   });
 
   it('records fps updates for observability thresholds', () => {
@@ -63,5 +68,18 @@ describe('useFPSMonitor', () => {
     const fpsValues = mockUpdatePerformance.mock.calls.map((call) => call[0]);
     expect(fpsValues.length).toBeGreaterThan(0);
     expect(fpsValues.every((value: number) => Number.isFinite(value))).toBe(true);
+  });
+
+  it('records frame telemetry samples and updates degradation telemetry', () => {
+    mockEvaluateSmoothnessWindow.mockReturnValue({ meetsThreshold: true });
+    renderHook(() => useFPSMonitor());
+
+    act(() => {
+      rafCallback?.(16);
+      rafCallback?.(1030);
+    });
+
+    expect(mockRecordAnimationFrameSample).toHaveBeenCalled();
+    expect(mockSetPerformanceDegradation).toHaveBeenCalled();
   });
 });

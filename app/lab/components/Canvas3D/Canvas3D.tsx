@@ -1,7 +1,7 @@
 'use client';
 
 import { Canvas, useThree } from '@react-three/fiber';
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, memo, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { CameraState } from '../../types/camera.types';
 import { isSameCameraState } from '../../lib/camera-helpers';
@@ -29,7 +29,7 @@ export interface Canvas3DProps {
  * Sets up React Three Fiber with proper camera and rendering
  * Includes responsive resize handling and WebGL context recovery
  */
-export function Canvas3D({ camera, children, className }: Canvas3DProps) {
+export const Canvas3D = memo(function Canvas3D({ camera, children, className }: Canvas3DProps) {
   const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -81,15 +81,25 @@ export function Canvas3D({ camera, children, className }: Canvas3DProps) {
       </Canvas>
     </div>
   );
-}
+});
 
-function CameraSync({ camera }: { camera?: CameraState }) {
+const CameraSync = memo(function CameraSync({ camera }: { camera?: CameraState }) {
   const { camera: sceneCamera } = useThree();
   const perspectiveCamera = sceneCamera as THREE.PerspectiveCamera;
   const lastAppliedCameraRef = useRef<CameraState | null>(null);
 
   useEffect(() => {
     if (!camera) {
+      return;
+    }
+
+    if (
+      !sceneCamera ||
+      typeof (sceneCamera as THREE.Camera).position?.set !== 'function' ||
+      typeof (sceneCamera as THREE.Camera).up?.set !== 'function' ||
+      typeof perspectiveCamera.updateProjectionMatrix !== 'function' ||
+      typeof (sceneCamera as THREE.Camera).lookAt !== 'function'
+    ) {
       return;
     }
 
@@ -118,4 +128,4 @@ function CameraSync({ camera }: { camera?: CameraState }) {
   }, [camera, perspectiveCamera, sceneCamera]);
 
   return null;
-}
+});

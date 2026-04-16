@@ -27,6 +27,9 @@ Open `http://localhost:3000/lab`.
 - Measurement capture and field readouts
 - FPS monitoring and adaptive LOD
 - WebGL error handling and accessibility labels
+- Maxwell interference point-cloud rendering with semantic high/medium/low bands
+- Interference interpretation summaries (strongest/weakest regions + distribution)
+- Emitter-change telemetry hooks for point-cloud update observability
 
 ## Operator Sidebar Workflow
 
@@ -92,3 +95,10 @@ npm test           # Run all tests
 npm run type-check # TypeScript validation
 npm run build      # Production build
 ```
+
+### Interference Point-Cloud Quality Targets
+
+- Replace beachball-style output with a data-first point cloud.
+- Preserve emitter-to-pattern spatial correspondence.
+- Maintain repeatable interpretation for strongest/weakest regions.
+- Baseline interaction performance target: emitter-change-to-visible-update p95 <= 1s.

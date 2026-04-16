@@ -1,5 +1,6 @@
 import { ColorScheme } from '../types/visualization.types';
 import { SOURCE_LIMITS } from '../types/source.types';
+import { AnimationFrameSample, InputResponseSample, SmoothnessWindowEvaluation } from '../types/store.types';
 
 /**
  * Visualization helper utilities for color mapping and rendering
@@ -188,4 +189,70 @@ export function describeFieldInteraction(
     default:
       return 'quiet field';
   }
+}
+
+export function getNonColorInteractionCue(
+  overlapScore: number,
+  cancellationScore: number,
+  contestedScore: number
+): '↑' | '↓' | '↔' | '·' {
+  const cue = classifyFieldInteraction(overlapScore, cancellationScore, contestedScore);
+  if (cue === 'constructive') return '↑';
+  if (cue === 'destructive') return '↓';
+  if (cue === 'contested') return '↔';
+  return '·';
+}
+
+export const SMOOTHNESS_THRESHOLDS = {
+  minSmoothPercent: 95,
+  maxP95LatencyMs: 120,
+  frameOverloadMs: 33,
+  severeLagLatencyMs: 300,
+  sampleWindowMs: 5000,
+} as const;
+
+export function calculatePercentile(values: number[], percentile: number): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const rank = Math.min(sorted.length - 1, Math.max(0, Math.ceil((percentile / 100) * sorted.length) - 1));
+  return sorted[rank];
+}
+
+export function evaluateSmoothnessWindow(
+  frameSamples: AnimationFrameSample[],
+  inputSamples: InputResponseSample[],
+  now: number,
+  windowMs: number = SMOOTHNESS_THRESHOLDS.sampleWindowMs
+): SmoothnessWindowEvaluation {
+  const windowStart = now - windowMs;
+  const scopedFrames = frameSamples.filter((sample) => sample.timestamp >= windowStart && sample.timestamp <= now);
+  const scopedInputs = inputSamples.filter((sample) => sample.timestamp >= windowStart && sample.timestamp <= now);
+
+  const smoothFrames = scopedFrames.filter((sample) => sample.frameDurationMs <= SMOOTHNESS_THRESHOLDS.frameOverloadMs);
+  const smoothInputs = scopedInputs.filter((sample) => !sample.jankFlag && sample.responseLatencyMs <= SMOOTHNESS_THRESHOLDS.maxP95LatencyMs);
+
+  const animationSmoothPercent =
+    scopedFrames.length === 0 ? 100 : (smoothFrames.length / scopedFrames.length) * 100;
+  const interactionSmoothPercent =
+    scopedInputs.length === 0 ? 100 : (smoothInputs.length / scopedInputs.length) * 100;
+
+  const severeLagIncidents = scopedInputs.filter(
+    (sample) => sample.responseLatencyMs >= SMOOTHNESS_THRESHOLDS.severeLagLatencyMs
+  ).length;
+
+  const meetsLatency =
+    calculatePercentile(scopedInputs.map((sample) => sample.responseLatencyMs), 95) <=
+    SMOOTHNESS_THRESHOLDS.maxP95LatencyMs;
+
+  return {
+    windowStart,
+    windowEnd: now,
+    interactionSmoothPercent,
+    animationSmoothPercent,
+    severeLagIncidents,
+    meetsThreshold:
+      animationSmoothPercent >= SMOOTHNESS_THRESHOLDS.minSmoothPercent &&
+      interactionSmoothPercent >= SMOOTHNESS_THRESHOLDS.minSmoothPercent &&
+      meetsLatency,
+  };
 }

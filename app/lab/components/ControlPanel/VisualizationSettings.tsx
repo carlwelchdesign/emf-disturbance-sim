@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Alert,
   Box,
   FormControl,
   FormControlLabel,
@@ -18,18 +19,27 @@ import { Slider } from '../shared/Slider';
 
 export function VisualizationSettings() {
   const colorScheme = useLabStore((state) => state.settings.colorScheme);
-  const showFPS = useLabStore((state) => state.settings.showFPS);
   const animateFields = useLabStore((state) => state.settings.animateFields);
   const animationSpeed = useLabStore((state) => state.settings.animationSpeed);
   const solverProfile = useLabStore((state) => state.settings.solverProfile);
+  const interferenceProfile = useLabStore((state) => state.settings.interferenceProfile);
   const themeMode = useLabStore((state) => state.settings.themeMode);
   const showFlightPaths = useLabStore((state) => state.settings.showFlightPaths);
+  const performanceSignal = useLabStore((state) => state.settings.performanceSignal);
   const updateSettings = useLabStore((state) => state.updateSettings);
   const setSolverProfile = useLabStore((state) => state.setSolverProfile);
 
   return (
     <Box>
       <Stack spacing={1.5}>
+        <Alert severity="info" variant="outlined" aria-label="Maxwell hidden scope message">
+          Maxwell field visualization is hidden in this optimization cycle. Smoothness tuning applies to non-Maxwell workflows.
+        </Alert>
+        {performanceSignal.active && (
+          <Alert severity="warning" aria-label="Performance degraded message">
+            {performanceSignal.message}
+          </Alert>
+        )}
         <FormControl fullWidth size="small">
           <Tooltip title="Choose how field intensity is colored across the 3D scene." describeChild>
             <InputLabel id="color-scheme-label" shrink>
@@ -47,14 +57,6 @@ export function VisualizationSettings() {
             <MenuItem value="monochrome">Monochrome</MenuItem>
           </Select>
         </FormControl>
-        <Tooltip title="Display the current frame rate in the top-right corner of the canvas." describeChild>
-          <Box component="span">
-            <FormControlLabel
-              control={<Switch checked={showFPS} onChange={(_, checked) => updateSettings({ showFPS: checked })} />}
-              label="Show FPS"
-            />
-          </Box>
-        </Tooltip>
         <Tooltip title="Toggle the motion-first particle and wavefront animation in the 3D scene." describeChild>
           <Box component="span">
             <FormControlLabel
@@ -68,6 +70,23 @@ export function VisualizationSettings() {
             />
           </Box>
         </Tooltip>
+        <FormControl fullWidth size="small">
+          <Tooltip title="Select the interference point-cloud encoding profile." describeChild>
+            <InputLabel id="interference-profile-label" shrink>
+              Interference Profile
+            </InputLabel>
+          </Tooltip>
+          <Select
+            labelId="interference-profile-label"
+            value={interferenceProfile}
+            label="Interference Profile"
+            onChange={(event) => updateSettings({ interferenceProfile: event.target.value as SolverProfile })}
+          >
+            <MenuItem value="simplified">Simplified</MenuItem>
+            <MenuItem value="balanced">Balanced</MenuItem>
+            <MenuItem value="scientific">Scientific</MenuItem>
+          </Select>
+        </FormControl>
         <FormControl fullWidth size="small">
           <Tooltip title="Choose how much field detail and directional structure to emphasize." describeChild>
             <InputLabel id="solver-profile-label" shrink>

@@ -17,9 +17,9 @@
 
 **Purpose**: Prepare feature scaffolding and test files for interference point-cloud work.
 
-- [ ] T001 Define baseline evaluation scenario set and acceptance rubric in `specs/007-improve-interference-point-cloud/quickstart.md`
-- [ ] T002 Create test file skeletons for this feature in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx` and `app/lab/__tests__/components/Analysis/maxwell-interpretation.test.tsx`
-- [ ] T003 [P] Create Maxwell visualization helper test scaffold in `app/lab/__tests__/lib/maxwell-encoding.test.ts`
+- [X] T001 Define baseline evaluation scenario set and acceptance rubric in `specs/007-improve-interference-point-cloud/quickstart.md`
+- [X] T002 Create test file skeletons for this feature in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx` and `app/lab/__tests__/components/Analysis/maxwell-interpretation.test.tsx`
+- [X] T003 [P] Create Maxwell visualization helper test scaffold in `app/lab/__tests__/lib/maxwell-encoding.test.ts`
 
 ---
 
@@ -29,14 +29,14 @@
 
 **⚠️ CRITICAL**: No user story implementation begins until this phase is complete.
 
-- [ ] T004 Implement interference band and cue types in `app/lab/types/maxwell.types.ts`
-- [ ] T005 Implement deterministic normalization/banding utilities in `app/lab/modules/maxwell/core/interference-encoding.ts`
-- [ ] T006 [P] Implement non-color cue mapping utilities (size/luminance/density) in `app/lab/modules/maxwell/core/interference-cues.ts`
-- [ ] T007 Implement render-state mapping utilities from `FieldOutputSet` to point-cloud payload in `app/lab/modules/maxwell/core/field-output-builder.ts`
-- [ ] T008 Add selector/store support for interference rendering state in `app/lab/hooks/useLabStore.ts`
-- [ ] T009 Add foundational unit coverage for encoding determinism and band boundaries in `app/lab/__tests__/lib/maxwell-encoding.test.ts`
-- [ ] T010 [P] Implement interaction telemetry and edge-state event emitter in `app/lab/modules/maxwell/core/performance-telemetry.ts`
-- [ ] T011 [P] Add telemetry unit coverage for latency/event emission in `app/lab/__tests__/modules/maxwell/performance-telemetry.test.ts`
+- [X] T004 Implement interference band and cue types in `app/lab/types/maxwell.types.ts`
+- [X] T005 Implement deterministic normalization/banding utilities in `app/lab/modules/maxwell/core/interference-encoding.ts`
+- [X] T006 [P] Implement non-color cue mapping utilities (size/luminance/density) in `app/lab/modules/maxwell/core/interference-cues.ts`
+- [X] T007 Implement render-state mapping utilities from `FieldOutputSet` to point-cloud payload in `app/lab/modules/maxwell/core/field-output-builder.ts`
+- [X] T008 Add selector/store support for interference rendering state in `app/lab/hooks/useLabStore.ts`
+- [X] T009 Add foundational unit coverage for encoding determinism and band boundaries in `app/lab/__tests__/lib/maxwell-encoding.test.ts`
+- [X] T010 [P] Implement interaction telemetry and edge-state event emitter in `app/lab/modules/maxwell/core/performance-telemetry.ts`
+- [X] T011 [P] Add telemetry unit coverage for latency/event emission in `app/lab/__tests__/modules/maxwell/performance-telemetry.test.ts`
 
 **Checkpoint**: Shared encoding/render-state foundation complete; user stories can proceed.
 
@@ -50,22 +50,22 @@
 
 ### Tests for User Story 1
 
-- [ ] T012 [P] [US1] Add rendering test for point-cloud presence and non-beachball geometry in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
-- [ ] T013 [P] [US1] Add visualization integrity test for truthful sample-to-position mapping in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
+- [X] T012 [P] [US1] Add rendering test for point-cloud presence and non-beachball geometry in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
+- [X] T013 [P] [US1] Add visualization integrity test for truthful sample-to-position mapping in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
 
 ### Visualization Quality Validation (Required)
 
-- [ ] T014 [P] [US1] Add data-ink ratio regression test for Maxwell field rendering in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
-- [ ] T015 [P] [US1] Add graphical integrity test for monotonic intensity encoding in `app/lab/__tests__/lib/maxwell-encoding.test.ts`
-- [ ] T016 [P] [US1] Add accessibility cue test to ensure non-color-only intensity encoding in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
-- [ ] T017 [P] [US1] Add contrast-threshold validation test for point cues/background readability in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
+- [X] T014 [P] [US1] Add data-ink ratio regression test for Maxwell field rendering in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
+- [X] T015 [P] [US1] Add graphical integrity test for monotonic intensity encoding in `app/lab/__tests__/lib/maxwell-encoding.test.ts`
+- [X] T016 [P] [US1] Add accessibility cue test to ensure non-color-only intensity encoding in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
+- [X] T017 [P] [US1] Add contrast-threshold validation test for point cues/background readability in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Refactor `MaxwellFieldVolume` to render data-first interference point cloud in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
-- [ ] T019 [US1] Integrate interference encoding utilities into point generation pipeline in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
-- [ ] T020 [US1] Update Maxwell canvas wiring to prefer point-cloud field mode in `app/lab/components/Canvas3D/Canvas3D.tsx`
-- [ ] T021 [US1] Update field overlay labels/status to reflect interference point-cloud semantics in `app/lab/components/Canvas3D/MaxwellFieldOverlay.tsx`
+- [X] T018 [US1] Refactor `MaxwellFieldVolume` to render data-first interference point cloud in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
+- [X] T019 [US1] Integrate interference encoding utilities into point generation pipeline in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
+- [X] T020 [US1] Update Maxwell canvas wiring to prefer point-cloud field mode in `app/lab/components/Canvas3D/Canvas3D.tsx`
+- [X] T021 [US1] Update field overlay labels/status to reflect interference point-cloud semantics in `app/lab/components/Canvas3D/MaxwellFieldOverlay.tsx`
 
 **Checkpoint**: User Story 1 is independently functional and demonstrates meaningful interference patterns.
 
@@ -79,17 +79,17 @@
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Add interpretation-band consistency test for repeated renders in `app/lab/__tests__/components/Analysis/maxwell-interpretation.test.tsx`
-- [ ] T023 [P] [US2] Add strongest/weakest region identification test in `app/lab/__tests__/components/Analysis/maxwell-interpretation.test.tsx`
-- [ ] T024 [P] [US2] Add evaluation-protocol test for first-attempt identification and clarity scoring workflow in `app/lab/__tests__/components/Analysis/maxwell-interpretation.test.tsx`
+- [X] T022 [P] [US2] Add interpretation-band consistency test for repeated renders in `app/lab/__tests__/components/Analysis/maxwell-interpretation.test.tsx`
+- [X] T023 [P] [US2] Add strongest/weakest region identification test in `app/lab/__tests__/components/Analysis/maxwell-interpretation.test.tsx`
+- [X] T024 [P] [US2] Add evaluation-protocol test for first-attempt identification and clarity scoring workflow in `app/lab/__tests__/components/Analysis/maxwell-interpretation.test.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] Implement interpretation summary generation (strongest/weakest + band distribution) in `app/lab/modules/maxwell/core/interference-encoding.ts`
-- [ ] T026 [P] [US2] Surface interpretation summary in context panel UI in `app/lab/components/Analysis/MaxwellRunContextPanel.tsx`
-- [ ] T027 [P] [US2] Add interference-band legend and cue explanation in `app/lab/components/Analysis/EmitterInteractionsPanel.tsx`
-- [ ] T028 [US2] Add visualization setting controls for interpretation profile selection in `app/lab/components/ControlPanel/VisualizationSettings.tsx`
-- [ ] T029 [US2] Document and wire evaluation rubric workflow for SC-001/SC-002 in `specs/007-improve-interference-point-cloud/quickstart.md`
+- [X] T025 [US2] Implement interpretation summary generation (strongest/weakest + band distribution) in `app/lab/modules/maxwell/core/interference-encoding.ts`
+- [X] T026 [P] [US2] Surface interpretation summary in context panel UI in `app/lab/components/Analysis/MaxwellRunContextPanel.tsx`
+- [X] T027 [P] [US2] Add interference-band legend and cue explanation in `app/lab/components/Analysis/EmitterInteractionsPanel.tsx`
+- [X] T028 [US2] Add visualization setting controls for interpretation profile selection in `app/lab/components/ControlPanel/VisualizationSettings.tsx`
+- [X] T029 [US2] Document and wire evaluation rubric workflow for SC-001/SC-002 in `specs/007-improve-interference-point-cloud/quickstart.md`
 
 **Checkpoint**: User Stories 1 and 2 both work independently with repeatable interpretation cues.
 
@@ -103,17 +103,17 @@
 
 ### Tests for User Story 3
 
-- [ ] T030 [P] [US3] Add emitter-adjustment stability test for update determinism in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
-- [ ] T031 [P] [US3] Add saturation/low-signal edge-case stability test in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
-- [ ] T032 [P] [US3] Add p95 latency assertion test for emitter-change-to-render timing in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
+- [X] T030 [P] [US3] Add emitter-adjustment stability test for update determinism in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
+- [X] T031 [P] [US3] Add saturation/low-signal edge-case stability test in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
+- [X] T032 [P] [US3] Add p95 latency assertion test for emitter-change-to-render timing in `app/lab/__tests__/components/Canvas3D/maxwell-point-cloud.test.tsx`
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] Implement transition smoothing and deterministic update guardrails in `app/lab/modules/maxwell/core/interference-encoding.ts`
-- [ ] T034 [US3] Apply update-stability behavior in runtime point-cloud render loop in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
-- [ ] T035 [US3] Improve active-step/render-state synchronization for emitter changes in `app/lab/hooks/useLabStore.ts`
-- [ ] T036 [US3] Add runtime safety fallbacks for sparse/extreme values in `app/lab/components/Canvas3D/InterferenceField3D.tsx`
-- [ ] T037 [US3] Integrate emitter-change-to-render telemetry hooks into update loop in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
+- [X] T033 [US3] Implement transition smoothing and deterministic update guardrails in `app/lab/modules/maxwell/core/interference-encoding.ts`
+- [X] T034 [US3] Apply update-stability behavior in runtime point-cloud render loop in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
+- [X] T035 [US3] Improve active-step/render-state synchronization for emitter changes in `app/lab/hooks/useLabStore.ts`
+- [X] T036 [US3] Add runtime safety fallbacks for sparse/extreme values in `app/lab/components/Canvas3D/InterferenceField3D.tsx`
+- [X] T037 [US3] Integrate emitter-change-to-render telemetry hooks into update loop in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
 
 **Checkpoint**: All user stories are independently functional with stable interactive behavior.
 
@@ -123,11 +123,11 @@
 
 **Purpose**: Final quality pass across stories.
 
-- [ ] T038 [P] Update Maxwell feature documentation for new point-cloud behavior and latency objective in `README.md`
-- [ ] T039 [P] Sync feature quickstart/task references in `specs/007-improve-interference-point-cloud/quickstart.md`
-- [ ] T040 Run full verification commands from quickstart and record outcomes in `specs/007-improve-interference-point-cloud/quickstart.md`
+- [X] T038 [P] Update Maxwell feature documentation for new point-cloud behavior and latency objective in `README.md`
+- [X] T039 [P] Sync feature quickstart/task references in `specs/007-improve-interference-point-cloud/quickstart.md`
+- [X] T040 Run full verification commands from quickstart and record outcomes in `specs/007-improve-interference-point-cloud/quickstart.md`
 - [ ] T041 Run scenario-based evaluation protocol and record SC-001/SC-002 outcomes in `specs/007-improve-interference-point-cloud/quickstart.md`
-- [ ] T042 Perform final code cleanup and type/lint issue resolution in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx` and `app/lab/modules/maxwell/core/interference-encoding.ts`
+- [X] T042 Perform final code cleanup and type/lint issue resolution in `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx` and `app/lab/modules/maxwell/core/interference-encoding.ts`
 
 ---
 

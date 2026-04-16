@@ -58,4 +58,32 @@ describe('user journey 2', () => {
     expect(useLabStore.getState().sources).toHaveLength(0);
     expect(screen.getByText(/No sources yet/i)).toBeInTheDocument();
   });
+
+  it('preserves non-Maxwell workflow operations while performance telemetry is active', () => {
+    render(<LabPage />);
+    act(() => {
+      useLabStore.getState().setPerformanceDegradation({
+        active: true,
+        triggerCategory: 'frame-overload',
+        startedAt: Date.now(),
+        userMessage: 'Performance degraded temporarily',
+        recoveryState: 'recovering',
+      });
+    });
+
+    expect(screen.getAllByText(/Performance degraded temporarily/i).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: /Add Source/i }));
+    expect(useLabStore.getState().sources.length).toBeGreaterThan(1);
+
+    act(() => {
+      useLabStore.getState().setPerformanceDegradation({
+        active: false,
+        triggerCategory: 'frame-overload',
+        userMessage: 'Performance stable',
+        recoveryState: 'restored',
+      });
+    });
+    expect(screen.queryAllByText(/Performance degraded temporarily/i)).toHaveLength(0);
+  });
 });

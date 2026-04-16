@@ -4,13 +4,33 @@
  * Provides clean access to Maxwell solver state from UI components.
  */
 import { useLabStore } from './useLabStore';
-import { FieldOutputSet, DerivedMetricResult, ValidationReport, SimulationRun } from '../types/maxwell.types';
+import {
+  FieldOutputSet,
+  DerivedMetricResult,
+  ValidationReport,
+  SimulationRun,
+  PointCloudRenderState,
+  InterferenceInterpretationSnapshot,
+} from '../types/maxwell.types';
 
 /** Get the field output for the currently active Maxwell run */
 export function useActiveFieldOutput(): FieldOutputSet | undefined {
   return useLabStore((state) => {
-    const { maxwellActiveRunId, maxwellFieldOutputs } = state;
-    return maxwellActiveRunId ? maxwellFieldOutputs[maxwellActiveRunId] : undefined;
+    if (!state.maxwellActiveRunId) {
+      return undefined;
+    }
+    const { maxwellActiveRunId, maxwellFieldOutputs, maxwellRuns } = state;
+    if (maxwellActiveRunId && maxwellFieldOutputs[maxwellActiveRunId]) {
+      return maxwellFieldOutputs[maxwellActiveRunId];
+    }
+    for (let i = maxwellRuns.length - 1; i >= 0; i--) {
+      const runId = maxwellRuns[i].runId;
+      const output = maxwellFieldOutputs[runId];
+      if (output) {
+        return output;
+      }
+    }
+    return undefined;
   });
 }
 
@@ -18,6 +38,9 @@ export function useActiveFieldOutput(): FieldOutputSet | undefined {
 export function useActiveMetrics(): DerivedMetricResult[] | undefined {
   return useLabStore((state) => {
     const { maxwellActiveRunId, maxwellDerivedMetrics } = state;
+    if (!maxwellActiveRunId) {
+      return undefined;
+    }
     return maxwellActiveRunId ? maxwellDerivedMetrics[maxwellActiveRunId] : undefined;
   });
 }
@@ -26,6 +49,9 @@ export function useActiveMetrics(): DerivedMetricResult[] | undefined {
 export function useActiveValidationReport(): ValidationReport | undefined {
   return useLabStore((state) => {
     const { maxwellActiveRunId, maxwellValidationReports } = state;
+    if (!maxwellActiveRunId) {
+      return undefined;
+    }
     return maxwellActiveRunId ? maxwellValidationReports[maxwellActiveRunId] : undefined;
   });
 }
@@ -48,4 +74,24 @@ export function useMaxwellErrors(runId: string) {
 /** Get a specific run by ID */
 export function useMaxwellRun(runId: string): SimulationRun | undefined {
   return useLabStore((state) => state.maxwellRuns.find((r) => r.runId === runId));
+}
+
+export function useActiveInterferenceRenderState(): PointCloudRenderState | undefined {
+  return useLabStore((state) => {
+    const { maxwellActiveRunId, maxwellInterferenceRenderStates } = state;
+    if (!maxwellActiveRunId) {
+      return undefined;
+    }
+    return maxwellActiveRunId ? maxwellInterferenceRenderStates[maxwellActiveRunId] : undefined;
+  });
+}
+
+export function useActiveInterferenceInterpretationSnapshot(): InterferenceInterpretationSnapshot | undefined {
+  return useLabStore((state) => {
+    const { maxwellActiveRunId, maxwellInterpretationSnapshots } = state;
+    if (!maxwellActiveRunId) {
+      return undefined;
+    }
+    return maxwellActiveRunId ? maxwellInterpretationSnapshots[maxwellActiveRunId] : undefined;
+  });
 }

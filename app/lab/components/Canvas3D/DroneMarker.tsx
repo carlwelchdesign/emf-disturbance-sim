@@ -13,6 +13,9 @@ const MODEL_PATH = '/models/Drone_RQ-180-optimized.glb';
 
 // Model exported in cm; 162.5 units wide → scale to 0.5 world-units
 const DRONE_SCALE = 0.02;
+const DRONE_VISUAL_SPEED_MULTIPLIER = 1.6;
+const POSITION_PUSH_INTERVAL_SEC = 0.1;
+const METRICS_PUSH_INTERVAL_SEC = 0.5;
 
 const STATUS_COLORS: Record<DroneStatus, string> = {
   nominal: '#00FF88',
@@ -27,7 +30,8 @@ export interface DroneMarkerProps {
 export function DroneMarker({ drone }: DroneMarkerProps) {
   const groupRef = useRef<THREE.Group>(null);
   const animRef = useRef({ segment: drone.currentSegment, progress: drone.segmentProgress });
-  const frameCount = useRef(0);
+  const pushTimersRef = useRef({ position: 0, metrics: 0 });
+  const forwardRef = useRef(new THREE.Vector3());
 
   const { scene } = useGLTF(MODEL_PATH);
   const sources = useLabStore((s) => s.sources);
@@ -77,6 +81,8 @@ export function DroneMarker({ drone }: DroneMarkerProps) {
 
     const { waypoints, speed } = drone;
     const anim = animRef.current;
+    const timers = pushTimersRef.current;
+    const dt = Math.min(delta, 0.05);
 
     const segA = waypoints[anim.segment];
     const segB = waypoints[(anim.segment + 1) % waypoints.length];
@@ -85,7 +91,7 @@ export function DroneMarker({ drone }: DroneMarkerProps) {
     const dz = segB.position.z - segA.position.z;
     const segLen = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
 
-    anim.progress += (speed * delta * animationSpeed) / segLen;
+    anim.progress += (speed * dt * animationSpeed * DRONE_VISUAL_SPEED_MULTIPLIER) / segLen;
     if (anim.progress >= 1) {
       anim.progress -= 1;
       anim.segment = (anim.segment + 1) % waypoints.length;
@@ -100,22 +106,24 @@ export function DroneMarker({ drone }: DroneMarkerProps) {
 
     groupRef.current.position.set(px, py, pz);
 
-    const fwd = new THREE.Vector3(curB.position.x - curA.position.x, 0, curB.position.z - curA.position.z);
+    const fwd = forwardRef.current.set(curB.position.x - curA.position.x, 0, curB.position.z - curA.position.z);
     if (fwd.lengthSq() > 0.001) {
       groupRef.current.rotation.y = Math.atan2(fwd.x, fwd.z);
     }
 
-    frameCount.current++;
+    timers.position += dt;
+    timers.metrics += dt;
 
     // Push position at ~10 Hz so derived emission sources track the drone smoothly
-    if (frameCount.current % 6 === 0) {
+    if (timers.position >= POSITION_PUSH_INTERVAL_SEC) {
+      timers.position = 0;
       const pos = { x: px, y: py, z: pz };
       updateDroneState(drone.id, { position: pos });
     }
 
     // Full metrics update at ~2 Hz (expensive field calculation)
-    if (frameCount.current >= 30) {
-      frameCount.current = 0;
+    if (timers.metrics >= METRICS_PUSH_INTERVAL_SEC) {
+      timers.metrics = 0;
       const pos = { x: px, y: py, z: pz };
       const time = clock.getElapsedTime();
       const metrics = computeFactionMetrics(pos, sources, time, calculateFieldAtPoint);

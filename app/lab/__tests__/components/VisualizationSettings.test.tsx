@@ -13,15 +13,19 @@ describe('VisualizationSettings', () => {
       selector({
         settings: {
           colorScheme: 'thermal',
-          showFPS: false,
           animateFields: true,
           animationSpeed: 1,
           solverProfile: 'balanced',
+          interferenceProfile: 'balanced',
           themeMode: 'dark',
           showThreatMetrics: false,
           showEmitterInteractions: false,
           showFieldChart: false,
           showFlightPaths: false,
+          performanceSignal: {
+            active: false,
+            message: 'Performance stable',
+          },
         },
         updateSettings,
         setSolverProfile: jest.fn(),
@@ -61,11 +65,48 @@ describe('VisualizationSettings', () => {
     expect(screen.getByLabelText(/field fidelity/i)).toBeInTheDocument();
   });
 
+  it('renders the interference profile selector', () => {
+    render(<VisualizationSettings />);
+    expect(screen.getByLabelText(/interference profile/i)).toBeInTheDocument();
+  });
+
   it('keeps visualization controls scoped to global settings', () => {
     render(<VisualizationSettings />);
 
     expect(screen.queryByText(/selected entity/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/remove source/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/x/i)).not.toBeInTheDocument();
+  });
+
+  it('shows Maxwell-hidden scope guidance for this feature', () => {
+    render(<VisualizationSettings />);
+    expect(screen.getByLabelText(/maxwell hidden scope message/i)).toBeInTheDocument();
+  });
+
+  it('shows degraded-state messaging when performance signal is active', () => {
+    (useLabStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({
+        settings: {
+          colorScheme: 'thermal',
+          animateFields: true,
+          animationSpeed: 1,
+          solverProfile: 'balanced',
+          interferenceProfile: 'balanced',
+          themeMode: 'dark',
+          showThreatMetrics: false,
+          showEmitterInteractions: false,
+          showFieldChart: false,
+          showFlightPaths: false,
+          performanceSignal: {
+            active: true,
+            message: 'Performance degraded temporarily',
+          },
+        },
+        updateSettings,
+        setSolverProfile: jest.fn(),
+      })
+    );
+
+    render(<VisualizationSettings />);
+    expect(screen.getByLabelText(/performance degraded message/i)).toBeInTheDocument();
   });
 });

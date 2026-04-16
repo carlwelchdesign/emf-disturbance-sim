@@ -68,6 +68,8 @@ jest.mock('../../../app/lab/hooks/useMaxwellRunSelectors', () => ({
   useActiveValidationReport: jest.fn(() => undefined),
   useMaxwellRuns: jest.fn(() => []),
   useActiveRunId: jest.fn(() => null),
+  useActiveInterferenceInterpretationSnapshot: jest.fn(() => undefined),
+  useActiveInterferenceRenderState: jest.fn(() => undefined),
 }));
 
 describe('A11Y-001: ARIA roles and keyboard accessibility', () => {

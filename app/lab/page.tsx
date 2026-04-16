@@ -1,16 +1,17 @@
 'use client';
 
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Chip, IconButton, Paper, Typography } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import { Canvas3D } from './components/Canvas3D/Canvas3D';
+import { EnvironmentBoundary } from './components/Canvas3D/EnvironmentBoundary';
 import { SourceMarker } from './components/Canvas3D/SourceMarker';
 import { MeasurementPoint as MeasurementPointMarker } from './components/Canvas3D/MeasurementPoint';
-import { FieldVisualization } from './components/Canvas3D/FieldVisualization';
 import { DroneMarker } from './components/Canvas3D/DroneMarker';
 import { FlightPath } from './components/Canvas3D/FlightPath';
 import { ContestZoneMarker } from './components/Canvas3D/ContestZoneMarker';
-import { MaxwellFieldOverlay } from './components/Canvas3D/MaxwellFieldOverlay';
-import { MaxwellFieldVolume } from './components/Canvas3D/MaxwellFieldVolume';
 import { InterferenceField3D } from './components/Canvas3D/InterferenceField3D';
+import { FieldVisualization } from './components/Canvas3D/FieldVisualization';
 import { ControlPanel } from './components/ControlPanel/ControlPanel';
 import { FieldStrengthOverlay } from './components/Analysis/FieldStrengthOverlay';
 import { ThreatMetricsPanelContent } from './components/Analysis/ThreatMetricsPanel';
@@ -25,6 +26,7 @@ import { WebGLErrorBoundary } from './components/shared/WebGLErrorBoundary';
 import { useFPSMonitor } from './hooks/useFPSMonitor';
 import { useLabStore } from './hooks/useLabStore';
 import { useMemo } from 'react';
+import { useState } from 'react';
 
 /**
  * Main page component for the EMF/RF Disturbance Lab
@@ -38,6 +40,7 @@ export default function LabPage() {
   const measurements = useLabStore((state) => state.measurements);
   const drones = useLabStore((state) => state.drones);
   const hasActiveMaxwellRun = useLabStore((s) => !!s.maxwellActiveRunId);
+  const [controlPanelOpen, setControlPanelOpen] = useState(true);
   const activeSources = useMemo(() => {
     const staticSources = sources.filter((source) => source.active);
     const droneEmissionSources = drones
@@ -72,9 +75,10 @@ export default function LabPage() {
       }}
     >
       {/* 3D Visualization */}
-      <Box sx={{ flex: 1, position: 'relative' }}>
+      <Box sx={{ flex: 1, minWidth: 0, position: 'relative', overflow: 'hidden' }}>
         <WebGLErrorBoundary>
           <Canvas3D camera={camera}>
+            <EnvironmentBoundary />
             {/* Source markers */}
             {sources.map((source) => (
               <SourceMarker
@@ -90,16 +94,11 @@ export default function LabPage() {
               <MeasurementPointMarker key={measurement.id} measurement={measurement} />
             ))}
 
-            {/* Field visualization */}
             <FieldVisualization
               sources={activeSources}
               lod={settings.lod}
               colorScheme={settings.colorScheme}
             />
-
-            {/* Live 3-D interference field — colours every lattice point by net
-                E-field strength (superposition of all active sources + phase).
-                Updates every few frames; no solver run required. */}
             <InterferenceField3D
               sources={activeSources}
               lod={settings.lod}
@@ -118,8 +117,6 @@ export default function LabPage() {
               <DroneMarker key={drone.id} drone={drone} />
             ))}
 
-            {/* Maxwell FDTD field volume — renders E-field at current time step */}
-            {hasActiveMaxwellRun && <MaxwellFieldVolume />}
           </Canvas3D>
         </WebGLErrorBoundary>
 
@@ -154,8 +151,7 @@ export default function LabPage() {
         <FieldStrengthOverlay measurement={measurements[measurements.length - 1]} />
         <FPSCounter />
 
-        {/* Maxwell time-navigation overlay (bottom-centre of canvas) */}
-        <MaxwellFieldOverlay />
+        {/* Maxwell field overlay disabled */}
 
         {/* Maxwell overlay — always visible (launch controls + results) */}
         <Box
@@ -183,9 +179,24 @@ export default function LabPage() {
               backdropFilter: 'blur(6px)',
             }}
           >
-            <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(148,163,184,0.7)', letterSpacing: '0.08em', display: 'block', mb: 0.75 }}>
-              MAXWELL SOLVER
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
+              <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(148,163,184,0.7)', letterSpacing: '0.08em' }}>
+                MAXWELL SOLVER
+              </Typography>
+              <Chip
+                label="VISUALS DISABLED"
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: '0.58rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  bgcolor: 'rgba(148,163,184,0.14)',
+                  color: 'rgba(148,163,184,0.9)',
+                  border: '1px solid rgba(148,163,184,0.3)',
+                }}
+              />
+            </Box>
             <MaxwellRunControlsContent />
           </Box>
 
@@ -225,7 +236,7 @@ export default function LabPage() {
         <Box
           sx={{
             position: 'absolute',
-            bottom: 12,
+            top: 12,
             right: 12,
             width: 200,
             zIndex: 10,
@@ -254,8 +265,9 @@ export default function LabPage() {
               borderRadius: '0 0 6px 6px',
               p: 1.25,
               backdropFilter: 'blur(6px)',
-              maxHeight: 280,
-              overflow: 'hidden',
+              maxHeight: '42vh',
+              overflowY: 'auto',
+              overflowX: 'hidden',
             }}
           >
             <EmitterInteractionsPanelContent />
@@ -266,7 +278,68 @@ export default function LabPage() {
       </Box>
 
       {/* Control Panel */}
-      <ControlPanel />
+      <Box
+        sx={{
+          position: 'relative',
+          width: controlPanelOpen ? 320 : 48,
+          minWidth: controlPanelOpen ? 320 : 48,
+          maxWidth: controlPanelOpen ? 320 : 48,
+          flexShrink: 0,
+          zIndex: 30,
+          pointerEvents: 'auto',
+        }}
+      >
+        {controlPanelOpen ? (
+          <>
+            <ControlPanel />
+            <IconButton
+              aria-label="Hide control panel"
+              onClick={() => setControlPanelOpen(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 20,
+                bgcolor: 'rgba(2, 6, 23, 0.72)',
+                color: 'rgba(226, 232, 240, 0.95)',
+                '&:hover': {
+                  bgcolor: 'rgba(2, 6, 23, 0.88)',
+                },
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </>
+        ) : (
+          <Box
+            sx={{
+              width: 48,
+              height: '100%',
+              borderLeft: 1,
+              borderColor: 'divider',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              pt: 1,
+              bgcolor: 'background.default',
+            }}
+          >
+            <IconButton
+              aria-label="Show control panel"
+              onClick={() => setControlPanelOpen(true)}
+              sx={{
+                bgcolor: 'rgba(2, 6, 23, 0.72)',
+                color: 'rgba(226, 232, 240, 0.95)',
+                '&:hover': {
+                  bgcolor: 'rgba(2, 6, 23, 0.88)',
+                },
+              }}
+            >
+              <MenuIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 }

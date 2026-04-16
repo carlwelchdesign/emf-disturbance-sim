@@ -4,6 +4,7 @@ import { createCPUBackend } from '../compute/cpu-backend';
 import { RFSource } from '../../types/source.types';
 import { FieldPoint, FieldGrid } from '../../types/field.types';
 import { BoundingBox } from '../../types/common.types';
+import { RuntimeTelemetryPayload } from './types';
 
 /**
  * Simulation engine orchestrating field calculations
@@ -11,6 +12,10 @@ import { BoundingBox } from '../../types/common.types';
  */
 export class SimulationEngine implements ISimulationEngine {
   private backend: IComputeBackend;
+  private runtimeTelemetryPayload: RuntimeTelemetryPayload | null = null;
+  private lastGridComputeAt = 0;
+  private lastGridResult: FieldGrid | null = null;
+  private readonly minGridIntervalMs = 16;
 
   constructor(backend?: IComputeBackend) {
     // Default to CPU backend if none provided
@@ -25,6 +30,13 @@ export class SimulationEngine implements ISimulationEngine {
     sources: RFSource[],
     time: number = 0
   ): FieldPoint {
+    const payload = this.runtimeTelemetryPayload;
+    if (payload?.frameSample?.frameDurationMs && payload.frameSample.frameDurationMs <= 0) {
+      throw new Error('Invalid telemetry payload: frameDurationMs must be positive');
+    }
+    if (payload?.inputSample && payload.inputSample.responseLatencyMs < 0) {
+      throw new Error('Invalid telemetry payload: responseLatencyMs must be non-negative');
+    }
     return this.backend.calculateFieldAtPoint(point, sources, time);
   }
 
@@ -37,6 +49,11 @@ export class SimulationEngine implements ISimulationEngine {
     sources: RFSource[],
     time: number = 0
   ): FieldGrid {
+    const now = performance.now();
+    if (this.lastGridResult && now - this.lastGridComputeAt < this.minGridIntervalMs) {
+      return this.lastGridResult;
+    }
+
     // Calculate bounding box size
     const sizeX = bounds.max.x - bounds.min.x;
     const sizeY = bounds.max.y - bounds.min.y;
@@ -52,7 +69,7 @@ export class SimulationEngine implements ISimulationEngine {
       depth: sizeZ,
     };
 
-    return this.backend.calculateFieldGrid(
+    const result = this.backend.calculateFieldGrid(
       {
         resolution,
         bounds: boundingBox,
@@ -60,6 +77,9 @@ export class SimulationEngine implements ISimulationEngine {
       sources,
       time
     );
+    this.lastGridComputeAt = now;
+    this.lastGridResult = result;
+    return result;
   }
 
   /**
@@ -74,6 +94,10 @@ export class SimulationEngine implements ISimulationEngine {
    */
   isReady(): boolean {
     return this.backend.isAvailable;
+  }
+
+  setRuntimeTelemetryPayload(payload: RuntimeTelemetryPayload): void {
+    this.runtimeTelemetryPayload = payload;
   }
 
   /**

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useCameraControls } from '../../hooks/useCameraControls';
 
 /**
@@ -7,6 +8,16 @@ import { useCameraControls } from '../../hooks/useCameraControls';
  */
 export function CameraControls() {
   const { onMouseDown, onMouseMove, onMouseUp, onWheel } = useCameraControls();
+  const layerStyle = useMemo(
+    () => ({
+      position: 'absolute' as const,
+      inset: 0,
+      zIndex: 1,
+      cursor: 'grab',
+      touchAction: 'none' as const,
+    }),
+    []
+  );
 
   return (
     <div
@@ -14,15 +25,10 @@ export function CameraControls() {
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
       onWheel={onWheel}
       onContextMenu={(event) => event.preventDefault()}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 1,
-        cursor: 'grab',
-        touchAction: 'none',
-      }}
+      style={layerStyle}
     />
   );
 }

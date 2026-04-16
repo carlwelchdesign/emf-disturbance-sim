@@ -30,8 +30,12 @@ export function MaxwellRunContextPanel({ className }: MaxwellRunContextPanelProp
   const setActiveMaxwellRun = useLabStore((s) => s.setActiveMaxwellRun);
   const currentStep = useLabStore((s) => s.maxwellCurrentStep);
   const setCurrentStep = useLabStore((s) => s.setMaxwellCurrentStep);
+  const interferenceSnapshots = useLabStore((s) => s.maxwellInterpretationSnapshots);
+  const interferenceRenderStates = useLabStore((s) => s.maxwellInterferenceRenderStates);
 
   const [selectedMetric, setSelectedMetric] = useState<string>('');
+  const interpretationSnapshot = activeRunId ? (interferenceSnapshots?.[activeRunId]) : undefined;
+  const interferenceRenderState = activeRunId ? (interferenceRenderStates?.[activeRunId]) : undefined;
 
   const timeAxis = fieldOutput?.timeAxis ?? [];
   const totalSteps = timeAxis.length;
@@ -218,6 +222,26 @@ export function MaxwellRunContextPanel({ className }: MaxwellRunContextPanelProp
               ))}
             </Select>
           </FormControl>
+        </Box>
+      )}
+
+      {(interpretationSnapshot || interferenceRenderState) && (
+        <Box sx={{ mt: 1 }} role="region" aria-label="Interference interpretation summary">
+          <Divider sx={{ my: 1 }} />
+          <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+            Interference Interpretation
+          </Typography>
+          {interpretationSnapshot && (
+            <Stack sx={{ mt: 0.5, gap: 0.25 }}>
+              <Typography variant="caption">{interpretationSnapshot.strongestRegionLabel}</Typography>
+              <Typography variant="caption">{interpretationSnapshot.weakestRegionLabel}</Typography>
+            </Stack>
+          )}
+          {interferenceRenderState && (
+            <Typography variant="caption" color="text.secondary">
+              Bands — H:{interferenceRenderState.bandDistribution.high} M:{interferenceRenderState.bandDistribution.medium} L:{interferenceRenderState.bandDistribution.low}
+            </Typography>
+          )}
         </Box>
       )}
 

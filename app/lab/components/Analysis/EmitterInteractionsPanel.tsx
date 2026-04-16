@@ -5,6 +5,7 @@ import { Box, Typography } from '@mui/material';
 import { useLabStore } from '../../hooks/useLabStore';
 import { RFSource } from '../../types/source.types';
 import { calculateFieldOverlapScore } from '../../lib/field-math';
+import { useActiveInterferenceRenderState } from '../../hooks/useMaxwellRunSelectors';
 
 function dist3(a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }) {
   const dx = a.x - b.x;
@@ -24,6 +25,35 @@ function Row({ label, value, color }: { label: string; value: string; color?: st
       </Typography>
     </Box>
   );
+}
+
+function sourcePowerWatts(source: RFSource) {
+  return source.powerUnit === 'dBm' ? Math.pow(10, source.power / 10) / 1000 : Math.max(0, source.power);
+}
+
+function computeInteractionSummary(sources: RFSource[]) {
+  const activeSources = sources.filter((s) => s.active);
+  const friendly = activeSources.filter((s) => (s.faction ?? 'friendly') !== 'hostile');
+  const hostile = activeSources.filter((s) => s.faction === 'hostile');
+  const pairCount = friendly.length * hostile.length;
+  const friendlyPower = friendly.reduce((sum, source) => sum + sourcePowerWatts(source), 0);
+  const hostilePower = hostile.reduce((sum, source) => sum + sourcePowerWatts(source), 0);
+  const totalPower = friendlyPower + hostilePower;
+  const hostileProbability = totalPower > 1e-9 ? hostilePower / totalPower : 0;
+  const friendlyProbability = totalPower > 1e-9 ? friendlyPower / totalPower : 0;
+  return {
+    friendly,
+    hostile,
+    pairCount,
+    friendlyPower,
+    hostilePower,
+    hostileProbability,
+    friendlyProbability,
+  };
+}
+
+function percent(v: number) {
+  return `${Math.round(Math.min(1, Math.max(0, v)) * 100)}%`;
 }
 
 function PairPanel({ friendly, hostile }: { friendly: RFSource; hostile: RFSource }) {
@@ -81,6 +111,7 @@ function PairPanel({ friendly, hostile }: { friendly: RFSource; hostile: RFSourc
  */
 export function EmitterInteractionsPanel() {
   const sources = useLabStore((state) => state.sources);
+  const interferenceState = useActiveInterferenceRenderState();
 
   const pairs = useMemo(() => {
     const friendly = sources.filter((s) => s.active && (s.faction ?? 'friendly') !== 'hostile');
@@ -93,8 +124,7 @@ export function EmitterInteractionsPanel() {
     }
     return result;
   }, [sources]);
-
-  if (pairs.length === 0) return null;
+  const summary = useMemo(() => computeInteractionSummary(sources), [sources]);
 
   return (
     <Box
@@ -120,9 +150,22 @@ export function EmitterInteractionsPanel() {
       >
         EMITTER INTERACTIONS
       </Typography>
-      {pairs.slice(0, 3).map((p, i) => (
-        <PairPanel key={i} friendly={p.friendly} hostile={p.hostile} />
-      ))}
+      {interferenceState && (
+        <Typography variant="caption" sx={{ color: 'rgba(226,232,240,0.75)', display: 'block', mb: 0.75 }}>
+          Bands H/M/L: {interferenceState.bandDistribution.high}/{interferenceState.bandDistribution.medium}/{interferenceState.bandDistribution.low}
+        </Typography>
+      )}
+      <Row label="Pairs F×H" value={`${summary.pairCount}`} />
+      <Row label="P_hostile" value={percent(summary.hostileProbability)} color="#FF3320" />
+      <Row label="P_friendly" value={percent(summary.friendlyProbability)} color="#00AAFF" />
+      <Row label="Sources F/H" value={`${summary.friendly.length}/${summary.hostile.length}`} />
+      {pairs.length === 0 ? (
+        <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.9)', display: 'block', mt: 0.6, fontFamily: 'monospace', fontSize: '0.64rem' }}>
+          No friendly-hostile pair currently active. Pair analytics will appear automatically.
+        </Typography>
+      ) : (
+        pairs.slice(0, 3).map((p, i) => <PairPanel key={i} friendly={p.friendly} hostile={p.hostile} />)
+      )}
     </Box>
   );
 }
@@ -130,6 +173,7 @@ export function EmitterInteractionsPanel() {
 /** Content-only export for use inside a shared grouped container */
 export function EmitterInteractionsPanelContent() {
   const sources = useLabStore((state) => state.sources);
+  const interferenceState = useActiveInterferenceRenderState();
   const pairs = useMemo(() => {
     const friendly = sources.filter((s) => s.active && (s.faction ?? 'friendly') !== 'hostile');
     const hostile = sources.filter((s) => s.active && s.faction === 'hostile');
@@ -141,7 +185,7 @@ export function EmitterInteractionsPanelContent() {
     }
     return result;
   }, [sources]);
-  if (pairs.length === 0) return null;
+  const summary = useMemo(() => computeInteractionSummary(sources), [sources]);
   return (
     <>
       <Typography
@@ -150,9 +194,22 @@ export function EmitterInteractionsPanelContent() {
       >
         EMITTER INTERACTIONS
       </Typography>
-      {pairs.slice(0, 3).map((p, i) => (
-        <PairPanel key={i} friendly={p.friendly} hostile={p.hostile} />
-      ))}
+      {interferenceState && (
+        <Typography variant="caption" sx={{ color: 'rgba(226,232,240,0.75)', display: 'block', mb: 0.75 }}>
+          Interference legend: High=strong overlap, Medium=transition, Low=weak
+        </Typography>
+      )}
+      <Row label="Pairs F×H" value={`${summary.pairCount}`} />
+      <Row label="P_hostile" value={percent(summary.hostileProbability)} color="#FF3320" />
+      <Row label="P_friendly" value={percent(summary.friendlyProbability)} color="#00AAFF" />
+      <Row label="Sources F/H" value={`${summary.friendly.length}/${summary.hostile.length}`} />
+      {pairs.length === 0 ? (
+        <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.9)', display: 'block', mt: 0.6, fontFamily: 'monospace', fontSize: '0.64rem' }}>
+          No friendly-hostile pair currently active. Pair analytics will appear automatically.
+        </Typography>
+      ) : (
+        pairs.slice(0, 3).map((p, i) => <PairPanel key={i} friendly={p.friendly} hostile={p.hostile} />)
+      )}
     </>
   );
 }

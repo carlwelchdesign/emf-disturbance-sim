@@ -145,6 +145,63 @@ export interface FieldOutputSet {
   validationStatus: 'validated' | 'non_validated';
 }
 
+export type InterferenceBandLabel = 'high' | 'medium' | 'low';
+
+export interface MaxwellFieldSample {
+  sampleId: string;
+  position: Vec3;
+  timeStep: number;
+  electricMagnitude: number;
+  magneticMagnitude: number;
+  compositeInterferenceScore: number;
+}
+
+export interface InterferenceIntensityBand {
+  bandId: string;
+  label: InterferenceBandLabel;
+  lowerBound: number;
+  upperBound: number;
+}
+
+export interface PointCueEncoding {
+  sampleId: string;
+  rgbColor: [number, number, number];
+  pointSize: number;
+  luminanceWeight: number;
+  visibilityAlpha: number;
+}
+
+export interface PointCloudEncodingProfile {
+  profileId: string;
+  colorMapName: string;
+  sizeScale: number;
+  densityScale: number;
+  luminanceScale: number;
+  noiseFloor: number;
+}
+
+export interface PointCloudRenderState {
+  runId: string;
+  timeStep: number;
+  status: 'sampling' | 'encoding' | 'rendered' | 'updating' | 'degraded' | 'error';
+  visiblePointCount: number;
+  bandDistribution: { high: number; medium: number; low: number };
+  validationStatus: 'validated' | 'non_validated';
+  isDegraded?: boolean;
+  degradeReason?: string;
+}
+
+export interface InterferenceInterpretationSnapshot {
+  snapshotId: string;
+  runId: string;
+  timeStep: number;
+  strongestRegionLabel: string;
+  weakestRegionLabel: string;
+  overlapRegionPresence: boolean;
+  consistencyToken: string;
+  bandCoverageMetrics: { high: number; medium: number; low: number };
+}
+
 export interface SnapshotMetric { step: number; time: number; value: number }
 
 export interface DerivedMetricResult {
@@ -274,4 +331,10 @@ export interface PerformanceTelemetry {
   completedAt?: number;
   runtimeMs?: number;
   interactionLatencies: number[];   // array of measured interaction response times in ms
+  emitterChangeLatencies?: number[];
+  edgeStateEvents?: Array<{
+    event: string;
+    timestamp: number;
+    detail?: string;
+  }>;
 }

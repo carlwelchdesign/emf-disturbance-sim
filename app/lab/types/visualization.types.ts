@@ -29,6 +29,9 @@ export interface VisualizationSettings {
   /** Field fidelity profile used to balance clarity and scientific detail */
   solverProfile: SolverProfile;
 
+  /** Interference point-cloud encoding profile */
+  interferenceProfile: SolverProfile;
+
   /** Global UI theme mode */
   themeMode: ThemeMode;
 
@@ -43,6 +46,12 @@ export interface VisualizationSettings {
 
   /** Show drone patrol flight paths in the 3D view */
   showFlightPaths: boolean;
+
+  /** User-visible degraded-state signal for non-Maxwell animation workload */
+  performanceSignal: {
+    active: boolean;
+    message: string;
+  };
 }
 
 /** Color scheme options for field visualization */
@@ -66,13 +75,18 @@ export const DEFAULT_VISUALIZATION: VisualizationSettings = {
   showFPS: false,
   showLabels: true,
   showGrid: true,
-  lod: 'high',
+  lod: 'low',
   solverProfile: 'balanced',
+  interferenceProfile: 'balanced',
   themeMode: 'dark',
   showThreatMetrics: true,
   showEmitterInteractions: true,
   showFieldChart: true,
   showFlightPaths: true,
+  performanceSignal: {
+    active: false,
+    message: 'Performance stable',
+  },
 };
 
 /** LOD configurations for different performance levels */

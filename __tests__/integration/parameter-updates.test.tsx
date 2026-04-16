@@ -42,4 +42,10 @@ describe('parameter updates integration', () => {
     rerender(<LabPage />);
     expect(screen.getByText(/Frequency: 5.00 GHz/i)).toBeInTheDocument();
   });
+
+  it('preserves data-first rendering cues without decorative overlays', () => {
+    render(<LabPage />);
+    expect(screen.queryByText(/decorative|sparkle|chartjunk/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/MAXWELL SOLVER/i)).toBeInTheDocument();
+  });
 });

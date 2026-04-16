@@ -1,5 +1,12 @@
 import { RFSource } from '../../types/source.types';
 import { FieldPoint, FieldGrid } from '../../types/field.types';
+import { AnimationFrameSample, InputResponseSample, PerformanceDegradationSignal } from '../../types/store.types';
+
+export interface RuntimeTelemetryPayload {
+  frameSample: AnimationFrameSample;
+  inputSample?: InputResponseSample;
+  degradationSignal?: PerformanceDegradationSignal;
+}
 
 /**
  * Interface for the simulation engine
@@ -34,4 +41,9 @@ export interface ISimulationEngine {
    * Check if simulation is ready
    */
   isReady(): boolean;
+
+  /**
+   * Optional runtime telemetry payload boundary used by smoothness instrumentation.
+   */
+  setRuntimeTelemetryPayload?: (payload: RuntimeTelemetryPayload) => void;
 }

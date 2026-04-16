@@ -53,6 +53,8 @@ jest.mock('../../../app/lab/hooks/useMaxwellRunSelectors', () => ({
   useActiveValidationReport: jest.fn(() => undefined),
   useMaxwellRuns: jest.fn(() => []),
   useActiveRunId: jest.fn(() => null),
+  useActiveInterferenceInterpretationSnapshot: jest.fn(() => undefined),
+  useActiveInterferenceRenderState: jest.fn(() => undefined),
 }));
 
 describe('Maxwell Visualizer Integration', () => {

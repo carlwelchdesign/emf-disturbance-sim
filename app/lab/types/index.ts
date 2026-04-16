@@ -70,4 +70,10 @@ export {
 export type {
   PerformanceMetrics,
   LabStoreState,
+  InteractionType,
+  AnimationFrameSample,
+  InputResponseSample,
+  PerformanceDegradationSignal,
+  SmoothnessWindowEvaluation,
+  SmoothnessTelemetryState,
 } from './store.types';

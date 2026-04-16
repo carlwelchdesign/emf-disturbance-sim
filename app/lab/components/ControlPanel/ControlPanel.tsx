@@ -3,7 +3,7 @@
 import { Box, Paper, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Tooltip, Typography } from '@mui/material';
 import CameraIcon from '@mui/icons-material/CameraAlt';
 import AddIcon from '@mui/icons-material/Add';
-import ClearIcon from '@mui/icons-material/DeleteSweep';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { SourceControls } from './SourceControls';
 import { SourceList } from './SourceList';
 import { EnvironmentControls } from './EnvironmentControls';
@@ -70,7 +70,7 @@ export function ControlPanel() {
           onToggleExpanded={() => toggleSectionExpanded('simulation-setup')}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
               <Tooltip title="Create another RF source using the current default settings." describeChild>
                 <Button
                   variant="contained"
@@ -78,7 +78,12 @@ export function ControlPanel() {
                   onClick={handleAddSource}
                   aria-label="Add source to simulation setup"
                   fullWidth
-                  sx={{ textTransform: 'none' }}
+                  sx={{
+                    textTransform: 'none',
+                    minHeight: 18,
+                    py: 0.25,
+                    fontSize: '0.75rem',
+                  }}
                 >
                   Add Source
                 </Button>
@@ -88,13 +93,23 @@ export function ControlPanel() {
                   <Button
                     variant="outlined"
                     color="error"
-                    startIcon={<ClearIcon />}
+                    startIcon={<DeleteIcon />}
                     onClick={() => setClearDialogOpen(true)}
                     aria-label="Clear all sources from simulation"
                     disabled={sourcesCount === 0}
-                    sx={{ textTransform: 'none' }}
+                    sx={{
+                      textTransform: 'none',
+                      minHeight: 18,
+                      py: 0.25,
+                      minWidth: 36,
+                      px: 0.75,
+                      fontSize: '0.75rem',
+                      '& .MuiButton-startIcon': {
+                        margin: 0,
+                      },
+                    }}
                   >
-                    Clear All
+                    {' '}
                   </Button>
                 </span>
               </Tooltip>
@@ -203,9 +218,9 @@ export function ControlPanel() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setClearDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleClearAll} color="error" variant="contained">
-            Clear All
-          </Button>
+            <Button onClick={handleClearAll} color="error" variant="contained">
+              Clear All
+            </Button>
         </DialogActions>
       </Dialog>
     </Box>

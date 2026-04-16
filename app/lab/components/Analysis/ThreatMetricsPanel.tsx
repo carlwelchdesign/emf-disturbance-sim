@@ -3,6 +3,8 @@
 import { Box, Typography } from '@mui/material';
 import { useLabStore } from '../../hooks/useLabStore';
 import { FactionMetrics } from '../../types/field.types';
+import { RFSource } from '../../types/source.types';
+import { dbmToWatts } from '../../lib/field-math';
 
 function MetricRow({
   label,
@@ -32,6 +34,36 @@ function fmt(v: number, decimals = 2) {
   return v.toFixed(decimals);
 }
 
+function pct(v: number) {
+  return `${Math.round(Math.min(1, Math.max(0, v)) * 100)}%`;
+}
+
+function sourcePowerWatts(source: RFSource) {
+  return source.powerUnit === 'dBm' ? dbmToWatts(source.power) : Math.max(0, source.power);
+}
+
+function computePresetProbabilities(sources: RFSource[]) {
+  const activeSources = sources.filter((s) => s.active);
+  const friendlySources = activeSources.filter((s) => (s.faction ?? 'friendly') !== 'hostile');
+  const hostileSources = activeSources.filter((s) => s.faction === 'hostile');
+
+  const friendlyPower = friendlySources.reduce((sum, source) => sum + sourcePowerWatts(source), 0);
+  const hostilePower = hostileSources.reduce((sum, source) => sum + sourcePowerWatts(source), 0);
+  const totalPower = friendlyPower + hostilePower;
+
+  const hostileProbability = totalPower > 1e-9 ? hostilePower / totalPower : 0;
+  const friendlyProbability = totalPower > 1e-9 ? friendlyPower / totalPower : 0;
+
+  return {
+    friendlyCount: friendlySources.length,
+    hostileCount: hostileSources.length,
+    friendlyPower,
+    hostilePower,
+    hostileProbability,
+    friendlyProbability,
+  };
+}
+
 function ThreatBar({ value }: { value: number }) {
   const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
   const barColor = value < 0.35 ? '#00FF88' : value < 0.65 ? '#FFAA00' : '#FF3320';
@@ -47,20 +79,42 @@ function ThreatBar({ value }: { value: number }) {
   );
 }
 
-function PanelContent({ metrics }: { metrics: FactionMetrics }) {
+function PanelContent({
+  metrics,
+  sources,
+}: {
+  metrics: FactionMetrics | null;
+  sources: RFSource[];
+}) {
+  const probabilities = computePresetProbabilities(sources);
+  const hostileProbability = metrics ? metrics.threatDominance : probabilities.hostileProbability;
+  const friendlyProbability = metrics ? 1 - metrics.threatDominance : probabilities.friendlyProbability;
+
   return (
     <>
-      <MetricRow label="E_friendly" value={`${fmt(metrics.eFieldFriendly)} V/m`} color="#00AAFF" />
-      <MetricRow label="E_hostile" value={`${fmt(metrics.eFieldHostile)} V/m`} color="#FF3320" />
-      <MetricRow label="E_net" value={`${fmt(metrics.eFieldNet)} V/m`} />
-      <MetricRow label="Destructive" value={fmt(metrics.destructiveStrength)} color="#FF6600" />
-      <MetricRow label="Constructive" value={fmt(metrics.constructiveStrength)} color="#88FF44" />
-      <MetricRow label="I_interaction" value={fmt(metrics.interactionScore)} />
+      {metrics ? (
+        <>
+          <MetricRow label="E_friendly" value={`${fmt(metrics.eFieldFriendly)} V/m`} color="#00AAFF" />
+          <MetricRow label="E_hostile" value={`${fmt(metrics.eFieldHostile)} V/m`} color="#FF3320" />
+          <MetricRow label="E_net" value={`${fmt(metrics.eFieldNet)} V/m`} />
+          <MetricRow label="Destructive" value={fmt(metrics.destructiveStrength)} color="#FF6600" />
+          <MetricRow label="Constructive" value={fmt(metrics.constructiveStrength)} color="#88FF44" />
+          <MetricRow label="I_interaction" value={fmt(metrics.interactionScore)} />
+        </>
+      ) : (
+        <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.9)', fontFamily: 'monospace', fontSize: '0.65rem', display: 'block', mb: 0.4 }}>
+          Telemetry unavailable for this preset. Using live source mix.
+        </Typography>
+      )}
+      <MetricRow label="P_hostile" value={pct(hostileProbability)} color="#FF3320" />
+      <MetricRow label="P_friendly" value={pct(friendlyProbability)} color="#00AAFF" />
+      <MetricRow label="Sources F/H" value={`${probabilities.friendlyCount}/${probabilities.hostileCount}`} />
+      <MetricRow label="Power F/H" value={`${fmt(probabilities.friendlyPower, 3)}/${fmt(probabilities.hostilePower, 3)} W`} />
       <Box sx={{ mt: 0.5 }}>
         <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.8)', fontFamily: 'monospace', fontSize: '0.68rem' }}>
           Threat Dominance
         </Typography>
-        <ThreatBar value={metrics.threatDominance} />
+        <ThreatBar value={hostileProbability} />
       </Box>
     </>
   );
@@ -72,9 +126,7 @@ function PanelContent({ metrics }: { metrics: FactionMetrics }) {
  */
 export function ThreatMetricsPanel() {
   const metrics = useLabStore((state) => state.activeFactionMetrics);
-  const drones = useLabStore((state) => state.drones);
-
-  if (!metrics || drones.length === 0) return null;
+  const sources = useLabStore((state) => state.sources);
 
   return (
     <Box
@@ -98,7 +150,7 @@ export function ThreatMetricsPanel() {
       >
         LIVE FIELD METRICS
       </Typography>
-      <PanelContent metrics={metrics} />
+      <PanelContent metrics={metrics} sources={sources} />
     </Box>
   );
 }
@@ -106,8 +158,7 @@ export function ThreatMetricsPanel() {
 /** Content-only export for use inside a shared grouped container */
 export function ThreatMetricsPanelContent() {
   const metrics = useLabStore((state) => state.activeFactionMetrics);
-  const drones = useLabStore((state) => state.drones);
-  if (!metrics || drones.length === 0) return null;
+  const sources = useLabStore((state) => state.sources);
   return (
     <>
       <Typography
@@ -116,7 +167,7 @@ export function ThreatMetricsPanelContent() {
       >
         LIVE FIELD METRICS
       </Typography>
-      <PanelContent metrics={metrics} />
+      <PanelContent metrics={metrics} sources={sources} />
     </>
   );
 }

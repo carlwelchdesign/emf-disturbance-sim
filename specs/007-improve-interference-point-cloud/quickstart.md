@@ -58,3 +58,46 @@
 - `npm test`
 - `npm run lint`
 - `npm run type-check`
+
+## 9) Evaluation rubric workflow (SC-001 / SC-002)
+
+Use the following structured protocol for reference scenarios:
+
+| Scenario | First-attempt strongest/weakest correct? (SC-001) | Clarity rating 1-5 (SC-002) | Notes |
+|---|---|---|---|
+| Scenario B (2 emitters overlap) | ☐ yes / ☐ no | ☐1 ☐2 ☐3 ☐4 ☐5 | |
+| Scenario C (close emitters) | ☐ yes / ☐ no | ☐1 ☐2 ☐3 ☐4 ☐5 | |
+| Scenario D (dynamic adjustments) | ☐ yes / ☐ no | ☐1 ☐2 ☐3 ☐4 ☐5 | |
+
+Acceptance guidance:
+- SC-001 target: >= 90% first-attempt strongest/weakest identification accuracy.
+- SC-002 target: >= 85% of ratings are clear or better (4+).
+
+## 10) Spec/task references
+
+- Spec: `specs/007-improve-interference-point-cloud/spec.md`
+- Plan: `specs/007-improve-interference-point-cloud/plan.md`
+- Data model: `specs/007-improve-interference-point-cloud/data-model.md`
+- Contract: `specs/007-improve-interference-point-cloud/contracts/interference-point-cloud-contract.md`
+- Tasks: `specs/007-improve-interference-point-cloud/tasks.md`
+
+## 11) Verification result log
+
+Record command outcomes here:
+
+- `npm test`: _pending_
+- `npm run lint`: _pending_
+- `npm run type-check`: _pending_
+- Last verification run:
+  - `npm test -- --runInBand`: ✅ Pass (`46/46` suites, `223/223` tests)
+  - `npm run lint`: ✅ Pass
+  - `npm run type-check`: ✅ Pass
+
+## 12) Scenario evaluation results
+
+Record SC-001/SC-002 outcomes from rubric execution:
+
+- Run date: _pending_
+- Participants: _pending_
+- SC-001 result: _pending_
+- SC-002 result: _pending_

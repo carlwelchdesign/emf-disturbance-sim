@@ -103,4 +103,43 @@ describe('useLabStore source and selection state', () => {
     store.updateSettings({ themeMode: 'light' });
     expect(useLabStore.getState().settings.themeMode).toBe('light');
   });
+
+  it('records and evaluates smoothness telemetry windows', () => {
+    const store = useLabStore.getState();
+    const now = Date.now();
+    store.recordAnimationFrameSample({
+      timestamp: now,
+      frameDurationMs: 16,
+      animationActive: true,
+      interactionType: 'none',
+      sceneMode: 'non-maxwell',
+      maxwellVisible: false,
+    });
+    store.recordInputResponseSample({
+      eventId: 'sample-1',
+      timestamp: now,
+      interactionType: 'rotate',
+      responseLatencyMs: 32,
+      jankFlag: false,
+    });
+
+    const evaluation = store.evaluateSmoothnessWindow(5000);
+    expect(evaluation).not.toBeNull();
+    expect(evaluation?.interactionSmoothPercent).toBeGreaterThan(0);
+  });
+
+  it('updates and clears degraded performance signal state', () => {
+    const store = useLabStore.getState();
+    store.setPerformanceDegradation({
+      active: true,
+      triggerCategory: 'frame-overload',
+      startedAt: Date.now(),
+      userMessage: 'Degraded mode active',
+      recoveryState: 'recovering',
+    });
+    expect(useLabStore.getState().settings.performanceSignal.active).toBe(true);
+
+    store.clearTelemetry();
+    expect(useLabStore.getState().settings.performanceSignal.active).toBe(false);
+  });
 });

@@ -13,7 +13,10 @@ import { LabStoreState } from '../types/store.types';
 import { sanitizeSource } from '../lib/validation';
 import { createSourceIdGenerator } from '../lib/source-helpers';
 import { isSameCameraState } from '../lib/camera-helpers';
-import { getSourceColor } from '../lib/visualization-helpers';
+import {
+  evaluateSmoothnessWindow as evaluateSmoothnessWindowHelper,
+  getSourceColor,
+} from '../lib/visualization-helpers';
 import { buildScenarioSources, getScenarioPreset } from '../modules/scenario/presets';
 import { SIDEBAR_SECTION_DEFAULT_EXPANDED } from '../lib/sidebar-layout';
 import { globalOrchestrator } from '../modules/maxwell/core/run-orchestrator';
@@ -21,9 +24,30 @@ import { validateRunRequest } from '../modules/maxwell/core/pre-run-validator';
 import { FDTDAdapter } from '../modules/maxwell/methods/fdtd/fdtd-adapter';
 import { ValidationPipeline } from '../modules/maxwell/core/validation-pipeline';
 import { SimulationConfiguration } from '../types/maxwell.types';
+import {
+  AnimationFrameSample,
+  InputResponseSample,
+  PerformanceDegradationSignal,
+  SmoothnessTelemetryState,
+} from '../types/store.types';
 
 const sourceIdGenerator = createSourceIdGenerator('source');
 let measurementIdCounter = 1;
+const MAX_TELEMETRY_SAMPLES = 600;
+
+const DEFAULT_DEGRADATION_SIGNAL: PerformanceDegradationSignal = {
+  active: false,
+  triggerCategory: 'frame-overload',
+  userMessage: 'Performance stable',
+  recoveryState: 'restored',
+};
+
+const DEFAULT_TELEMETRY_STATE: SmoothnessTelemetryState = {
+  frameSamples: [],
+  inputSamples: [],
+  degradationSignal: DEFAULT_DEGRADATION_SIGNAL,
+  latestEvaluation: null,
+};
 
 // Bootstrap the store with the EW Drone Patrol vs Jammer preset
 const _ewPreset = getScenarioPreset('ew-drone-patrol')!;
@@ -59,7 +83,7 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   activeScenarioPresetId: 'ew-drone-patrol',
   scenarioIsDirty: false,
   camera: { ...DEFAULT_CAMERA, ...(_ewPreset.camera ?? {}) },
-  settings: { ...DEFAULT_VISUALIZATION, ...(_ewPreset.settings ?? {}) },
+  settings: { ...DEFAULT_VISUALIZATION, ...(_ewPreset.settings ?? {}), lod: 'low' },
   environment: { ...DEFAULT_ENVIRONMENT, ...(_ewPreset.environment ?? {}) },
   measurements: [],
   performance: {
@@ -67,6 +91,7 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     averageFPS: 60,
     isLowPerformance: false,
   },
+  telemetry: { ...DEFAULT_TELEMETRY_STATE },
   drones: _initialDrones,
   activeFactionMetrics: null,
   // === Maxwell Solver State ===
@@ -77,6 +102,8 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
   maxwellDerivedMetrics: {},
   maxwellValidationReports: {},
   maxwellErrors: {},
+  maxwellInterferenceRenderStates: {},
+  maxwellInterpretationSnapshots: {},
 
   // === Source Actions ===
   addSource: (params = {}) => {
@@ -305,9 +332,11 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
       settings: {
         ...DEFAULT_VISUALIZATION,
         ...preset.settings,
+        lod: state.settings.lod,
         themeMode: state.settings.themeMode,
         showFPS: state.settings.showFPS,
         solverProfile: state.settings.solverProfile,
+        interferenceProfile: state.settings.interferenceProfile,
       },
       measurements: [],
       drones,
@@ -428,6 +457,72 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     });
   },
 
+  recordAnimationFrameSample: (sample: AnimationFrameSample) => {
+    set((state) => ({
+      telemetry: {
+        ...state.telemetry,
+        frameSamples: [...state.telemetry.frameSamples.slice(-(MAX_TELEMETRY_SAMPLES - 1)), sample],
+      },
+    }));
+  },
+
+  recordInputResponseSample: (sample: InputResponseSample) => {
+    set((state) => ({
+      telemetry: {
+        ...state.telemetry,
+        inputSamples: [...state.telemetry.inputSamples.slice(-(MAX_TELEMETRY_SAMPLES - 1)), sample],
+      },
+    }));
+  },
+
+  setPerformanceDegradation: (signal: PerformanceDegradationSignal) => {
+    set((state) => ({
+      telemetry: {
+        ...state.telemetry,
+        degradationSignal: signal,
+      },
+      settings: {
+        ...state.settings,
+        performanceSignal: {
+          active: signal.active,
+          message: signal.userMessage,
+        },
+      },
+    }));
+  },
+
+  evaluateSmoothnessWindow: (windowMs = 5000) => {
+    const state = get();
+    const evaluation = evaluateSmoothnessWindowHelper(
+      state.telemetry.frameSamples,
+      state.telemetry.inputSamples,
+      Date.now(),
+      windowMs
+    );
+
+    set((prevState) => ({
+      telemetry: {
+        ...prevState.telemetry,
+        latestEvaluation: evaluation,
+      },
+    }));
+
+    return evaluation;
+  },
+
+  clearTelemetry: () => {
+    set((state) => ({
+      telemetry: { ...DEFAULT_TELEMETRY_STATE },
+      settings: {
+        ...state.settings,
+        performanceSignal: {
+          active: false,
+          message: 'Performance stable',
+        },
+      },
+    }));
+  },
+
   // === Drone Actions ===
   addDrone: (params: CreateDroneParams) => {
     const id = `drone-${Date.now()}`;
@@ -500,7 +595,11 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     if (response.accepted) {
       const run = globalOrchestrator.getRun(response.runId);
       if (run) {
-        set((state) => ({ maxwellRuns: [...state.maxwellRuns, run] }));
+        set((state) => ({
+          maxwellRuns: [...state.maxwellRuns, run],
+          maxwellActiveRunId: response.runId,
+          maxwellCurrentStep: 0,
+        }));
       }
 
       // Kick off async execution — defer one tick so the UI renders "queued" first
@@ -639,6 +738,18 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     }));
   },
 
+  setMaxwellInterferenceRenderState: (runId, renderState) => {
+    set((state) => ({
+      maxwellInterferenceRenderStates: { ...state.maxwellInterferenceRenderStates, [runId]: renderState },
+    }));
+  },
+
+  setMaxwellInterpretationSnapshot: (runId, snapshot) => {
+    set((state) => ({
+      maxwellInterpretationSnapshots: { ...state.maxwellInterpretationSnapshots, [runId]: snapshot },
+    }));
+  },
+
   getMaxwellRun: (runId) => {
     return get().maxwellRuns.find((r) => r.runId === runId);
   },
@@ -658,6 +769,16 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
     return maxwellActiveRunId ? maxwellValidationReports[maxwellActiveRunId] : undefined;
   },
 
+  getActiveMaxwellInterferenceRenderState: () => {
+    const { maxwellActiveRunId, maxwellInterferenceRenderStates } = get();
+    return maxwellActiveRunId ? maxwellInterferenceRenderStates[maxwellActiveRunId] : undefined;
+  },
+
+  getActiveMaxwellInterpretationSnapshot: () => {
+    const { maxwellActiveRunId, maxwellInterpretationSnapshots } = get();
+    return maxwellActiveRunId ? maxwellInterpretationSnapshots[maxwellActiveRunId] : undefined;
+  },
+
   clearMaxwellRun: (runId) => {
     set((state) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -668,6 +789,10 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
       const { [runId]: _vr, ...validationReports } = state.maxwellValidationReports;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [runId]: _er, ...errors } = state.maxwellErrors;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [runId]: _irs, ...interferenceRenderStates } = state.maxwellInterferenceRenderStates;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [runId]: _is, ...interpretationSnapshots } = state.maxwellInterpretationSnapshots;
       return {
         maxwellRuns: state.maxwellRuns.filter((r) => r.runId !== runId),
         maxwellActiveRunId: state.maxwellActiveRunId === runId ? null : state.maxwellActiveRunId,
@@ -675,6 +800,8 @@ export const useLabStore = create<LabStoreState>((set, get) => ({
         maxwellDerivedMetrics: derivedMetrics,
         maxwellValidationReports: validationReports,
         maxwellErrors: errors,
+        maxwellInterferenceRenderStates: interferenceRenderStates,
+        maxwellInterpretationSnapshots: interpretationSnapshots,
       };
     });
   },

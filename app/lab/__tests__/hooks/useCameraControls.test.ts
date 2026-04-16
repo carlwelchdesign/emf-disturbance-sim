@@ -13,16 +13,26 @@ jest.mock('../../hooks/useLabStore');
 describe('useCameraControls', () => {
   let mockUpdateCamera: jest.Mock;
   let mockResetCamera: jest.Mock;
+  let mockRecordInputResponseSample: jest.Mock;
+  let mockEvaluateSmoothnessWindow: jest.Mock;
+  let mockSetPerformanceDegradation: jest.Mock;
   let mockCamera: CameraState;
   let mockStore: {
     camera: CameraState;
     updateCamera: jest.Mock;
     resetCamera: jest.Mock;
+    settings: { animateFields: boolean };
+    recordInputResponseSample: jest.Mock;
+    evaluateSmoothnessWindow: jest.Mock;
+    setPerformanceDegradation: jest.Mock;
   };
 
   beforeEach(() => {
     mockUpdateCamera = jest.fn();
     mockResetCamera = jest.fn();
+    mockRecordInputResponseSample = jest.fn();
+    mockEvaluateSmoothnessWindow = jest.fn(() => ({ meetsThreshold: true }));
+    mockSetPerformanceDegradation = jest.fn();
     mockCamera = {
       position: { x: 5, y: 5, z: 5 },
       target: { x: 0, y: 0, z: 0 },
@@ -36,6 +46,10 @@ describe('useCameraControls', () => {
       camera: mockCamera,
       updateCamera: mockUpdateCamera,
       resetCamera: mockResetCamera,
+      settings: { animateFields: true },
+      recordInputResponseSample: mockRecordInputResponseSample,
+      evaluateSmoothnessWindow: mockEvaluateSmoothnessWindow,
+      setPerformanceDegradation: mockSetPerformanceDegradation,
     };
 
     (useLabStore as unknown as jest.Mock).mockImplementation((selector?: (state: typeof mockStore) => unknown) => {
@@ -245,6 +259,73 @@ describe('useCameraControls', () => {
       // Should have called updateCamera with clamped values
       expect(mockUpdateCamera).toHaveBeenCalled();
       // Camera position should not be at origin (clamped at min distance)
+    });
+  });
+
+  describe('latency and jank sampling', () => {
+    it('records input response telemetry for camera interactions', () => {
+      const { result } = renderHook(() => useCameraControls());
+
+      act(() => {
+        result.current.onMouseDown({
+          button: 0,
+          clientX: 100,
+          clientY: 100,
+          preventDefault: jest.fn(),
+        } as unknown as React.MouseEvent);
+      });
+
+      act(() => {
+        result.current.onMouseMove({
+          clientX: 130,
+          clientY: 120,
+          preventDefault: jest.fn(),
+        } as unknown as React.MouseEvent);
+      });
+
+      expect(mockRecordInputResponseSample).toHaveBeenCalledWith(
+        expect.objectContaining({
+          interactionType: 'rotate',
+          responseLatencyMs: expect.any(Number),
+        })
+      );
+    });
+
+    it('evaluates smoothness telemetry during interaction updates', () => {
+      mockEvaluateSmoothnessWindow.mockReturnValue({ meetsThreshold: true });
+      const { result } = renderHook(() => useCameraControls());
+
+      act(() => {
+        result.current.onMouseDown({
+          button: 0,
+          clientX: 100,
+          clientY: 100,
+          preventDefault: jest.fn(),
+        } as unknown as React.MouseEvent);
+      });
+
+      act(() => {
+        result.current.onMouseMove({
+          clientX: 140,
+          clientY: 120,
+          preventDefault: jest.fn(),
+        } as unknown as React.MouseEvent);
+      });
+
+      act(() => {
+        result.current.onWheel({
+          deltaY: 100,
+          preventDefault: jest.fn(),
+        } as unknown as WheelEvent);
+      });
+
+      expect(mockEvaluateSmoothnessWindow).toHaveBeenCalled();
+      expect(mockSetPerformanceDegradation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          active: false,
+          triggerCategory: 'input-overload',
+        })
+      );
     });
   });
 
