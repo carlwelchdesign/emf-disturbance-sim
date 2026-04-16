@@ -122,8 +122,6 @@ For the deeper engineering reference (math, interference semantics, and how equa
 
 - [https://github.com/carlwelchdesign/emf-disturbance-sim/wiki](https://github.com/carlwelchdesign/emf-disturbance-sim/wiki)
 
-This is in-repo documentation. GitHub's hosted Wiki at `.../wiki` is a separate repository (`.wiki.git`) and must be published separately.
-
 ## Next Steps
 
 1. Complete Maxwell point-cloud visual reintroduction with robust non-color interference cues and stable region interpretation.
