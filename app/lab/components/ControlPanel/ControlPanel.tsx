@@ -8,9 +8,7 @@ import { SourceControls } from './SourceControls';
 import { SourceList } from './SourceList';
 import { EnvironmentControls } from './EnvironmentControls';
 import { VisualizationSettings } from './VisualizationSettings';
-import { MeasurementTools } from './MeasurementTools';
 import { ScenarioPresets } from './ScenarioPresets';
-import { MeasurementList } from '../Analysis/MeasurementList';
 import { FPSMonitor } from '../shared/FPSMonitor';
 import { useLabStore } from '../../hooks/useLabStore';
 import { useState } from 'react';
@@ -151,22 +149,6 @@ export function ControlPanel() {
           onToggleExpanded={() => toggleSectionExpanded('visualization-controls')}
         >
           <VisualizationSettings />
-        </SectionPanel>
-
-        <SectionPanel
-          sectionId="analysis-measurements"
-          title={SIDEBAR_SECTION_TITLES['analysis-measurements']}
-          ariaDescription="Analysis and measurements section for readouts and measurement tools"
-          expanded={sectionDisclosure['analysis-measurements']}
-          onToggleExpanded={() => toggleSectionExpanded('analysis-measurements')}
-        >
-          <MeasurementTools />
-          <Box sx={{ mt: 1 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-              Measurement List
-            </Typography>
-            <MeasurementList />
-          </Box>
         </SectionPanel>
 
         <SectionPanel

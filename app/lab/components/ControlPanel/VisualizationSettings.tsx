@@ -14,11 +14,10 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useLabStore } from '../../hooks/useLabStore';
-import { ColorScheme, SolverProfile, VISUALIZATION_LIMITS } from '../../types/visualization.types';
+import { SolverProfile, VISUALIZATION_LIMITS } from '../../types/visualization.types';
 import { Slider } from '../shared/Slider';
 
 export function VisualizationSettings() {
-  const colorScheme = useLabStore((state) => state.settings.colorScheme);
   const animateFields = useLabStore((state) => state.settings.animateFields);
   const animationSpeed = useLabStore((state) => state.settings.animationSpeed);
   const solverProfile = useLabStore((state) => state.settings.solverProfile);
@@ -39,23 +38,6 @@ export function VisualizationSettings() {
             {performanceSignal.message}
           </Alert>
         )}
-        <FormControl fullWidth size="small">
-          <Tooltip title="Choose how field intensity is colored across the 3D scene." describeChild>
-            <InputLabel id="color-scheme-label" shrink>
-              Color Scheme
-            </InputLabel>
-          </Tooltip>
-          <Select
-            labelId="color-scheme-label"
-            value={colorScheme}
-            label="Color Scheme"
-            onChange={(event) => updateSettings({ colorScheme: event.target.value as ColorScheme })}
-          >
-            <MenuItem value="thermal">Thermal</MenuItem>
-            <MenuItem value="rainbow">Rainbow</MenuItem>
-            <MenuItem value="monochrome">Monochrome</MenuItem>
-          </Select>
-        </FormControl>
         <Tooltip title="Toggle the motion-first particle and wavefront animation in the 3D scene." describeChild>
           <Box component="span">
             <FormControlLabel
