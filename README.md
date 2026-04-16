@@ -1,6 +1,6 @@
 # EMF Visualizer
 
-Interactive EMF/RF disturbance lab built with Next.js, React Three Fiber, MUI, and Zustand.
+Interactive EMF/RF disturbance lab built with Next.js 14, React Three Fiber, MUI, and Zustand.
 
 <img width="1728" height="962" alt="image" src="https://github.com/user-attachments/assets/7d1741de-f209-48ad-9dd1-1509dac16715" />
 
@@ -18,89 +18,106 @@ Open `http://localhost:3000/lab`.
 - `npm run dev` — start the app
 - `npm run test` — run the test suite
 - `npm run type-check` — run TypeScript checks
+- `npm run lint` — run ESLint
 - `npm run build` — production build
 
-## Features
+## Technical Feature Overview
 
-- 3D source visualization
-- Source add/remove/selection controls
-- Frequency, power, and phase controls
-- Environment and visualization settings
-- Measurement capture and field readouts
-- FPS monitoring and adaptive LOD
-- WebGL error handling and accessibility labels
-- Maxwell interference point-cloud rendering with semantic high/medium/low bands
-- Interference interpretation summaries (strongest/weakest regions + distribution)
-- Emitter-change telemetry hooks for point-cloud update observability
+### 3D scene and interaction
 
-## Operator Sidebar Workflow
+- React Three Fiber scene with source markers, measurement markers, drone markers/paths, contested-zone markers, and field overlays.
+- Orbit/pan/zoom camera control with FPS sampling and smoothness/performance degradation signaling.
+- WebGL context error boundary for recovery-safe rendering behavior.
 
-The `/lab` sidebar is organized for operator flow in fixed order:
+Key files:
+- `app/lab/page.tsx`
+- `app/lab/components/Canvas3D/Canvas3D.tsx`
+- `app/lab/hooks/useCameraControls.ts`
+- `app/lab/hooks/useFPSMonitor.ts`
 
-1. **Simulation Setup**: add/clear sources and apply presets
-2. **Active Entities**: inventory of sources and selection surface
-3. **Selected Entity**: focused editing for selected source(s)
-4. **Visualization Controls**: global rendering and display toggles
-5. **Analysis / Measurements**: measurement capture and readouts
-6. **System / View**: environment utilities, camera reset, FPS monitor
+### Source modeling and controls
 
-### Usage notes
+- RF sources support position, frequency, phase, power (`watts` or `dBm`), bandwidth, faction, and antenna type metadata.
+- Sidebar workflow supports setup, active-entity selection, focused parameter editing, visualization controls, and analysis.
+- Precision controls use dual-mode UI (slider + direct numeric entry).
 
-- Use **Active Entities** to select; use **Selected Entity** to edit.
-- Advanced source controls are collapsed by default for progressive disclosure.
-- Precision parameters support dual-mode interaction (slider + numeric entry).
-- Global sections do not mutate source-local settings.
+Key files:
+- `app/lab/components/ControlPanel/ControlPanel.tsx`
+- `app/lab/components/ControlPanel/SourceControls.tsx`
+- `app/lab/components/shared/DualModeControl.tsx`
+- `app/lab/types/source.types.ts`
+
+### Field modeling pathways
+
+1. **Real-time EMF model (default visual path)**  
+   CPU superposition model with near-field softening and directional gain handling:
+   - free-space field approximation: `E = sqrt(30 * EIRP) / r`
+   - source phase and spectral spread support
+   - faction-aware threat/interaction metrics
+
+2. **Full-wave Maxwell solver (run + analysis path)**  
+   FDTD Yee-grid solver with run orchestration, validation scenarios, and safety gates:
+   - domain/material/boundary inputs
+   - derived metrics including Poynting/energy density
+   - run lifecycle (`queued`, `running`, `validated`, etc.) and provenance
+
+Key files:
+- `app/lab/lib/field-math.ts`
+- `app/lab/modules/compute/cpu-backend.ts`
+- `app/lab/modules/maxwell/core/maxwell-solver-engine.ts`
+- `app/lab/types/maxwell.types.ts`
+
+### Interference and interpretation
+
+- Legacy interference view renders continuous 3D field structure for interactive exploration.
+- Maxwell interference encoding includes semantic bands (`high`, `medium`, `low`) plus interpretation summaries (strongest/weakest regions and overlap presence).
+- Accessibility requirement is enforced by design intent: interference cannot rely on color-only semantics.
+
+Key files:
+- `app/lab/components/Canvas3D/InterferenceField3D.tsx`
+- `app/lab/modules/maxwell/core/interference-encoding.ts`
+- `app/lab/components/Analysis/MaxwellRunContextPanel.tsx`
+
+## Current Maxwell UI Status
+
+- Maxwell **solver execution and metrics panels are active**.
+- Maxwell **3D visual overlays are currently disabled in the UI** while point-cloud rendering quality is refined:
+  - `app/lab/components/Canvas3D/MaxwellFieldOverlay.tsx`
+  - `app/lab/components/Canvas3D/MaxwellFieldVolume.tsx`
+
+This lets teams validate solver behavior and derived metrics now, while visual rendering iterates separately.
+
+## Performance, Safety, and Quality Controls
+
+- FPS monitor and performance warning surfaces for sluggish scenes.
+- Maxwell run safety controls include memory budgeting, OOM guard behavior, degradation controls, and run-cap/queue enforcement.
+- Validation workflows support threshold-based correctness reporting before results are treated as trusted.
 
 ## Architecture
 
-The lab is organized into small modules:
-
 - `app/lab/components/` — UI, control panel, analysis overlays, and 3D scene wrappers
-- `app/lab/hooks/` — stateful hooks for camera, FPS monitoring, and field calculation
-- `app/lab/lib/` — math, validation, camera, and visualization helpers
-- `app/lab/modules/` — simulation and source/compute abstractions
+- `app/lab/hooks/` — stateful hooks (camera, FPS, field sampling, store interactions)
+- `app/lab/lib/` — pure math and utility helpers
+- `app/lab/modules/` — compute engines, source abstractions, Maxwell pipeline
 - `app/lab/types/` — shared domain types and defaults
 
-State lives in a Zustand store so UI controls and the 3D scene stay synchronized.
+State is centralized in `useLabStore` (Zustand) to keep controls, analytics, and scene rendering synchronized.
 
 ## Testing
 
-Integration and component tests live under `__tests__/` and `app/lab/__tests__/`.
-Run `npm test` before merging changes.
+- Unit/component/integration tests live under `app/lab/__tests__/` and top-level `__tests__/`.
+- Maxwell-specific coverage includes encoding behavior, a11y runflow, performance windows, and solver integrations.
 
-## Maxwell Full-Wave Solver
+## Technical Wiki
 
-The lab includes a full-wave time-domain Maxwell FDTD solver for electromagnetic simulation beyond quasi-static approximations.
+For the deeper engineering reference (math, interference semantics, and how equations map to this codebase), see:
 
-### Features
-- **FDTD Solver**: Yee-grid Finite-Difference Time-Domain solver with CFL-stable leap-frog time stepping
-- **12+ Validation Scenarios**: Correctness validated against analytical reference cases
-- **Browser Safety**: Memory budget gating, auto-degrade, OOM protection, run cap enforcement
-- **Derived Metrics**: Poynting vector magnitude and electromagnetic energy density
-- **Accessibility**: Full keyboard-only navigation (A11Y-001 compliant)
+- [`docs/wiki/emf-math-and-interference.md`](docs/wiki/emf-math-and-interference.md)
 
-### Running a Simulation
-1. Open the lab at `/lab`
-2. Expand the **Maxwell Solver** section in the control panel
-3. Configure domain, materials, and boundary conditions
-4. Submit run and monitor status transitions: `queued → running → validated`
+## Next Steps
 
-### Troubleshooting
-- **CFL violation**: Set `timeStepHint = 0` for auto-CFL time step
-- **Memory exceeded**: Reduce grid resolution or use a coarser scenario class
-- **Instability detected**: Reduce time step or check material property values
-- **Run queue full**: Wait for a run to complete or cancel a queued run
-
-### Verification
-```bash
-npm test           # Run all tests
-npm run type-check # TypeScript validation
-npm run build      # Production build
-```
-
-### Interference Point-Cloud Quality Targets
-
-- Replace beachball-style output with a data-first point cloud.
-- Preserve emitter-to-pattern spatial correspondence.
-- Maintain repeatable interpretation for strongest/weakest regions.
-- Baseline interaction performance target: emitter-change-to-visible-update p95 <= 1s.
+1. Complete Maxwell point-cloud visual reintroduction with robust non-color interference cues and stable region interpretation.
+2. Improve animation and camera smoothness under sustained interaction while preserving current workflows.
+3. Extend solver architecture toward additional method families (for example FEM/DGTD adapters) without changing user workflow.
+4. Add GPU-backed compute pathways for larger scenarios and lower latency.
+5. Introduce scenario persistence/export tooling for repeatable analysis workflows.
