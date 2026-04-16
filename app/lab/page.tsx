@@ -1,6 +1,18 @@
 'use client';
 
-import { Box, Chip, IconButton, Paper, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  Paper,
+  Typography,
+} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import GitHubIcon from '@mui/icons-material/GitHub';
@@ -32,6 +44,7 @@ import { useState } from 'react';
  * Main page component for the EMF/RF Disturbance Lab
  */
 export default function LabPage() {
+  const WELCOME_MODAL_Z_INDEX = 20000000;
   const sources = useLabStore((state) => state.sources);
   const selectedSourceId = useLabStore((state) => state.selectedSourceId);
   const selectSource = useLabStore((state) => state.selectSource);
@@ -41,6 +54,7 @@ export default function LabPage() {
   const drones = useLabStore((state) => state.drones);
   const hasActiveMaxwellRun = useLabStore((s) => !!s.maxwellActiveRunId);
   const [controlPanelOpen, setControlPanelOpen] = useState(true);
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(true);
   const activeSources = useMemo(() => {
     const staticSources = sources.filter((source) => source.active);
     const droneEmissionSources = drones
@@ -369,6 +383,34 @@ export default function LabPage() {
           </Box>
         )}
       </Box>
+
+      <Dialog
+        open={welcomeModalOpen}
+        onClose={() => setWelcomeModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        sx={{ zIndex: WELCOME_MODAL_Z_INDEX }}
+      >
+        <DialogTitle>Welcome to EMF Visualizer</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            This project is an interactive electromagnetic field lab built to make RF behavior easier to
+            explore in real time. You can configure emitters, compare interference patterns, and inspect
+            how source geometry, phase, frequency, and power shape field behavior in a live 3D scene.
+          </DialogContentText>
+          <DialogContentText>
+            The goal is to combine fast exploratory modeling with a structured path toward higher-fidelity
+            Maxwell-based analysis, while keeping the experience approachable and performance-safe in the
+            browser. It is designed to support both intuitive visual learning and deeper engineering
+            validation workflows.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setWelcomeModalOpen(false)} variant="contained" autoFocus>
+            Enter Lab
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
