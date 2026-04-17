@@ -3,7 +3,7 @@
 **Feature Branch**: `[004-create-feature-branch]`  
 **Created**: 2026-04-15  
 **Status**: Draft  
-**Input**: User description: "Redesign the EMF simulation sidebar into a professional operator console with clear information architecture, stateful entity selection, progressive disclosure, reduced slider fatigue, and strong scanability."
+**Input**: User description: "Redesign the EMF simulation sidebar as a professional-grade operator console, with a clear and intentional information architecture, state-aware entity selection, progressive disclosure of controls, minimized reliance on sliders, and a layout optimized for rapid scanning and decision-making."
 
 ## User Scenarios & Testing *(mandatory)*
 

@@ -3,7 +3,7 @@
 **Feature Branch**: `002-disturbance-lab`  
 **Created**: 2025-06-09  
 **Status**: Draft  
-**Input**: User description: "a polished single-page or hybrid interactive EMF visualization lab built with React, TypeScript, Next.js App Router, React Three Fiber, three, and local state. Include product goals, recommended UX/product approach, V1/V2 scope, scenarios, disturbance system, simulation model, rendering, state, testing, and open questions only if truly necessary."
+**Input**: User description: "A refined single-page or hybrid interactive EMF visualization environment, architected with React, TypeScript, and the Next.js App Router, and powered by React Three Fiber and Three.js with localized state management. The document should clearly articulate product objectives, a principled UX and product strategy, phased V1 and V2 scope, representative usage scenarios, a disturbance modeling system, core simulation architecture, rendering pipeline, state management approach, testing strategy, and only essential open questions where further clarification is required."
 
 ## Clarifications
 

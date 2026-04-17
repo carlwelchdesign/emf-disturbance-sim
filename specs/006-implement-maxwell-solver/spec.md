@@ -3,7 +3,9 @@
 **Feature Branch**: `[006-implement-maxwell-solver]`  
 **Created**: 2026-04-15  
 **Status**: Draft  
-**Input**: User description: "Implement a full-wave Maxwell solver capability in this app. Build an execution path that numerically solves time-domain Maxwell equations without quasi-static simplifications, supports at least one concrete method family initially (FDTD recommended), defines solver domain/material/boundary-condition inputs, provides validated field outputs (E, B, derived metrics), and integrates results into the existing EMF visualizer UI for interactive analysis. Include strict correctness validation against known analytical/reference scenarios, performance/scalability targets, error handling for unstable/invalid configurations, and a phased architecture that allows adding additional methods (FEM/DGTD/etc.) later."
+**Input**: User description: "Implement full-wave Maxwell solver capability within the application by establishing an execution path that numerically solves the time-domain form of Maxwell’s equations without quasi-static approximations. The initial implementation should support at least one concrete solver family, with FDTD as the recommended starting point, and define the required inputs for simulation domain configuration, material properties, and boundary conditions. It should produce validated field outputs, including E and B fields as well as derived metrics, and integrate those results into the existing EMF visualizer for interactive analysis.
+
+The design should also include rigorous correctness validation against known analytical and reference scenarios, explicit performance and scalability targets, robust handling of unstable or invalid configurations, and a phased architecture that can accommodate additional solver families such as FEM and DGTD over time."
 
 ## User Scenarios & Testing *(mandatory)*
 

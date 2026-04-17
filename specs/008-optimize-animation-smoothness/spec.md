@@ -3,7 +3,7 @@
 **Feature Branch**: `008-optimize-animation-smoothness`  
 **Created**: 2026-04-16  
 **Status**: Draft  
-**Input**: User description: "We need to optimize animation. its very sluggish currenly. We have hidden the maxwell field because we need to put more time into it later. So for now lets make sure we can animate smoothly, rotatate pan and zoom smoothly."
+**Input**: User description: "We need to prioritize animation performance and interaction smoothness. The current experience feels sluggish, and since the Maxwell field has been intentionally hidden until it can be developed further, the immediate focus should be on ensuring the core viewport performs well. For now, the goal is smooth animation, along with responsive rotation, panning, and zooming, so the scene feels stable, fluid, and professional even before the field layer is reintroduced."
 
 ## User Scenarios & Testing *(mandatory)*
 

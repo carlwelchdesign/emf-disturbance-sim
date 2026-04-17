@@ -3,7 +3,7 @@
 **Feature Branch**: `[007-improve-interference-point-cloud]`  
 **Created**: 2026-04-16  
 **Status**: Draft  
-**Input**: User description: "I want to make the maxwell cloud interference field much more meaningful. right now the maxwell field looks like large beachballs. I want a point cloud that shows interference from the emitters. currently the experience is not meaningful in any way. it doesn't make sense. visually it's not clear. we need to fix that"
+**Input**: User description: "I want the Maxwell interference field to convey something physically and visually meaningful. In its current form, the field reads as oversized spherical volumes that do not communicate interference behavior, emitter interaction, or spatial structure in a useful way. We should replace that with a point-cloud representation that makes constructive and destructive interference legible, clarifies how emitters influence the field, and produces a result that is both analytically informative and visually intuitive. As it stands, the experience lacks interpretability, the visual language is ambiguous, and the simulation does not communicate a coherent model. We need to redesign this so the field representation actually makes sense."
 
 ## User Scenarios & Testing *(mandatory)*
 

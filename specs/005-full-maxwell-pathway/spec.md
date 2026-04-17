@@ -3,7 +3,10 @@
 **Feature Branch**: `[005-full-maxwell-pathway]`  
 **Created**: 2026-04-15  
 **Status**: Draft  
-**Input**: User description: "Create a pathway for a full Maxwell solver (full-wave electromagnetic solver) that solves the complete set of Maxwell equations without quasi-static simplifications. The pathway should define user value, scope boundaries, functional requirements, measurable success criteria, user scenarios, edge cases, and assumptions for moving from the current EMF visualizer toward full-wave capability. It should acknowledge common solver methods (FDTD, FEM/FEA, DGTD, pseudo-spectral, BIE) and support evaluating build-vs-integrate options (e.g., leveraging existing solvers like Ansys HFSS/Maxwell, Siemens Simcenter, Cgmx, OpenSEMBA/DGTD, TDMS) while keeping the spec technology-agnostic and implementation-free."
+**Input**: User description: "Define a clear, technology-agnostic pathway toward a full-wave electromagnetic solver grounded in Maxwell’s equations, eliminating quasi-static approximations and enabling high-fidelity field simulation. This pathway should articulate user value, establish scope boundaries, and outline functional requirements, measurable success criteria, representative user scenarios, edge cases, and core assumptions required to evolve the current EMF visualizer into a full-wave system.
+
+It should acknowledge and contextualize established numerical methods such as Finite-Difference Time-Domain (FDTD), Finite Element Method (FEM/FEA), Discontinuous Galerkin Time-Domain (DGTD), pseudo-spectral approaches, and Boundary Integral Equation (BIE) methods. Additionally, it should support a rigorous evaluation of build-versus-integrate strategies, including the potential use of existing platforms like Ansys HFSS, Ansys Maxwell, Siemens Simcenter, OpenSEMBA, and TDMS-based toolchains, while remaining implementation-agnostic and focused on system design clarity rather than execution details.
+"
 
 ## Non-Goals
 

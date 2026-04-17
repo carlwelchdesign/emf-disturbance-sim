@@ -3,7 +3,7 @@
 **Feature Branch**: `003-improve-emf-solver`  
 **Created**: 2026-04-15  
 **Status**: Draft  
-**Input**: User description: "Have we fully use Maxwell's solver or is there still work we can do to make this even better?"
+**Input**: User description: "Have we fully leveraged a Maxwell’s equations–based solver, or are there remaining opportunities to further refine and extend the fidelity and performance of the model?"
 
 ## User Scenarios & Testing *(mandatory)*
 
