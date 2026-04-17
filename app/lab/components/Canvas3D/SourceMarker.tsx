@@ -24,10 +24,12 @@ export function SourceMarker({ source, isSelected, onClick }: SourceMarkerProps)
   const powerScale = source.powerUnit === 'dBm'
     ? Math.min(Math.max((source.power + 30) / 80, 0), 1)
     : Math.min(Math.max(Math.log10(Math.max(source.power, 0.001) * 1000) / 3, 0), 1);
-  const scale = isSelected ? 1.6 : 1.05 + powerScale * 0.35;
+  const scale = 1.05 + powerScale * 0.35;
   const isHostile = source.faction === 'hostile';
   const sourceLabel = source.label || source.deviceType || source.id;
   const affiliationLabel = isHostile ? 'HOSTILE' : 'NON-HOSTILE';
+  const selectedColor = isHostile ? '#ff7a59' : '#5ce1e6';
+  const markerColor = isSelected ? selectedColor : color;
 
   const { scene } = useGLTF(MODEL_PATH);
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
@@ -38,7 +40,7 @@ export function SourceMarker({ source, isSelected, onClick }: SourceMarkerProps)
   const animateFields = useLabStore((s) => s.settings.animateFields);
 
   useEffect(() => {
-    const emissiveColor = new THREE.Color(color);
+    const emissiveColor = new THREE.Color(markerColor);
     const collected: THREE.MeshStandardMaterial[] = [];
     clonedScene.traverse((child: THREE.Object3D) => {
       if (child instanceof THREE.Mesh) {
@@ -52,7 +54,7 @@ export function SourceMarker({ source, isSelected, onClick }: SourceMarkerProps)
       }
     });
     materialsRef.current = collected;
-  }, [clonedScene, color]);
+  }, [clonedScene, markerColor]);
 
   useFrame(({ clock }) => {
     if (isSelected) {
@@ -91,8 +93,9 @@ export function SourceMarker({ source, isSelected, onClick }: SourceMarkerProps)
             fontWeight: 700,
             whiteSpace: 'nowrap',
             textTransform: 'uppercase',
+            color: isSelected ? markerColor : isHostile ? '#FF3320' : '#E2E8F0',
             boxShadow: isSelected
-              ? `0 0 0 1px ${isHostile ? 'rgba(255, 51, 32, 0.8)' : 'rgba(0, 170, 255, 0.65)'}`
+              ? `0 0 0 1px ${markerColor}, 0 0 12px ${markerColor}`
               : 'none',
           }}
         >

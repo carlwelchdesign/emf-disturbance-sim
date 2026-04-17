@@ -46,7 +46,7 @@ import { useState } from 'react';
 export default function LabPage() {
   const WELCOME_MODAL_Z_INDEX = 20000000;
   const sources = useLabStore((state) => state.sources);
-  const selectedSourceId = useLabStore((state) => state.selectedSourceId);
+  const selectedSourceIds = useLabStore((state) => state.selectionContext.selectedSourceIds);
   const selectSource = useLabStore((state) => state.selectSource);
   const settings = useLabStore((state) => state.settings);
   const camera = useLabStore((state) => state.camera);
@@ -98,7 +98,7 @@ export default function LabPage() {
               <SourceMarker
                 key={source.id}
                 source={source}
-                isSelected={source.id === selectedSourceId}
+                isSelected={selectedSourceIds.includes(source.id)}
                 onClick={() => selectSource(source.id)}
               />
             ))}
