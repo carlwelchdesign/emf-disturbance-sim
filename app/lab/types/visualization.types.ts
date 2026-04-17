@@ -8,7 +8,7 @@ export interface VisualizationSettings {
   /** Color scheme for field strength mapping */
   colorScheme: ColorScheme;
   
-  /** Animation speed multiplier (1.0 = real-time) */
+  /** Animation speed multiplier (1.0 = real-time; default lab baseline is 2.0x) */
   animationSpeed: number;
   
   /** Whether time-based animation is enabled */
@@ -70,7 +70,7 @@ export type SolverProfile = 'simplified' | 'balanced' | 'scientific';
 export const DEFAULT_VISUALIZATION: VisualizationSettings = {
   fieldLineDensity: 50,
   colorScheme: 'thermal',
-  animationSpeed: 1.0,
+  animationSpeed: 2.0,
   animateFields: true,
   showFPS: false,
   showLabels: true,

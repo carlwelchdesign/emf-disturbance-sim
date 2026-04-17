@@ -1,6 +1,10 @@
 import { useLabStore } from '../../hooks/useLabStore';
 
 describe('useLabStore source and selection state', () => {
+  it('boots with a default animation speed of 2.0x', () => {
+    expect(useLabStore.getState().settings.animationSpeed).toBe(2.0);
+  });
+
   beforeEach(() => {
     useLabStore.getState().clearAllSources();
     useLabStore.getState().addSource();

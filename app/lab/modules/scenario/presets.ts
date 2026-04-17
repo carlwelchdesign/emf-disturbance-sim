@@ -247,7 +247,7 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     ],
     settings: {
       animateFields: true,
-      animationSpeed: 1.0,
+      animationSpeed: 2.0,
       showGrid: true,
       lod: 'high',
       colorScheme: 'rainbow',
