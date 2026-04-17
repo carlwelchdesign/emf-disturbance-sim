@@ -86,7 +86,6 @@ export function SourceMarker({ source, isSelected, onClick }: SourceMarkerProps)
             borderRadius: 4,
             border: `1px solid ${isHostile ? 'rgba(255, 51, 32, 0.9)' : 'rgba(0, 170, 255, 0.85)'}`,
             background: 'rgba(2, 6, 23, 0.84)',
-            color: isHostile ? '#FF3320' : '#E2E8F0',
             fontSize: '10px',
             fontFamily: 'monospace',
             letterSpacing: '0.04em',
